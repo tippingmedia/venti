@@ -30,11 +30,11 @@
         "name": "Venti",
         "handle": "venti",
         "schemaVersion": "3.0.0",
-        "changelogUrl": "",
+        "changelogUrl": "https://raw.githubusercontent.com/tippingmedia/venti/master/releases.json",
         "class": "tippingmedia\\venti\\Venti"
     },
     "support": {
         "email": "support@tippingmedia.com",
-        "docs": "https://venticalendar.io/docs/"
+        "docs": ""
     }
 }
