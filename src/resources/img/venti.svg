@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="343px" height="340px" viewBox="0 0 343 340" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.4.4 (17249) - http://www.bohemiancoding.com/sketch -->
+    <title>Slice 1</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="filter-1">
+            <feOffset dx="0" dy="2" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="0" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.140126812 0" in="shadowBlurOuter1" type="matrix" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="venti-logo" sketch:type="MSLayerGroup" transform="translate(-51.000000, 0.000000)">
+            <g id="icon-1" transform="translate(62.000000, 0.000000)" sketch:type="MSShapeGroup">
+                <rect id="Rectangle-2" fill="#DA5A47" x="0" y="37" width="320" height="160"></rect>
+                <rect id="Rectangle-1" stroke="#4A4A4A" stroke-width="10" x="0" y="37" width="320" height="293" rx="2"></rect>
+                <g id="Rectangle-3-+-Rectangle-3-Copy" transform="translate(70.000000, 0.000000)">
+                    <rect id="Rectangle-3" fill="#4A4A4A" x="0" y="0" width="30" height="37" rx="3"></rect>
+                    <rect id="Rectangle-3-Copy-2" fill="#FFFFFF" x="0" y="37" width="30" height="23" rx="3"></rect>
+                    <rect id="Rectangle-3-Copy-3" fill="#FFFFFF" x="150" y="37" width="30" height="23" rx="3"></rect>
+                    <rect id="Rectangle-3-Copy" fill="#4A4A4A" x="150" y="0" width="30" height="37" rx="3"></rect>
+                </g>
+                <path d="M98.56,160.2 L111.84,104.36 L92.88,104.36 L86.72,148.04 L79.44,104.36 L60,104.36 L74.32,160.2 L98.56,160.2 Z M152.48,138.36 C152.48,123.72 143.6,115.64 130.72,115.64 C115.76,115.64 108.56,126.44 108.56,138.76 C108.56,151.96 116,161.96 132.56,161.96 C140.4,161.96 146.56,158.84 150.88,155.4 L143.68,145.8 C140,148.36 137.12,149.56 134.32,149.56 C130.08,149.56 127.36,148.92 126.48,143.72 L152.08,143.72 C152.32,142.04 152.48,139.72 152.48,138.36 L152.48,138.36 Z M134.96,133.96 L126.32,133.96 C126.8,128.12 128.16,126.52 131.04,126.52 C134.56,126.52 134.88,129.96 134.96,133.4 L134.96,133.96 Z M186.8,115.64 C181.68,115.64 178,117.24 173.76,121.4 L172.56,117.32 L157.04,117.32 L157.04,160.2 L174.8,160.2 L174.8,131.96 C176.4,129.4 177.92,128.44 178.96,128.44 C179.76,128.44 180.4,129 180.4,131.72 L180.4,160.2 L198.16,160.2 L198.16,128.36 C198.16,120.2 193.76,115.64 186.8,115.64 L186.8,115.64 Z M236.4,158.12 L230.8,147.16 C229.52,147.88 228.24,148.12 227.12,148.12 C225.52,148.12 224.16,147.16 224.16,143.24 L224.16,129.24 L231.92,129.24 L233.68,117.32 L224.16,117.32 L224.16,106.44 L206.4,108.52 L206.4,117.32 L201.84,117.32 L201.84,129.24 L206.4,129.24 L206.4,143.4 C206.4,155.4 211.36,161.88 222.88,161.96 C226.96,161.96 232.72,160.68 236.4,158.12 L236.4,158.12 Z M248.32,93 C242.64,93 238.56,97 238.56,102.28 C238.56,107.48 242.64,111.56 248.32,111.56 C254,111.56 258,107.48 258,102.28 C258,97 254,93 248.32,93 L248.32,93 Z M257.12,160.2 L257.12,117.32 L239.36,117.32 L239.36,160.2 L257.12,160.2 Z" id="Venti" fill="#FFFFFF" filter="url(#filter-1)"></path>
+                <g id="Group" transform="translate(63.000000, 221.000000)">
+                    <g>
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-8" transform="translate(55.000000, 0.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-9" transform="translate(110.000000, 0.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-10" transform="translate(165.000000, 0.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-11" transform="translate(165.000000, 55.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-12" transform="translate(110.000000, 55.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-13" transform="translate(55.000000, 55.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                    <g id="Group-Copy-14" transform="translate(0.000000, 55.000000)">
+                        <rect id="Rectangle-9-Copy-4" stroke="#E7E7E7" stroke-width="6" fill="#FFFFFF" x="0" y="0" width="30" height="30" rx="2"></rect>
+                        <rect id="Rectangle-35" fill="#E7E7E7" x="20" y="2" width="8" height="8"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

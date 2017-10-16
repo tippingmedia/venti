@@ -1,0 +1,48 @@
+{% extends "_layouts/elementindex" %}
+
+{% do view.registerAssetBundle("tippingmedia\\venti\\bundles\\EventListBundle") %}
+
+{% set title = "Events"|t('venti') %}
+{% set elementType = 'tippingmedia\\venti\\elements\\VentiEvent' %}
+
+{% set tabs = {
+	events: { label: "Events"|t('venti'), url: url('venti') },
+	calendar: { label: "Calendar"|t('venti'), url: url('venti/calendar') },
+	groups: { label: "Groups"|t('venti'), url: url('venti/groups') },
+	locations: { label: "Locations"|t('venti'), url: url('venti/locations') },
+} %}
+
+{% if currentUser.can('ventiSettings') %}
+	{% set tabs = tabs|merge({settings: { label: "Settings"|t, url: url('venti/settings') }}) %}
+{% endif %}
+
+{% set extraPageHeaderHtml %}
+	{% if groups|length %}
+		<div class="buttons right">
+			{% if groups|length > 1 %}
+				<div class="btngroup submit">
+					<a class="btn submit add icon" href="{{ url('venti/'~groups[0].handle~'/new') }}">{{ "New Event"|t }}</a>
+					<div class="btn submit menubtn"></div>
+					<div class="menu">
+						<ul>
+							{% for group in groups %}
+								<li><a href="{{ url('venti/'~group.handle~'/new') }}"><span>{{ group.name|t }}</span><span class="menu-label-color" style='background-color:{{group.color}};'></span></a></li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			{% else %}
+				<a class="btn submit add icon" href="{{ url('venti/'~groups[0].handle~'/new') }}">{{ "New Event"|t }}</a>
+			{% endif %}
+		</div>
+	{% endif %}
+{% endset %}
+
+{% block sidebar %}
+	{# parent() #}
+	{% include "venti/events/_sidebar" with {groups:groups} %}
+{% endblock %}
+
+{% js %}
+	new VentiEvents();
+{% endjs %}

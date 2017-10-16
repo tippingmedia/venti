@@ -1,0 +1,203 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% do view.registerAssetBundle("tippingmedia\\venti\\bundles\\EventListBundle") %}
+
+{#{% includeCssResource "venti/css/venti.css" %}
+{% includeJsResource "venti/lib/fullcalendar/lib/moment.min.js" %}
+{% includeJsResource "venti/lib/fullcalendar/lib/moment-php-map.js" %}
+{% includeJsResource "venti/js/venti.js" %}#}
+{# New Group is used if group select was changed and saved. If there was an error this allows for the right group fields/tabs to be applied #}
+{% set eventGroup = newGroup is defined ? newGroup : group %}
+{% set isVersion = className(event) == 'tippingmedia\\venti\\elements\\VentiEvent' %}
+
+{% set canPublish = currentUser.can('publishEvents'~permissionSuffix) %}
+{# or currentUser.can('createEvents'~permissionSuffix) #}
+{% set canSave = (
+	(event.id) or
+	(not event.id or not event.enabled or canPublish)
+) %}
+
+
+{# Get first and last hours #}
+{% set ed = now|date_modify('tomorrow -1 min') %}
+{% set sd = now|date_modify('today') %}
+
+{% macro groupMenu(group) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+
+		<div id="group-select" class="btn groupbtn" role="button" data-menu-anchor="#group-menu-anchor">
+			<div id="group">
+				<span class="menu-label-color groupbtn-color" style="background-color:{{group.color}}"></span><span class='groupbtn-label'>{{group.name}}</span>
+			</div>
+			<div id="group-menu-anchor"></div>
+		</div>
+		<div class="menu">
+			<ul class="venti-group-menu-select">
+				{% set groups = craft.venti.groups() %}
+				{% for item in groups %}
+					<li><a data-value="{{item.id}}" data-label="{{item.name}}" data-color="{{item.color}}"><span class="menu-option-color" style="background-color:{{item.color}}"></span><span>{{item.name}}</span></a></li>
+				{% endfor %}
+			</ul>
+		</div>
+		<div class="spinner hidden"></div>
+
+	{% endset %}
+
+    {{ forms.field({
+        id: 'venti-group-menu',
+		label: 'Event Group'|t,
+    }, input) }}
+
+{% endmacro %}
+
+{% from _self import groupMenu %}
+
+{% block saveButton %}
+	{% if canSave %}
+		<input type="hidden" name="action" value="venti/event/save-event">
+		<input type="hidden" name="continueEditingUrl" value="{{ continueEditingUrl|hash }}">
+		<input type="hidden" name="redirect" value="venti">
+		<div class="btngroup">
+			<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+
+			<div class="btn submit menubtn"></div>
+			<div class="menu">
+				<ul>
+					<li><a class="formsubmit save-continue-editing" data-redirect="{{ continueEditingUrl|hash }}">{{ "Save and continue editing"|t }}</a></li>
+					<li><a class="formsubmit save-add-another" data-redirect="{{ 'venti/{group.handle}/new'|hash }}">{{ "Save and add another"|t }}</a></li>
+				</ul>
+			</div>
+		</div>
+	{% endif %}
+{% endblock %}
+
+{% block main %}
+	<!-- //<form id="venti-form" method="post" accept-charset="UTF-8" data-saveshortcut="1" data-saveshortcut-redirect="{{ continueEditingUrl }}"> -->
+
+		{% if craft.app.isMultiSite() %}
+			<input type="hidden" name="siteId" value="{{ event.siteId }}">
+		{% endif %}
+		{{ csrfInput() }}
+		<div class="grid first" data-max-cols="3">
+
+			<div class="item" data-position="left" data-colspan="2">
+				{#{{ craft.venti.settings.eventDuration }}#}
+				<div id="venti-fields" class="pane {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{ craft.venti.settings.eventDuration }}">
+					{% include 'venti/events/_tabs' with { group: eventGroup } only  %}
+
+					{% include 'venti/events/_fields' with {
+						event: event,
+						group: eventGroup,
+						dateFormat: dateFormat,
+						timeFormat: timeFormat } only %}
+
+				</div>
+			</div>
+
+
+			{# Sidebar #}
+			<div class="item last" data-position="right">
+
+				{% if craft.app.isMultiSite() and group.getGroupSiteSettings() | length > 1 %}
+					<ul id="sites" class="pane">
+						{% for siteId in siteIds %}
+							{% set site = craft.app.sites.getSiteById(siteId) %}
+                            <li{% if siteId == event.siteId %} class="sel"{% endif %}>
+                                {%- if siteId == event.siteId -%}
+                                    {{ site.name|t('site') }}
+                                    {{ forms.lightswitch({
+                                        name: 'enabledForSite',
+                                        on:   event.enabledForSite,
+                                        small: true,
+                                        disabled: isVersion
+                                    }) }}
+                                {%- else -%}
+									{% set siteEventUrl = url(
+										'venti/'~group.handle~'/'~craft.app.request.getSegment(3)~'/'~siteId
+									) -%}
+									<a href="{{ siteEventUrl }}">{{ site.name|t('site') }}</a>
+									<div class="status {{ siteId in enabledSiteIds ? 'enabled' : 'disabled' }}"></div>
+								{%- endif -%}
+							</li>
+						{% endfor %}
+					</ul>
+				{% endif %}
+				{% if canPublish %}
+					<div id="settings" class="pane meta">
+						{{ forms.textField({
+							label: "Slug"|t,
+							siteId: event.siteId,
+							id: 'slug',
+							name: 'slug',
+							value: event.slug,
+							placeholder: "Enter slug"|t('app'),
+							errors: (not isVersion ? event.getErrors('slug')|merge(event.getErrors('uri'))),
+							disabled: isVersion
+						}) }}
+
+						{% if canPublish or (canDeleteEvent) %}
+
+							{# Group Menu Button #}
+							{{ groupMenu(eventGroup) }}
+
+							{#{% set eventGroup = eventGroup %}
+							{% set sites = group.getGroupSiteSettings() %}#}
+							{% set statusInput %}
+								{% if canPublish %}
+									<div class="left">
+										{{ forms.lightswitch({
+											id: 'enabled',
+											name: 'enabled',
+											on: event.enabled is not empty ? event.enabled : '',
+											disabled: isVersion
+										}) }}
+									</div>
+								{% endif %}
+
+								{% if canDeleteEvent %}
+									<div class="right">
+										<input type="button" class="btn formsubmit" value="{{ 'Delete'|t }}" data-action="venti/event/delete-event"
+											data-confirm="{{ 'Are you sure you want to delete this event?'|t }}"
+											data-redirect="venti">
+									</div>
+								{% endif %}
+							{% endset %}
+
+							{{ forms.field({
+								label: "Enabled"|t,
+								id: 'enabled'
+							}, statusInput) }}
+
+						{% endif %}
+					</div>
+				{% endif %}
+			</div>
+		</div>
+	<!-- </form> -->
+{% endblock %}
+
+{% if not event.slug %}
+	{% js "window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');" %}
+{% endif %}
+
+{% set fieldData = {
+	'startDate' : event.startDate ? event.startDate : now,
+	'endDate' : event.endDate ? event.endDate : null,
+	'allDay'  : event.allDay ? event.allDay : "",
+	'rRule'   : event.rRule ? event.rRule : "",
+	'summary' : event.summary ? event.summary : "",
+	'siteId'  : event.siteId ? event.siteId : craft.siteId
+} %}
+{% js %}
+    new VentiInput({
+	        id: "venti-fields",
+	        values: {{ fieldData|json_encode|raw }},
+			inline: false,
+			namespacedId: "",
+	        locale: "{{ craft.app.language }}",
+			siteId: "{{ craft.app.sites.currentSite.id }}"
+	    });
+{% endjs %}

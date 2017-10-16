@@ -1,0 +1,15 @@
+{% import "_includes/forms" as forms %}
+
+<div class="field first" id="title-field">
+    {{ forms.textField({
+        label: 		"Title"|t,
+        id: 		'title',
+        name: 		'title',
+        value: 		event.title,
+        errors: 	event.getErrors('title'),
+        siteId:     craft.app.isMultiSite ? event.siteId : null,
+        first: 		true,
+        autofocus: 	true,
+        required: 	true
+    }) }}
+</div>

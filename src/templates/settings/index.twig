@@ -1,0 +1,6 @@
+{% if currentUser.can('ventiSettings') %}
+    {% redirect 'venti/settings/general' %}
+{% endif %}
+
+{% extends "403" %}
+{% set message = "User must have permission to edit the settings."|t %}

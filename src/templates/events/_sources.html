@@ -1,0 +1,42 @@
+{% spaceless %}
+{% set keyPrefix = keyPrefix ?? '' %}
+<ul>
+	{% for key, source in sources %}
+		{% set color = "" %}
+		{% set handle = "" %}
+        {% for group in groups %}
+        	{% if source.label is defined and (group.name|lower == source.label|lower) %}
+				{% set color = group.color %}
+				{% set handle = group.handle %}
+			{% endif %}
+        {% endfor %}
+		{% if source.heading is defined %}
+			<li class="heading"><span>{{ source.heading|t('site') }}</span></li>
+		{% else %}
+			{% set key = source.keyPath ?? (keyPrefix ~ source.key) %}
+			<li>
+				<a data-key="{{ key }}" data-handle="{{- handle -}}"
+					{%- if source.hasThumbs is defined and source.hasThumbs %} data-has-thumbs{% endif %}
+					{%- if source.structureId is defined and source.structureId %} data-has-structure{% endif %}
+					{%- if source.defaultSort is defined %}{% set defaultSort = source.defaultSort %} data-default-sort="{{ defaultSort is iterable ? defaultSort|join(':') : defaultSort }}"{% endif %}
+					{%- if source.data is defined -%}
+						{% for dataKey, dataVal in source.data %} data-{{ dataKey }}="{{ dataVal }}"{% endfor %}
+					{%- endif %}>
+						{%- if source.status is defined and source.status -%}
+							<span class="status {{ source.status }}"></span>
+						{%- endif -%}
+						<span class="menu-label">{{- source.label -}}</span>
+                        <span class="menu-label-color" style="background-color:{{ color }}"></span>
+				</a>
+				{% if source.nested is defined and source.nested is not empty %}
+					<div class="toggle"></div>
+					{% include "_elements/sources" with {
+						keyPrefix: key ~ '/',
+						sources: source.nested
+					} %}
+				{% endif %}
+			</li>
+		{% endif %}
+	{% endfor %}
+</ul>
+{% endspaceless %}

@@ -1,0 +1,247 @@
+{% import "_includes/forms" as forms %}
+
+{% set localeData = craft.app.i18n.getLocaleById(craft.app.language|default('en_us')) %}
+{% set enLocaleData = craft.app.i18n.getLocaleById('en_us') %}
+{% set name = craft.app.request.getParam('name') %}
+{% set inline = craft.app.request.getParam('inline') %}
+
+{% set state = values.frequency + 1 %}
+
+{% if inline == 'false' %}
+    <div class='venti_overlay' data-events-overlay style='display:none;'>
+{% endif %}
+
+    <div class='venti_modal' id='{{name}}-venti-modal' data-state="{{state|default()}}" data-locale="{{ craft.app.language }}">
+        <form class='venti_modal-form' id='{{name}}-venti-modal__form'>
+            <div class='pane first'>
+                <nav id="{{ name }}-modtabs" class="tabs venti_modal_tabs">
+                    <ul style='text-align:left;'>
+                        <li><a id="{{ name }}-tab-0" class="tab sel" href="#{{ name }}-modtab1" tabindex="1">{{ 'Repeat'|t }}</a></li>
+                        <li><a id="{{ name }}-tab-1" class="tab" href="#{{ name }}-modtab2" tabindex="1">{{ 'Exclude Dates'|t }}</a></li>
+                        <li><a id="{{ name }}-tab-2" class="tab" href="#{{ name }}-modtab3" tabindex="1">{{ 'Include Dates'|t }}</a></li>
+                    </ul>
+                </nav>
+                <div>
+                    <div id='{{ name }}-modtab1'>
+                        <table class="rep">
+                            <tbody>
+                                <tr>
+                                    <th>{{ 'Repeats'|t }}:</th>
+                                    <td>
+                                        <div class='select'>
+                                            {% set freq = [
+                                                'Daily'|t,
+                                                'Every weekday (Monday to Friday)'|t,
+                                                'Every Monday, Wednesday, and Friday'|t,
+                                                'Every Tuesday, and Thursday'|t,
+                                                'Weekly'|t,
+                                                'Monthly'|t,
+                                                'Yearly'|t
+                                            ] %}
+                                            <select id="{{ name }}-venti_frequency" class="venti-frequency--select" title="{{ 'Repeats Weekly'|t }}" name="{{ name }}[repeat][frequency]" >
+                                                {% for item in freq %}
+                                                    {% set idx = loop.index0 %}
+                                                    <option title="{{ freq[idx] }}" value="{{idx}}" {% if values.frequency == idx  %}selected{% endif %}> {{ freq[idx] }} </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tbody>
+                                <tr id="{{ name }}-venti_every" class="venti-repeatevery--select">
+                                    <th>{{ 'Repeat every'|t }}:</th>
+                                    <td>
+                                        <div class='select' >
+                                            <select id="{{ name }}-venti_every_select" name="{{ name }}[repeat][every]">
+                                                {% for i in 1..30 %}
+                                                    <option value="{{i}}" {% if values.every is defined and values.every == i %} selected {% endif %} >{{ i }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <label for="venti_every_select">
+                                            <span class='venti-select--label_days'>{{ 'days'|t }}</span>
+                                            <span class='venti-select--label_weeks'>{{ 'weeks'|t }}</span>
+                                            <span class='venti-select--label_months'>{{ 'months'|t }}</span>
+                                            <span class='venti-select--label_years'>{{ 'years'|t }}</span>
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr id="{{ name }}-venti_dow" class="venti-dayofweek--group">
+                                    <th>{{ 'Repeat on'|t }}:</th>
+                                    <td >
+                                        <span>
+                                            {% set dowAbbr = localeData.getWeekdayNames('short') %}
+                                            {% set dowWide = localeData.getWeekdayNames('wide') %}
+                                            {% set dow = enLocaleData.getWeekdayNames('wide') %}
+
+                                            {% for item in dow %}
+                                                {% set idx = loop.index0 %}
+                                                <span class="venti-dow--item">
+                                                    <input id="{{ name }}-venti_dow{{ idx + 1 }}" name="{{ name }}[repeat][on][]" value="{{ dow[idx]|lower }}" title="{{ dowWide[idx] }}" type="checkbox"  {% if values.on is defined %}{% if dow[idx]|lower in values.on %}checked=checked{% endif %}{% endif %}/>
+                                                    <label for="{{ name }}-venti_dow{{ idx + 1 }}" title="{{ dowWide[idx] }}" >{{ dowAbbr[idx]|upper }}</label>
+                                                </span>
+                                            {% endfor %}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr id='{{ name }}-venti_repeatby' class="venti-repeatby--group">
+                                    <th>{{ 'Repeat by'|t }}:</th>
+                                        {% set repeatBy = [
+                                            {
+                                                'title': 'Repeat by day of the month'|t,
+                                                'text' : 'day of the month'|t
+                                            },
+                                            {
+                                                'title': 'Repeat by day of the week'|t,
+                                                'text' : 'day of the week'|t
+                                            }
+                                        ] %}
+                                    <td>
+                                        {% for item in repeatBy %}
+                                            {% set idx = loop.index0 %}
+                                            <span>
+                                                <input id="{{ name }}-venti_domrepeat" name="{{ name }}[repeat][by][]" type="radio" checked="" value='{{idx}}' title="{{ repeatBy[idx].title }}" {% if values.by is defined and values.by == idx %}checked=checked{% endif %}  />
+                                                <label for="{{ name }}-venti_domrepeat" title="{{ repeatBy[idx].title }}" >{{ repeatBy[idx].text }}</label>
+                                            </span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th id="{{ name }}-venti_starts.label">{{ 'Starts on'|t }}:</th>
+                                    <td>
+                                        <input autocomplete="off" name="{{ name }}[repeat][starts]" value="{% if values.starts is defined %}{{ values.starts }}{% endif %}" class='text nicetext venti-starts-on' id="{{ name }}-venti_starts" size="10" readonly="readonly" type="text" >
+                                        <input name="{{ name }}[repeat][startsTime]" value="{% if values.startsTime is defined %}{{ values.startsTime }}{% endif %}" class='venti-starts-on' id="{{ name }}-venti_starts-time"  type="hidden">
+                                        <input name="{{ name }}[repeat][ends]" value="{% if values.ends is defined %}{{ values.ends }}{% endif %}" class='venti-ends-on' id="{{ name }}-venti_ends"  type="hidden">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th >{{ 'Ends'|t }}:</th>
+                                    <td class="venti_endson">
+                                        <span>
+                                            <input id="{{ name }}-venti_endsnever" class='venti-endson__never' name="{{ name }}[repeat][endsOn][]" title="{{ 'Never ends'|t }}" value='0' type="radio"  {% if values.endsOn is defined %}{% if values.endsOn[0] == 0 %}checked=checked{% endif %}{% endif %} >
+                                            <label for="{{ name }}-venti_endsnever" title="{{ 'Never ends'|t }}">{{ 'Never'|t }}</label>
+                                        </span>
+                                        <span>
+                                            <input id="{{ name }}-venti_endsafter" class='venti-endson__after' name="{{ name }}[repeat][endsOn][]" title="{{ 'Ends after a number of occurrences'|t }}" value='1' type="radio"  {% if values.endsOn is defined %}{% if values.endsOn[0] == 1 %}checked=checked{% endif %}{% endif %} />
+                                            <label for="{{ name }}-venti_endsafter" title="{{ 'Ends after a number of occurrences'|t }}">{{ 'After'|t }}
+                                                <input id="{{ name }}-venti_occurrences"  class="venti-endson-afterfield text nicetext" name="{{ name }}[repeat][occur]" size="3" type='text' title="{{ 'Times'|t }}" value="{{ values.occur|default('') }}"  {% if values.endsOn is defined %}{% if not values.endsOn[0] == 1 %} disabled {% endif %}{% endif %} /> {{ 'occurrences'|t }}
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <input id="{{ name }}-venti_endson_rdio" class='venti-endson__date' name="{{ name }}[repeat][endsOn][]" title="{{ 'Ends on a specified date'|t }}" value='2' type="radio" {% if values.endsOn is defined %}{% if values.endsOn[0] == 2 %}checked=checked{% endif %}{% endif %} >
+                                            <label for="{{ name }}-venti_endson" title="{{ 'Ends on a specified date'|t }}">{{ 'On'|t }}</label>
+                                                {% set disabled = false %}
+                                                {% if values.endsOn is defined %}
+                                                    {% if not values.endsOn[0] == 2 %}
+                                                        {% set disabled = true %}
+                                                    {% endif %}
+                                                {% endif %}
+                                                {{ forms.dateField({
+                                                    id: name ~ '-venti-endsOn',
+                                                    name: name ~ '[repeat][enddate]',
+                                                    class: "venti-endson-datefield",
+                                                    size: '10',
+                                                    autocomplete: 'off',
+                                                    disabled: disabled,
+                                                    value: values.enddate|default(''),
+                                                    errors:''
+                                                }) }}
+
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr id="{{ name }}-venti_summary">
+                                    <th>{{ 'Summary'|t }}:</th>
+                                    <td class="venti-summary"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id='{{ name }}-modtab2' class='text--left venti_modal_tab_content venti-exclude--tab' data-template=".venti_exclude_element_template">
+                        {{ forms.dateField({
+                                id: name ~ '-venti-exclude',
+                                name: 'venti_exclude',
+                                class: 'venti-exclude-datefield',
+                                size: '10',
+                                title: 'exclude date',
+                                autocomplete: 'off',
+                                value: '',
+                                errors:''
+                            }) }}
+                        <div class='elements venti_elements'>
+                            {% if values.exclude is defined and values.exclude|length %}
+                                {% for item in values.exclude %}
+                                    <div class="element unselectable removable" data-siteid="{{ craft.app.sites.currentSite.id }}"  data-editable="0" tabindex="0" style="top: 0px; left: 0px; z-index: 1;">
+                                        <input type="hidden" name="{{ name }}[repeat][exclude][]" value="{{ item }}">
+                                        <a class="delete icon" title="{{ 'Remove'|t }}"></a>
+                                        <div class="label"><span class="title">{{item}}</span></div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <script class="venti_exclude_element_template" type='text/template'>
+                            <div class="element unselectable removable" data-siteid="{{ craft.app.sites.currentSite.id }}"  data-editable="0" tabindex="0" style="top: 0px; left: 0px; z-index: 1;">
+                                <input type="hidden" name="{{ name }}[repeat][exclude][]" value=""/>
+                                <a class="delete icon" title="{{ 'Remove'|t }}"></a>
+                                <div class="label"><span class="title"></span></div>
+                            </div>
+                        </script>
+                    </div>
+
+                    <div id='{{ name }}-modtab3' class='text--left venti_modal_tab_content venti-include--tab' data-template=".venti_include_element_template">
+                        {{ forms.dateField({
+                                id: name ~ '-venti-include',
+                                name: 'venti_include',
+                                class: 'venti-include-datefield',
+                                size: '10',
+                                title: 'include dates',
+                                autocomplete: 'off',
+                                value: '',
+                                errors:''
+                            }) }}
+                        <div id='{{ name }}-venti_inc_elements' class='elements venti_elements'>
+                            {% if values.include is defined and values.include|length %}
+                                {% for item in values.include %}
+                                    <div class="element unselectable removable" data-siteid="{{ craft.app.sites.currentSite.id }}"  data-editable="0" tabindex="0" style="top: 0px; left: 0px; z-index: 1;">
+                                        <input type="hidden" name="{{ name }}[repeat][include][]" value="{{ item }}">
+                                        <a class="delete icon" title="{{ 'Remove'|t }}"></a>
+                                        <div class="label"><span class="title">{{item}}</span></div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <script class='venti_include_element_template' type='text/template'>
+                            <div class="element unselectable removable" data-siteid="{{ craft.app.sites.currentSite.id }}"  data-editable="0" tabindex="0" style="top: 0px; left: 0px; z-index: 1;">
+                                <input type="hidden" name="{{ name }}[repeat][include][]" value=""/>
+                                <a class="delete icon" title="{{ 'Remove'|t }}"></a>
+                                <div class="label"><span class="title"></span></div>
+                            </div>
+                        </script>
+                    </div>
+
+                </div>
+            </div>
+            <div class="footer">
+                <table class='btns'>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type='hidden' name='{{name}}[repeat][siteId]' value='{{ craft.app.sites.currentSite.id }}' />
+                                <button class='done btn submit' data-widget-done>{{ 'DONE'|t }}</button>
+                                <button class='cancel btn'>{{ 'Cancel'|t }}</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+
+{% if inline == 'false' %}
+</div>
+{% endif %}

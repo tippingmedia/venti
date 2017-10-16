@@ -1,0 +1,129 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% import "venti/locations/_fields" as fields %}
+
+{% includeCssResource "venti/css/venti.css" %}
+{% if craft.venti.settings.googleMapsApiKey is not empty %}
+    {% includeJsFile "https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places&key=" ~ craft.venti.settings.googleMapsApiKey %}
+    {% includeJsResource "venti/js/venti.js" %}
+{% endif %}
+
+
+{% set isVersion = location.getClassHandle() == 'LocationVersion' %}
+
+{% set canPublish = currentUser.can('publishLocations') %}
+{% set canCreate = currentUser.can('createLocations') %}
+
+{% set canSave = false %}
+
+{% if location.id %}
+    {% if canPublish %}
+        {% set canSave = true %}
+    {% endif %}
+{% elseif not location.id %}
+    {% if canCreate %}
+        {% set canSave = true %}
+    {% endif %}
+{% endif %}
+
+
+{% block saveButton %}
+    {% if canSave %}
+    	<input type="hidden" name="action" value="venti/location/saveLocation">
+    	<input type="hidden" name="redirect" value="venti/locations">
+    	<div class="btngroup">
+    		<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+
+    		<div class="btn submit menubtn"></div>
+    		<div class="menu">
+    			<ul>
+    				<li><a class="formsubmit" data-redirect="{{ continueEditingUrl }}">{{ "Save and continue editing"|t }}</a></li>
+    				<li><a class="formsubmit" data-redirect="venti/location/new">{{ "Save and add another"|t }}</a></li>
+    			</ul>
+    		</div>
+    	</div>
+    {% endif %}
+
+{% endblock %}
+{% block main %}
+    <input type="hidden" name="locationId" value="{{ location.id }}">
+
+    {{ getCsrfInput() }}
+
+    <div class="grid first" data-max-cols="3">
+        <div class="item" data-position="left" data-colspan="2">
+            <div class="pane">
+
+                {{ forms.textField({
+                    label: 		"Title"|t,
+                    id: 		'title',
+                    name: 		'title',
+                    value: 		location.title,
+                    errors: 	location.getErrors('title'),
+                    first: 		true,
+                    autofocus: 	true,
+                    required: 	true
+                }) }}
+                <hr/>
+                {% if craft.venti.settings.googleMapsApiKey is not empty %}
+                    {{ fields.textField("findaddr",'',{placeholder:"Type address you want to find here."|t, size: 75, class:"find-address-input"},{label:"Find Address"|t,}) }}
+                {% endif %}
+                {{ fields.textField("address",location.address,{ placeholder:"Address line 1"|t, class:"loc-address-input"},{label:"Address"|t,instructions:"Street address, P.O. box, company name, c/o"|t}) }}
+                {{ fields.textField("addressTwo",location.addressTwo,{ placeholder:"Address line 2"|t, class:"loc-address-two-input"},{label:"Address 2"|t,instructions:"Apartment, suite , unit, building, floor, etc."|t}) }}
+                {{ fields.textField("city",location.city,{placeholder:"City/Town"|t, size: 50, class:"loc-city-input"},{label:"City"|t,}) }}
+                {{ fields.textField("state",location.state,{placeholder:"State/Province/Region"|t, size: 50, class:"loc-state-input"},{label:"State"|t,}) }}
+                {{ fields.textField("zipCode",location.zipCode,{placeholder:"Zip Code/Postal Code"|t, size: 50, class:"loc-zip-input"},{label:"Zip Code"|t,}) }}
+                {{ fields.selectField("country",location.country,{options:countries, class:"loc-countries-input", default:defaultCountry },{label:"Country"|t}) }}
+                <hr/>
+                {% if craft.venti.settings.googleMapsApiKey is not empty %}
+                    <h3>{{ "Map Coordinates"|t }}</h3>
+                    {{ fields.textField("latitude",location.latitude,{class:"loc-lat-input", size: 50},{label:"Latitude"|t}) }}
+                    {{ fields.textField("longitude",location.longitude,{class:"loc-lng-input", size: 50},{label:"Longitude"|t}) }}
+                    <hr/>
+                {% endif %}
+                {{ fields.textField("website",location.website,{placeholder:"http://…"|t, size: 50},{label:"Website"|t,}) }}
+
+            </div>
+        </div>
+        {# Sidebar #}
+        <div class="item last" data-position="right">
+            {% if canPublish %}
+                <div id="settings" class="pane">
+                    {{ forms.textField({
+                        label: "Slug"|t,
+                        id: 'slug',
+                        name: 'slug',
+                        value: location.slug,
+                        placeholder: "Enter slug"|t,
+                        errors: (not isVersion ? location.getErrors('slug')|merge(location.getErrors('uri'))),
+                        disabled: isVersion
+                    }) }}
+
+                    {% if canDeleteLocation %}
+                        <div class="text--right">
+                            <input type="button" class="btn formsubmit" value="{{ 'Delete'|t }}" data-action="venti/location/deleteLocation"
+                                data-confirm="{{ 'Are you sure you want to delete this location?'|t }}"
+                                data-redirect="venti/locations">
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endif %}
+            {% if craft.venti.settings.googleMapsApiKey is not empty %}
+                <div class="pane">
+                    <div class='map_container'></div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% if not location.slug %}
+	{% js "window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');" %}
+{% endif %}
+
+{% js %}
+    new VentiLocation({
+        id: "venti-location",
+    });
+{% endjs %}

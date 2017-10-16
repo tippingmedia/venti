@@ -1,0 +1,60 @@
+{% extends "_layouts/cp" %}
+{% set title = "Event Groups"|t %}
+
+{% set tabs = {
+	venti:    	{ label: "Events"|t, url: url('venti') },
+	calendar:   { label: "Calendar"|t, url: url('venti/calendar') },
+	groups: 	{ label: "Groups"|t, url: url('venti/groups') },
+	locations: { label: "Locations"|t, url: url('venti/locations') },
+} %}
+
+{% if currentUser.can('ventiSettings') %}
+	{% set tabs = tabs|merge({settings: { label: "Settings"|t, url: url('venti/settings') }}) %}
+{% endif %}
+
+{% set selectedTab = 'groups' %}
+
+{% set extraPageHeaderHtml %}
+	<div id="newgroupcontainer" class="buttons">
+		<a href="{{ url('venti/groups/new') }}" class="btn submit add icon">{{ "New Group"|t }}</a>
+	</div>
+{% endset %}
+
+
+{% set content %}
+	<div id="nogroups"{% if groups %} class="hidden"{% endif %}>
+		<p>{{ "There are no groups. Add a group to begin adding events."|t('venti') }}</p>
+	</div>
+
+	{% if groups|length %}
+		<table id="groups" class="data fullwidth collapsible">
+			<thead>
+				<th scope="col">{{ "Name"|t }}</th>
+				<th scope="col">{{ "Handle"|t }}</th>
+				<th scope="col">{{ "Color"|t }}</th>
+				<td class="thin"></td>
+			</thead>
+			<tbody>
+				{% for group in groups %}
+					<tr data-id="{{ group.id }}" data-name="{{ group.name|t }}">
+						<th scope="row" data-title="{{ 'Name'|t }}"><a href="{{ url('venti/groups/' ~ group.id) }}">{{ group.name|t }}</a></th>
+						<td data-title="{{ 'Handle'|t }}"><code>{{ group.handle }}</code></td>
+						<td data-title="{{ 'Color'|t }}"><div class="color" ><div class="colorpreview" style="background-color:{{group.color}}"></div></div></td>
+						<td class="thin"><a class="delete icon" title="{{ 'Delete'|t }}" role="button"></a></td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% endif %}
+{% endset %}
+
+
+{% js %}
+	var adminTable = new Craft.AdminTable({
+		tableSelector: '#groups',
+		noObjectsSelector: '#nogroups',
+		newObjectBtnSelector: '#newgroupcontainer',
+		deleteAction: 'venti/groups/delete-group',
+		confirmDeleteMessage: '{{ "Are you sure you want to delete “{name}” and all its events?"|t('venti') }}'
+	});
+{% endjs %}

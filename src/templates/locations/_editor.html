@@ -1,0 +1,47 @@
+{% import "_includes/forms" as forms %}
+{% import "venti/locations/_fields" as fields %}
+
+{% includeCssResource "venti/css/venti.css" %}
+
+{% set canPublish = currentUser.can('publishLocations') %}
+{% set isVersion = location.getClassHandle() == 'LocationVersion' %}
+
+<div class="main">
+    <input type="hidden" name="locationId" value="{{ location.id }}">
+
+    {{ getCsrfInput() }}
+
+    <div class="fields" >
+        <div class="meta" >
+
+
+                {{ forms.textField({
+                    label: 		"Title"|t,
+                    id: 		'title',
+                    name: 		'title',
+                    value: 		location.title,
+                    errors: 	location.getErrors('title'),
+                    first: 		true,
+                    autofocus: 	true,
+                    required: 	true
+                }) }}
+                <hr/>
+
+                {{ fields.textField("address",location.address,{ placeholder:"Address line 1"|t, class:"loc-address-input"},{label:"Address"|t,instructions:"Street address, P.O. box, company name, c/o"|t}) }}
+                {{ fields.textField("addressTwo",location.addressTwo,{ placeholder:"Address line 2"|t, class:"loc-address-two-input"},{label:"Address 2"|t,instructions:"Apartment, suite , unit, building, floor, etc."|t}) }}
+                {{ fields.textField("city",location.city,{placeholder:"City/Town"|t, size: 50, class:"loc-city-input"},{label:"City"|t,}) }}
+                {{ fields.textField("state",location.state,{placeholder:"State/Province/Region"|t, size: 50, class:"loc-state-input"},{label:"State"|t,}) }}
+                {{ fields.textField("zipCode",location.zipCode,{placeholder:"Zip Code/Postal Code"|t, size: 50, class:"loc-zip-input"},{label:"Zip Code"|t,}) }}
+                {{ fields.selectField("country",location.country,{options:countries, class:"loc-countries-input", default:defaultCountry},{label:"Country"|t}) }}
+                <hr/>
+                {% if craft.venti.settings.googleMapsApiKey is not empty %}
+                    <h3>{{ "Map Coordinates"|t }}</h3>
+                    {{ fields.textField("latitude",location.latitude,{class:"loc-lat-input", size: 50},{label:"Latitude"|t}) }}
+                    {{ fields.textField("longitude",location.longitude,{class:"loc-lng-input", size: 50},{label:"Longitude"|t}) }}
+                    <hr/>
+                {% endif %}
+                {{ fields.textField("website",location.website,{placeholder:"http://…"|t, size: 50},{label:"Website"|t,}) }}
+
+        </div>
+    </div>
+</div>

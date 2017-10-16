@@ -1,0 +1,355 @@
+{% import "_includes/forms" as forms %}
+
+{% set groupHandle = group.handle %}
+{% set canPublish = currentUser.can('publishEvents'~permissionSuffix) %}
+{% set isVersion = event.getClassHandle() == 'EventVersion' %}
+
+{% set ed = now|date_modify('tomorrow -1 min') %}
+{% set sd = now|date_modify('today') %}
+
+{% macro dateTimeField(event, attribute, label) %}
+
+	{% import "_includes/forms" as forms %}
+
+	{% set input %}
+		{{ forms.date({
+			id:        attribute,
+			name:      attribute,
+			locale:    event.locale,
+			class: 	  'venti-' ~ attribute|trim|lower ~ '--input',
+			value:     event[attribute],
+		}) }}
+
+		{{ forms.time({
+			id:        attribute,
+			name:      attribute,
+			locale:    event.locale,
+			class: 	  'venti-' ~ attribute|trim|lower ~ '--input',
+			value:     event[attribute],
+			minuteIncrement: craft.venti.settings.timeInterval,
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       attribute,
+		label:    label,
+		locale:   craft.venti.settings.translate ? event.locale : null,
+		first:    (attribute == 'startDate'),
+		required: true,
+		errors:    event.getErrors(attribute),
+	}, input) }}
+
+{% endmacro %}
+
+{% macro lightswitchField(event, attribute, label) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.lightswitch({
+			id: 		attribute,
+			name: 		attribute,
+			locale:     event.locale,
+			class: 	  	'venti-' ~ attribute|trim|lower ~ '--input',
+			on: 		event[attribute]
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       attribute,
+		label:    label,
+		locale:   craft.venti.settings.translate ? event.locale : null,
+		required: false,
+		errors:    event.getErrors(attribute),
+	}, input) }}
+
+{% endmacro %}
+
+{% macro toggleField(event, attribute, label, class) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set value = (event[attribute] is defined ? event[attribute] : 1) %}
+	{% set input %}
+		{% if attribute is defined and (attribute|length < 3 or attribute|slice(-2) != '[]') %}
+			<input type="hidden" name="{{ attribute }}" value="">
+		{% endif %}
+		<input type="checkbox" id="{{ attribute }}" name="{{ attribute }}" value="1" class='venti-{{ attribute|trim|lower}}--input {{ class }}' {%- if value is defined and value %} checked='checked'{% endif %} />
+		<label for="{{ attribute }}">{{ label|raw }}</label>
+	{% endset %}
+
+	{{ forms.field({
+		id:       attribute,
+		label:    label,
+		locale:   craft.venti.settings.translate ? event.locale : null,
+		required: false,
+		errors:    event.getErrors(attribute),
+	}, input) }}
+
+{% endmacro %}
+
+{% macro checkboxField(event, attribute, label, class) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.checkbox({
+			id: 		attribute,
+			name: 		attribute,
+			locale:     event.locale,
+			class: 		'venti-' ~ attribute|trim|lower ~ '--input ' ~ class,
+			checked: 	event[attribute]
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       	attribute,
+		label:    	label,
+		locale:   	craft.venti.settings.translate ? event.locale : null,
+		required: 	false
+	}, input) }}
+
+{% endmacro %}
+
+{% macro hiddenField(event, attribute, prefix) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{# forms.hidden({
+			id: 		"venti-" ~ attribute|lower,
+			locale:     event.locale,
+			value: 		event[attribute],
+			class: 		prefix ~ "-" ~ attribute|trim|lower ~ '--input',
+			name: 		attribute
+		}) #}
+		<input type="hidden" name="{{ attribute }}" id="venti-{{ attribute|lower }}" class="venti-{{ attribute|trim|lower }}--input" value="{{ event[attribute]}}" />
+	{% endset %}
+
+	{{ forms.field({
+		id:       	"venti-" ~ attribute,
+		required: 	false,
+		class: 		"venti-" ~ attribute|lower,
+		locale:   	craft.venti.settings.translate ? event.locale : null,
+	}, input) }}
+
+{% endmacro %}
+
+{% macro elementSelectField(name, elementSelectSettings) %}
+
+    {% import "_includes/forms" as forms %}
+    {% set input %}
+        {{ forms.elementSelectField({
+            id: name,
+            name: name,
+			viewMode: "list",
+        }|merge(elementSelectSettings)) }}
+    {% endset %}
+
+    {{ forms.field({
+        id: name~'location-select',
+    }, input) }}
+
+{% endmacro %}
+
+{% macro groupMenu(group) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		<div id="group-select" class="btn groupbtn" role="button" data-menu-anchor="#group-menu-anchor">
+			<div id="group">
+				<span class="menu-label-color groupbtn-color" style="background-color:{{group.color}}"></span><span class='groupbtn-label'>{{group.name}}</span>
+			</div>
+			<div id="group-menu-anchor"></div>
+		</div>
+		<div class="menu">
+			<ul class="venti-group-menu-select">
+				{% set groups = craft.venti.groups() %}
+				{% for item in groups %}
+					<li><a data-value="{{item.id}}" data-label="{{item.name}}" data-color="{{item.color}}"><span class="menu-option-color" style="background-color:{{item.color}}"></span><span>{{item.name}}</span></a></li>
+				{% endfor %}
+			</ul>
+		</div>
+	{% endset %}
+
+    {{ forms.field({
+        id: 'venti-group-menu',
+		label: 'Event Group'|t
+    }, input) }}
+
+{% endmacro %}
+
+{% from _self import elementSelectField %}
+{% from _self import dateTimeField %}
+{% from _self import checkboxField %}
+{% from _self import hiddenField %}
+{% from _self import toggleField %}
+{% from _self import groupMenu %}
+
+<!-- <input type="hidden" name="action" value="venti/event/saveEvent"> -->
+{% if craft.isLocalized() %}<input type="hidden" name="locale" value="{{ event.locale }}">{% endif %}
+
+{{ getCsrfInput() }}
+<div id="venti-fields" class="venti-fields {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{	craft.venti.settings.eventDuration }}" >
+
+	<input type="hidden" id="groupId" class='venti-groupId' name="groupId" value="{{ group.id }}">
+	<input type="hidden" name="eventId" value="{{ event.id }}">
+
+	{{ forms.textField({
+		label: 		"Title"|t,
+		id: 		'title',
+		name: 		'title',
+		value: 		event.title,
+		errors: 	event.getErrors('title'),
+		locale:   	craft.venti.settings.translate ? event.locale : null,
+		first: 		true,
+		autofocus: 	true,
+		required: 	true
+	}) }}
+
+	{# Group Menu Button #}
+	{# {{ groupMenu(group) }} #}
+
+	{{ checkboxField(event, 'allDay', "All Day"|t, "venti--checkbox checkbox", false ) }}
+	{{ dateTimeField(event, 'startDate', "Start Date"|t, true) }}
+	{{ dateTimeField(event, 'endDate', "End Date"|t, false) }}
+	{{ toggleField(event, 'repeat', "Recurring Schedule"|t, "venti-toggle venti-toggle-round", false) }}
+
+	<div class="field venti-summary--wrap">
+		<div class='venti-summary--human'>{{ event.summary is defined ? event.summary : "" }}</div>
+
+		{% if event.repeat is defined %}
+			{% if event.repeat == 1 %}
+					<a data-events-edit class="venti-eventRepeat-edit" style='display:inline;'>{{ 'Edit'|t }}</a>
+			{% else %}
+					<a data-events-edit class="venti-eventRepeat-edit" style='display:none;'>{{ 'Edit'|t }}</a>
+			{% endif %}
+		{% endif %}
+		<div class='venti-summary-extra-dates'>
+			<div class='venti-included-dates u-margin-top-tiny {% if not event.includedDates|length %}hidden{% endif %}'>
+				<h6>{{ "Including"|t }}</h6>
+				<span class="date__items">
+					{% if event.includedDates|length %}
+						{% for date in event.includedDates %}
+							<span>{{ date|date(dateFormat) }}</span>{% if not loop.last %}, {% endif %}
+						{% endfor %}
+					{% endif %}
+				</span>
+			</div>
+
+			<div class="venti-excluded-dates u-margin-top-small {% if not event.excludedDates|length %}hidden{% endif %}">
+				<h6>{{ "Excluding"|t }}</h6>
+				<span class="date__items">
+					{% if event.excludedDates|length %}
+						{% for date in event.excludedDates %}
+							<span>{{ date|date(dateFormat) }}</span>{% if not loop.last %}, {% endif %}
+						{% endfor %}
+					{% endif %}
+				</span>
+			</div>
+		</div>
+	</div>
+	<div class='venti-hidden--wrap'>
+		{{ hiddenField(event, 'summary', 'venti', false) }}
+		{{ hiddenField(event, 'rRule', 'venti', false) }}
+		{{ hiddenField(event, 'isrepeat', 'venti', false) }}
+	</div>
+	<div class="venti-inline" id="venti-inline" style="display:none;"></div>
+
+	{# Location Element Select #}
+	{% if craft.venti.settings.hideLocation != 1 %}
+		<div class="field">
+			{% set locElement = craft.elements.getElementType('Venti_Location') %}
+			{% set locParams = {
+				label: "Event Location"|t,
+				instructions: "Select the location your event is occuring.",
+				limit: 1,
+				elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
+				elementType: locElement,
+				locale: craft.venti.settings.translate ? event.locale : null,
+				selectionLabel: "Choose a location"|t,
+			}
+			%}
+			{{ elementSelectField('location', locParams , false) }}
+		</div>
+
+		{#  Specific Location #}
+		{{ forms.textField({
+			label: 		"Specific Location"|t,
+			instructions: "Room #, building, entrance …",
+			id: 		'specific-location',
+			name: 		'specificLocation',
+			value: 		event.specificLocation,
+			errors: 	event.getErrors('specificLocation'),
+			locale:   	craft.venti.settings.translate ? event.locale : null,
+			size: 50,
+			first: 		false,
+			autofocus: 	false,
+			required: 	false
+		}) }}
+	{% endif %}
+
+
+	{% if craft.venti.settings.hideRegistration != 1 %}
+		<div class="field registration-field">
+			<div class="heading">
+				<label for="venti-registration-input">{{ "Registration"|t }}</label>
+				<div class="instructions">{{ "Include your registration url or form embed code."|t }}</div>
+			</div>
+			<div class="input" id="venti-registration-input">
+				{% if event.registration is not empty %}
+					{% set reg = event.registration %}
+				{% endif %}
+				<input type="text" class="text" size="50" name="registration[text]" value="{% if reg['text'] is defined and reg['text'] and event.registration['text'] is not empty %}{{event.registration['text']}}{% endif %}" placeholder="{{ "Registration text"|t }}"/>
+				<br><br>
+		        <input
+					type="radio"
+					id="venti-registration-toggle-left"
+					class="venti--radio venti-registration-toggle-left"
+					name="registration[type]"
+					value="url" {% if reg['type'] is defined  and reg['type'] == "url" %} checked='checked'{% endif %}/>
+		        <label for="venti-registration-toggle-left"><span class='venti--radio-label'>{{ "URL"|t }}</span></label>
+		        <input
+					type="radio"
+					id="venti-registration-toggle-right"
+					class="venti--radio venti-registration-toggle-right"
+					name="registration[type]"
+					value="embed" {% if reg['type'] is defined and reg['type'] == "embed" %} checked='checked'{% endif %}/>
+		        <label for="venti-registration-toggle-right"><span class='venti--radio-label'>{{ 'Form Embed'|t }}</span></label>
+		        <br/>
+		        <br/>
+		        <input
+					type="text"
+					class='text venti--registration-url'
+					name="registration[url]"
+					size="50"
+					placeholder="http://…"
+					value="{%- if reg['type'] is defined and reg['type'] == "url" and event.registration['url'] is not empty -%}{{ event.registration['url']|default('') }}{%- endif -%}"/>
+		        <textarea
+					class='text venti--registration-embed'
+					name="registration[embed]"
+					rows="10"
+					cols="100"
+					placeholder="<iframe src=…">{% if reg['type'] is defined and reg['type'] == "embed" and reg['embed'] is not empty %}{{ reg['embed']|default('')}}{% endif %}</textarea>
+			</div>
+		</div>
+	{% endif %}
+</div>
+
+{% if not event.slug %}
+	{% js "window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');" %}
+{% endif %}
+
+{% set fieldData = {
+	'startDate' : event.startDate ? event.startDate : now,
+	'endDate' : event.endDate ? event.endDate : null,
+	'allDay'  : event.allDay ? event.allDay : "",
+	'rRule'   : event.rRule ? event.rRule : "",
+	'summary' : event.summary ? event.summary : "",
+	'locale'  : event.locale ? event.locale : craft.locale
+} %}
+{% js %}
+    new VentiInput({
+	        id: "{{ namespacedId|e('js') }}-venti-fields",
+	        values: {{ fieldData|json_encode|raw }},
+			inline: true,
+			namespacedId: "{{ namespacedId|e('js') }}",
+	        locale: "{% if craft.isLocalized() %}{{ event.locale | e('js') }}{% endif %}"
+	    });
+{% endjs %}

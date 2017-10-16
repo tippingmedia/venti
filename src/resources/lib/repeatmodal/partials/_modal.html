@@ -1,0 +1,150 @@
+<div class='evrp_modal'>
+  <div class='pane'>
+    <nav id="tabs" class="tabs">
+      <ul>
+        <li><a id="tab-0" class="tab sel" href="#modtab1" tabindex="0">Times</a></li>
+        <li><a id="tab-1" class="tab" href="#modtab2" tabindex="0">Exceptions</a></li>
+      </ul>
+    </nav>
+    <div>
+      <div id="modtab1">
+        <table class="rep">
+          <tbody>
+            <tr>
+              <th>Repeats:</th>
+              <td>
+                <select id="er:frequency" title="Repeats Weekly">
+                  <option title="Daily" value="0" checked> Daily </option>
+                  <option title="Every weekday (Monday to Friday)" value="1"> Every weekday (Monday to Friday) </option>
+                  <option title="Every Monday, Wednesday, and Friday" value="2"> Every Monday, Wednesday, and Friday </option>
+                  <option title="Every Tuesday, and Thursday" value="3"> Every Tuesday, and Thursday </option>
+                  <option title="Weekly" value="4"> Weekly </option>
+                  <option title="Monthly" value="5"> Monthly </option>
+                  <option title="Yearly" value="6"> Yearly </option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+          <tbody>
+            <tr>
+              <th>Repeat every:</th>
+              <td>
+                <select id="er:week" title="">
+                  <option value="1"> 1 </option>
+                  <option value="2"> 2 </option>
+                  <option value="3"> 3 </option>
+                  <option value="4"> 4 </option>
+                  <option value="5"> 5 </option>
+                  <option value="6"> 6 </option>
+                  <option value="7"> 7 </option>
+                  <option value="8"> 8 </option>
+                  <option value="9"> 9 </option>
+                  <option value="10"> 10 </option>
+                  <option value="11"> 11 </option>
+                  <option value="12"> 12 </option>
+                  <option value="13"> 13 </option>
+                  <option value="14"> 14 </option>
+                  <option value="15"> 15 </option>
+                  <option value="16"> 16 </option>
+                  <option value="17"> 17 </option>
+                  <option value="18"> 18 </option>
+                  <option value="19"> 19 </option>
+                  <option value="20"> 20 </option>
+                  <option value="21"> 21 </option>
+                  <option value="22"> 22 </option>
+                  <option value="23"> 23 </option>
+                  <option value="24"> 24 </option>
+                  <option value="25"> 25 </option>
+                  <option value="26"> 26 </option>
+                  <option value="27"> 27 </option>
+                  <option value="28"> 28 </option>
+                  <option value="29"> 29 </option>
+                  <option value="30"> 30 </option>
+                </select>
+                <label>days</label>
+              </td>
+            </tr>
+            <tr>
+              <th>Repeat on:</th>
+              <td id="er:dow">
+                <div>
+                  <span class="er-dow">
+                  <input id="er:dow1" name="SU" title="Sunday" type="checkbox">
+                  <label for="er:dow1" title="Sunday">S</label>
+                  </span>
+                  <span class="er-dow">
+                  <input id="er:dow2" name="MO" title="Monday" type="checkbox">
+                  <label for="er:dow2" title="Monday">M</label>
+                  </span>
+                  <span class="er-dow">
+                  <input id="er:dow3" name="TU" title="Tuesday" type="checkbox">
+                  <label for="er:dow3" title="Tuesday">T</label>
+                  </span>
+                  <span class="er-dow">
+                  <input id="er:dow4" name="WE" title="Wednesday" type="checkbox">
+                  <label for="er:dow4" title="Wednesday">W</label>
+                  </span>
+                  <span class="er-dow">
+                  <input id="er:dow5" name="TH" title="Thursday" type="checkbox">
+                  <label for="er:dow5" title="Thursday">T</label></span>
+                  <span class="er-dow">
+                  <input id="er:dow6" name="FR" title="Friday" type="checkbox">
+                  <label for="er:dow6" title="Friday">F</label>
+                  </span>
+                  <span class="er-dow">
+                  <input id="er:dow7" name="SA" title="Saturday" type="checkbox">
+                  <label for="er:dow7" title="Saturday">S</label>
+                  </span>
+                </div>
+              </td>
+            </tr>
+
+
+
+            <tr tabindex="0">
+              <th id="er:starts.label">Starts on:</th>
+              <td><input autocomplete="off" disabled id="er:starts" size="10"></td>
+            </tr>
+            <tr>
+              <th class="">Ends:</th>
+              <td>
+              <span class="">
+              <input checked id="er:endsnever" name="endson" title="Ends never" type="radio">
+              <label for="er:endsnever" title="Ends never">Never</label>
+              </span>
+              <span class="">
+                <input id="er:endsafter" name="endson" title="Ends after a number of occurrences" type="radio">
+                <label for="er:endsafter" title="Ends after a number of occurrences">After
+                  <input disabled id="er:occurrences" size="3" title="Occurrences" value="">occurrences
+                </label>
+              </span>
+              <span class="">
+                <input id="er:endson:rdio" name="endson" title="Ends on a specified date" type="radio">
+                <label for="er:endson" title="Ends on a specified date">On
+                <input autocomplete="off" disabled id="er:endson" size="10" title="Specified date" value="">
+                </label>
+              </span>
+              </td>
+            </tr>
+
+            <tr id="er:summary" tabindex="0">
+              <th>Summary:</th>
+              <td class="ep-rec-summary">Weekly on Thursday</td>
+            </tr>
+          </tbody>
+          <tbody>
+            <tr>
+              <th></th>
+              <td class="">
+                <button class='evrp_done'>DONE</button>
+                <button class='evrp_close'>Cancel</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="modtab2">
+      </div>
+    </div>
+  </div>
+</div>

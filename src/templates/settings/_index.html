@@ -1,0 +1,70 @@
+{% import "_includes/forms" as forms %}
+
+{% macro textInputField(settings, attribute, field) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.textField({
+			id: 	        attribute,
+			name: 	        attribute,
+            placeholder:    field['placeholder'],
+			value:          settings[attribute]
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:               attribute,
+		label:            field['label'],
+        instructions:     field['instructions'],
+		required:         false,
+        first:            field['first'],
+        autofocus:        field['autofocus'],
+        errors:           settings.getErrors(attribute),
+	}, input) }}
+
+{% endmacro %}
+
+{% macro checkboxField(settings, attribute, field) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.checkbox({
+			id: 	attribute,
+			name: 	attribute,
+			checked: settings[attribute]
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       		  attribute,
+		label:            field['label'],
+        instructions:     field['instructions'],
+		required: false
+	}, input) }}
+
+{% endmacro %}
+
+{% from _self import textInputField, checkboxField %}
+
+{% set pnField = {
+    "label":        "Plugin Name"|t,
+    "instructions": "Plugin name for the end user."|t,
+    "placeholder":  "",
+    "first"      :  true,
+    "autofocus"  :  true,
+} %}
+
+{% set tField = {
+    "label":        "Translate"|t,
+    "instructions": "Venti inputs are translatable."|t,
+} %}
+
+<h2>{{ 'Venti Settings'|t }}</h2>
+ 
+
+{{ textInputField(settings, 'pluginName', pnField) }}
+
+{% if craft.isLocalized() %}
+	<hr>
+	{{ checkboxField(settings, 'translate', tField) }}
+{% endif %}

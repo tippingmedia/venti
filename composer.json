@@ -1,0 +1,40 @@
+{
+    "name": "tippingmedia/venti",
+    "description": "Powerful event calendar management",
+    "version": "3.0.0-dev",
+    "type": "craft-plugin",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "venti",
+        "events",
+        "calendar"
+    ],
+    "authors": [{
+        "name": "Tipping Media LLC",
+        "homepage": "https://tippingmedia.com"
+    }],
+    "require": {
+        "craftcms/cms": "~3.0.0-dev",
+        "simshaun/recurr": "^2.2",
+        "mexitek/phpcolors": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "tippingmedia\\venti\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Venti",
+        "handle": "venti",
+        "schemaVersion": "3.0.0",
+        "changelogUrl": "",
+        "class": "tippingmedia\\venti\\Venti"
+    },
+    "support": {
+        "email": "support@tippingmedia.com",
+        "docs": "https://venticalendar.io/docs/"
+    }
+}

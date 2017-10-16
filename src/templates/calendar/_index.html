@@ -1,0 +1,75 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Calendar"|t %}
+
+{% set tabs = {
+	venti:    	{ label: "Events"|t, url: url('venti') },
+    calendar:   { label: "Calendar"|t, url: url('venti/calendar') },
+	groups: 	{ label: "Groups"|t, url: url('venti/groups') },
+	locations: { label: "Locations"|t, url: url('venti/locations') },
+} %}
+
+{% if currentUser.can('ventiSettings') %}
+	{% set tabs = tabs|merge({settings: { label: "Settings"|t, url: url('venti/settings') }}) %}
+{% endif %}
+
+{% set selectedTab = 'calendar' %}
+
+{% includeCssResource "venti/css/venti.css" %}
+{% includeCssResource "venti/lib/fullcalendar/fullcalendar.css" %}
+{% includeJsResource "venti/lib/fullcalendar/lib/moment.min.js" %}
+{% includeJsFile "//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.8.0/fullcalendar.min.js" %}
+{% includeJsResource "venti/lib/qtip/jquery.qtip.min.js" %}
+{% includeCssFile "//cdn.jsdelivr.net/qtip2/3.0.3/basic/jquery.qtip.min.css" %}
+{% includeJsResource "venti/lib/fullcalendar/lang-all.js" %}
+{% includeJsResource "venti/lib/fullcalendar/lib/moment-php-map.js" %}
+{% includeJsResource "venti/js/venti.js" %}
+
+
+{% set extraPageHeaderHtml %}
+	{% if groups|length %}
+		<div class="buttons">
+			{% if groups|length > 1 %}
+				<div class="btn submit menubtn add icon">{{ "New Event"|t }}</div>
+				<div class="menu">
+					<ul>
+						{% for group in groups %}
+							<li><a href="{{ url('venti/'~group.handle~'/new') }}"><span>{{ group.name|t }}</span><span class="menu-label-color" style='background-color:{{group.color}};'></span></a></li>
+						{% endfor %}
+					</ul>
+				</div>
+			{% else %}
+				<a class="btn submit add icon" href="{{ url('venti/'~groups[0].handle~'/new') }}">{{ "New Event"|t }}</a>
+			{% endif %}
+		</div>
+	{% endif %}
+{% endset %}
+
+{% set groups = craft.venti.getCalendarSettingSources() %}
+
+{% set content %}
+    <div id='venti-calendar' data-date-format='{{ dateFormat }}' data-time-format='{{ timeFormat }}'></div>
+{% endset %}
+
+{# Retrieve list of all current locales used in Craft  #}
+{% set localesCollection = craft.i18n.getSiteLocales() %}
+{% set locales = [] %}
+{% for item in localesCollection %}
+	{% set lang = {"title":item.getName(),"handle":item.id} %}
+	{% set locales = locales|merge([lang]) %}
+{% endfor %}
+
+{% js %}
+    new VentiCalendar({
+        id:"#venti-calendar",
+        params: {
+            localized: "{% if craft.isLocalized() %}true{% else %}false{% endif %}",
+			cpLanguage: "{{ craft.locale() }}",
+            eventSources:{{ groups | json_encode() | raw }},
+            timezone:"{{ timezone }}",
+            locales: {{ locales | json_encode() | raw }},
+			editLocales: {{ editLocales | json_encode() | raw }}
+        }
+    });
+{% endjs %}

@@ -1,0 +1,245 @@
+{% import "_includes/forms" as forms %}
+{% macro dateTimeField(event, attribute, label) %}
+
+	{% import "_includes/forms" as forms %}
+
+	{% set input %}
+		{{ forms.date({
+			id:        attribute,
+			name:      attribute,
+			siteId:    event.siteId,
+			class: 	  'venti-' ~ attribute|trim|lower ~ '--input',
+			value:     event[attribute],
+		}) }}
+
+		{{ forms.time({
+			id:        attribute,
+			name:      attribute,
+			siteId:    event.siteId,
+			class: 	  'venti-' ~ attribute|trim|lower ~ '--input',
+			value:     event[attribute],
+			minuteIncrement: craft.venti.settings.timeInterval,
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       attribute,
+		label:    label,
+		siteId:    event.siteId,
+		first:    (attribute == 'startDate'),
+		required: true,
+		errors:   event.getErrors(attribute),
+	}, input) }}
+
+{% endmacro %}
+
+{% macro toggleField(event, attribute, label, class) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set value = (event[attribute] is defined ? event[attribute] : 1) %}
+	{% set input %}
+		{% if attribute is defined and (attribute|length < 3 or attribute|slice(-2) != '[]') %}
+			<input type="hidden" name="{{ attribute }}" value="">
+		{% endif %}
+		<input type="checkbox" id="{{ attribute }}" name="{{ attribute }}" value="1" class='venti-{{ attribute|trim|lower}}--input {{ class }}' {%- if value is defined and value %} checked='checked'{% endif %} />
+		<label for="{{ attribute }}">{{ label|raw }}</label>
+	{% endset %}
+
+	{{ forms.field({
+		id:       attribute,
+		label:    label,
+		siteId:    event.siteId,
+		required: false
+	}, input) }}
+
+{% endmacro %}
+
+{% macro checkboxField(event, attribute, label, class) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.checkbox({
+			id: 		attribute,
+			name: 		attribute,
+			siteId:     event.siteId,
+			class: 		'venti-' ~ attribute|trim|lower ~ '--input ' ~ class,
+			checked: 	event[attribute]
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       	attribute,
+		label:    	label,
+		siteId:    event.siteId,
+		required: 	false
+	}, input) }}
+
+{% endmacro %}
+
+{% macro hiddenField(event, attribute, prefix) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		<input type="hidden" name="{{ attribute }}" id="venti-{{ attribute|lower }}" class="venti-{{ attribute|trim|lower }}--input" value="{{ event[attribute]}}" />
+	{% endset %}
+
+	{{ forms.field({
+		id:       	"venti-" ~ attribute,
+		required: 	false,
+		class: 		"venti-" ~ attribute|lower,
+		siteId:    event.siteId,
+	}, input) }}
+
+{% endmacro %}
+
+{% macro elementSelectField(name, elementSelectSettings) %}
+
+    {% import "_includes/forms" as forms %}
+    {% set input %}
+        {{ forms.elementSelectField({
+            id: name,
+            name: name,
+			viewMode: "list",
+        }|merge(elementSelectSettings)) }}
+    {% endset %}
+
+    {{ forms.field({
+        id: name~'location-select',
+    }, input) }}
+
+{% endmacro %}
+
+{% from _self import elementSelectField %}
+{% from _self import dateTimeField %}
+{% from _self import toggleField %}
+{% from _self import checkboxField %}
+{% from _self import hiddenField %}
+
+
+{{ checkboxField(event, 'allDay', "All Day"|t, "venti--checkbox checkbox", false ) }}
+{{ dateTimeField(event, 'startDate', "Start Date"|t, true) }}
+{{ dateTimeField(event, 'endDate', "End Date"|t, false) }}
+
+{{ toggleField(event, 'repeat', "Recurring Schedule"|t, "venti-toggle venti-toggle-round", false) }}
+
+{# Event Repeat Schedule Meta Fields #}
+<div class="field venti-summary--wrap">
+    <div class='venti-summary--human'>{{ event.summary is defined ? event.summary : "" }}</div>
+    {% if event.repeat is defined %}
+        {% if event.repeat == 1 %}
+                <a data-events-edit class="venti-eventRepeat-edit" style='display:inline;' {# data-venti-modal="{{name}}-venti-modal" #}>{{ 'Edit'|t }}</a>
+        {% else %}
+                <a data-events-edit class="venti-eventRepeat-edit" style='display:none;' {# data-venti-modal="{{name}}-venti-modal" #}>{{ 'Edit'|t }}</a>
+        {% endif %}
+    {% endif %}
+    <div class='venti-summary-extra-dates'>
+        <div class='venti-included-dates u-margin-top-tiny {% if not event.includedDates|length %}hidden{% endif %}'>
+            <h6>{{ "Including"|t }}</h6>
+            <span class="date__items">
+                {% if event.includedDates|length %}
+                    {% for date in event.includedDates %}
+                        <span>{{ date|date(dateFormat) }}</span>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="venti-excluded-dates u-margin-top-small {% if not event.excludedDates|length %}hidden{% endif %}">
+            <h6>{{ "Excluding"|t }}</h6>
+            <span class="date__items">
+                {% if event.excludedDates|length %}
+                    {% for date in event.excludedDates %}
+                        <span>{{ date|date(dateFormat) }}</span>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+<div class='venti-hidden--wrap'>
+    {{ hiddenField(event, 'summary', 'venti', false) }}
+    {{ hiddenField(event, 'rRule', 'venti', false) }}
+    {{ hiddenField(event, 'isrepeat', 'venti', false) }}
+</div>
+
+{# Location Element Select 
+elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
+#}
+{% if craft.venti.settings.hideLocation != 1 %}
+	<div class="field">
+	{% set elementType = 'tippingmedia\\venti\\elements\\VentiLocation' %}
+	{% set locElement = craft.app.elements.createElement(elementType) %}
+	    {% set locParams = {
+	        label: "Event Location"|t,
+	        instructions: "Select the location your event is occuring."|t,
+	        limit: 1,
+	        elements: [],
+	        elementType: locElement,
+	        siteId:    event.siteId,
+	        selectionLabel: "Choose a location"|t,
+	    }
+	    %}
+	    {{ elementSelectField('location', locParams , false) }}
+	</div>
+
+	{#  Specific Location #}
+	{{ forms.textField({
+	    label: 		"Specific Location"|t,
+	    instructions: "Room #, building, entrance …"|t,
+	    id: 		'specific-location',
+	    name: 		'specificLocation',
+	    value: 		event.specificLocation,
+	    errors: 	event.getErrors('specificLocation'),
+	    siteId:     event.siteId,
+	    size: 50,
+	    first: 		false,
+	    autofocus: 	false,
+	    required: 	false
+	}) }}
+
+{% endif %}
+
+{% if craft.venti.settings.hideRegistration != 1 %}
+	<div class="field registration-field">
+	    <div class="heading">
+	        <label for="venti-registration-input">{{ "Registration"|t }}</label>
+	        <div class="instructions">{{ "Include your registration url or form embed code."|t }}</div>
+	    </div>
+	    <div class="input" id="venti-registration-input">
+	        {% if event.registration is not empty %}
+	            {% set reg = event.registration %}
+	        {% endif %}
+			<input type="text" class="text" size="50" name="registration[text]" value="{% if reg['text'] is defined and reg['text'] and event.registration['text'] is not empty %}{{event.registration['text']}}{% endif %}" placeholder="{{ "Registration text"|t }}"/>
+			<br><br>
+	        <input
+				type="radio"
+				id="venti-registration-toggle-left"
+				class="venti--radio venti-registration-toggle-left"
+				name="registration[type]"
+				value="url" {% if reg['type'] is defined  and reg['type'] == "url" %} checked='checked'{% endif %}/>
+	        <label for="venti-registration-toggle-left"><span class='venti--radio-label'>{{ "URL"|t }}</span></label>
+	        <input
+				type="radio"
+				id="venti-registration-toggle-right"
+				class="venti--radio venti-registration-toggle-right"
+				name="registration[type]"
+				value="embed" {% if reg['type'] is defined and reg['type'] == "embed" %} checked='checked'{% endif %}/>
+	        <label for="venti-registration-toggle-right"><span class='venti--radio-label'>{{ 'Form Embed'|t }}</span></label>
+	        <br/>
+	        <br/>
+	        <input
+				type="text"
+				class='text venti--registration-url'
+				name="registration[url]"
+				size="50"
+				placeholder="http://…"
+				value="{%- if reg['type'] is defined and reg['type'] == "url" and event.registration['url'] is not empty -%}{{ event.registration['url']|default('') }}{%- endif -%}"/>
+	        <textarea
+				class='text venti--registration-embed'
+				name="registration[embed]"
+				rows="10"
+				cols="100"
+				placeholder="<iframe src=…">{% if reg['type'] is defined and reg['type'] == "embed" and reg['embed'] is not empty %}{{ reg['embed']|default('')}}{% endif %}</textarea>
+	    </div>
+	</div>
+{% endif %}

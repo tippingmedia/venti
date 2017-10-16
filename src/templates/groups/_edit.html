@@ -1,0 +1,350 @@
+{% extends "_layouts/cp" %}
+
+{% do view.registerAssetBundle("tippingmedia\\venti\\bundles\\GroupBundle") %}
+{% js "https://cdn.jsdelivr.net/clipboard.js/1.5.12/clipboard.min.js" %}
+
+{% import "_includes/forms" as forms %}
+
+{% set title = "Edit Group - Venti"|t('venti') %}
+
+{% macro checkboxField(field) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.checkbox({
+			id: 		field['name'],
+			name: 		field['name'],
+			checked: 	field['checked'],
+			reverseToggle:     field['reverseToggle']
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       		  	field['name'],
+		label:            	field['label'],
+        instructions:     	field['instructions'],
+		required: 			false,
+	}, input) }}
+
+{% endmacro %}
+
+{% macro clrField(group) %}
+	{% from "_includes/forms" import colorField %}
+
+	{{ colorField({
+		label: "Color"|t,
+		instructions: "Select color for group organization."|t,
+		id: 'color',
+		class: 'clr',
+		name: 'color',
+		value: group.color,
+		errors: group.getErrors('color')
+	}) }}
+{% endmacro %}
+
+{% macro urlFormatText(groupType, locale, group, name, value) %}
+	{% from "_includes/forms" import text, errorList %}
+	{% set errors = group.getErrors(name~'-'~locale.id) %}
+
+	<div class="input{% if errors %} errors{% endif %}">
+		{{ text({
+			id: groupType~'-'~name~'-'~locale.id,
+			class: 'code ltr',
+			name: 'groups['~name~']['~locale.id~']',
+			value: (value != '__home__' ? value : null),
+			errors: errors
+		}) }}
+	</div>
+
+	{{ errorList(errors) }}
+{% endmacro %}
+
+{% macro textAreaField(group, name) %}
+	{% from "_includes/forms" import textareaField, errorList %}
+
+	{{ textareaField({
+		label: "Description"|t,
+		instructions: "Description of this group."|t,
+		id: "descrption",
+		name: 'description',
+		class: 'group-description-richtext',
+		value: group.description,
+		rows: 8,
+		errors: group.getErrors('description'),
+		required: false
+   }) }}
+{% endmacro %}
+
+{% macro  selectRoute(groupType, locale, group, name, value) %}
+	{% set options = [
+		{
+			'label' : 'event/{slug}/{eid}',
+			'value' : 'event/{slug}/{eid}',
+			'disabled': false
+		},
+		{
+			'label' : 'event/{slug}/{startDate|date("Y-m-d")}',
+			'value' : 'event/{slug}/{startDate|date("Y-m-d")}',
+			'disabled': false
+		}
+	]%}
+	{% include "_includes/forms/select" with {
+		id:       groupType~'-'~name~'-'~locale.id,
+		name:     'groups['~name~']['~locale.id~']',
+		options:  options,
+		value:    (value != '__home__' ? value : null)
+	} only %}
+{% endmacro %}
+
+
+{% macro hiddenField(groupType, locale, group, name, value) %}
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.hidden({
+			id: 		groupType~'-'~name~'-'~locale.id,
+			locale:     locale.id,
+			value: 		value,
+			name: 		'groups['~name~']['~locale.id~']'
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		required: false,
+		locale: locale.id ? locale.id : null,
+	}, input) }}
+{% endmacro %}
+
+
+
+{% from _self import  clrField, selectRoute, hiddenField, textAreaField, checkboxField %}
+
+{% set extraPageHeaderHtml %}
+	<div id="newgroupcontainer" class="buttons">
+		<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+	</div>
+{% endset %}
+
+{% block content %}
+	<form method="post" accept-charset="UTF-8" data-saveshortcut="1">
+		<input type="hidden" name="action" value="venti/groups/save-group">
+		<input type="hidden" name="redirect" value="venti/groups">
+
+		{% if group.id %}
+			<input type="hidden" name="groupId" value="{{ group.id }}">
+		{% endif %}
+		
+		{{ csrfInput() }}
+
+		{{ forms.textField({
+			first: true,
+			label: "Name"|t,
+			instructions: "What this group will be called in the CP."|t,
+			id: 'name',
+			name: 'name',
+			value: group.name,
+			errors: group.getErrors('name'),
+			autofocus: true,
+			required: true,
+			translatable: true
+		}) }}
+
+		{{ forms.textField({
+			label: "Handle"|t,
+			instructions: "How you’ll refer to this group in the templates."|t,
+			id: 'handle',
+			class: 'code',
+			name: 'handle',
+			value: group.handle,
+			errors: group.getErrors('handle'),
+			required: true
+		}) }}
+
+
+		{{ clrField(group) }}
+
+		{{ textAreaField(group,"description") }}
+
+		{# ICS url link field & copy button #}
+		<div class="field">
+			<div class="heading">
+				<label id="descrption-label" for="descrption">ICS</label>
+				<div class="instructions"><p>{{ "Groups' url to calendar ics file."|t }}</p></div>
+			</div>
+			<div class="input ltr">
+				<div class="text url-text">
+					<span>{{ group.getICSUrl()|raw }}</span>
+				</div>
+
+				<div class='btn copy-url' data-clipboard-text="{{ group.getICSUrl()|raw }}">{{ "Copy to clipboard"|t }}</div>
+				<a class="btn icon down" href="{{ group.getICSUrl()|raw }}" target="_blank">{{ "Download"|t }}</a>
+			</div>
+		</div>
+
+		<hr>
+
+		{% set siteRows = [] %}
+		{% set siteErrors = group.getErrors('groupSiteSettings') %}
+
+		{% for site in craft.app.sites.getAllSites() %}
+			{% set siteSettings = group.groupSiteSettings[site.id] ?? null %}
+			{% if siteSettings %}
+				{% for attribute, errors in siteSettings.getErrors() %}
+					{% set siteErrors = siteErrors|merge(errors) %}
+				{% endfor %}
+			{% endif %}
+			{% set siteRows = siteRows|merge({
+				(site.handle): {
+					heading: site.name|t('site'),
+					enabled: include('_includes/forms/lightswitch', {
+						name: 'sites['~site.handle~'][enabled]',
+						on: brandNewGroup or siteSettings,
+						value: group.id,
+						small: true
+					}),
+					singleUri: {
+						value: (siteSettings and siteSettings.uriFormat != '__home__') ? siteSettings.uriFormat,
+						hasErrors: (siteSettings ? siteSettings.hasErrors('uriFormat'))
+					},
+					uriFormat: {
+						value: siteSettings ? siteSettings.uriFormat,
+						hasErrors: (siteSettings ? siteSettings.hasErrors('uriFormat'))
+					},
+					template: {
+						value: siteSettings ? siteSettings.template,
+						hasErrors: siteSettings ? siteSettings.hasErrors('template'),
+					},
+					enabledByDefault: siteSettings ? siteSettings.enabledByDefault : true,
+				}
+			}) %}
+		{% endfor %}
+
+		{{ forms.editableTableField({
+			label: "Site Settings"|t('venti'),
+			instructions: "Choose which sites this group should be available in, and configure the site-specific settings."|t('venti'),
+			id: 'sites',
+			name: 'sites',
+			cols: {
+				heading: {
+					type: 'heading',
+					heading: "Site"|t('venti'),
+					class: 'thin'
+				},
+				enabled: {
+					type: 'heading',
+					class: 'thin'~(not craft.app.getIsMultiSite() ? ' hidden')
+				},
+				uriFormat: {
+					type: 'singleline',
+					heading: "Event URI Prefix Format"|t('venti'),
+					info: "What event URIs prefix should look like for the site. The URI will always end with `/{slug}/{startDate|date('Y-m-d')}`."|t('venti'),
+					placeholder: "If left blank the full URI will default to /event/{slug}/{startDate|date('Y-m-d')}",
+					code: true,
+					class: 'type-channel type-structure'
+				},
+				template: {
+					type: 'singleline',
+					heading: "Template"|t('venti'),
+					info: "Which template should be loaded when an event’s URL is requested."|t('venti'),
+					code: true
+				},
+				enabledByDefault: {
+					type: 'lightswitch',
+					heading: "Default Status"|t('venti'),
+					class: 'thin type-channel type-structure'
+				}
+			},
+			rows: siteRows,
+			staticRows: true,
+			errors: siteErrors|unique
+		}) }}
+
+		<hr>
+
+		<h2>{{ "Event Field Layout"|t }}</h2>
+
+		{% set fieldLayout = group.getFieldLayout() %}
+		{% set defaultLayoutCheckbox = {
+		    label: "Default Field Layout"|t,
+		    instructions: "Use default field layout from the [group settings](/admin/venti/settings/groups)."|t,
+			name: "defaultFieldLayout",
+			checked: (fieldLayout and fieldLayout.type == "Venti_Event_Default") ? true : false,
+			reverseToggle: "layout-design-wrapper"
+		} %}
+
+		{{ checkboxField(defaultLayoutCheckbox) }}
+
+		<div class='field {% if fieldLayout and fieldLayout.type == "Venti_Event_Default" %}hidden{% endif %}' id="layout-design-wrapper">
+			{# If using default field layout don't load it in layout designer if they choose to do custom #}
+			{% if fieldLayout and fieldLayout.type == "Venti_Event_Default" %}
+				{% include "_includes/fieldlayoutdesigner" with { fieldLayout: null} only %}
+			{% else %}
+				{% include "_includes/fieldlayoutdesigner" with {
+					fieldLayout: group.getFieldLayout()
+				} only %}
+			{% endif %}
+		</div>
+		<hr>
+
+		<div class="buttons">
+			<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+		</div>
+	</form>
+{% endblock %}
+
+{% js %}
+	{% if brandNewGroup %}
+        new Craft.HandleGenerator('#name', '#handle');
+		// TODO: Change suffix for uriFormat
+        {% for site in craft.app.sites.getAllSites() %}
+            new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[singleUri]"]');
+            new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[uriFormat]"]', { suffix: '/{slug}/{startDate|date("Y-m-d")}' });
+            new Craft.UriFormatGenerator('#name', '#sites tr[data-id="{{ site.handle }}"] textarea[name$="[template]"]', { suffix: '/_entry' });
+        {% endfor %}
+    {% endif %}
+
+	(function() {
+	    $('.group-description-richtext').redactor({
+			buttons: ['source','format','bold','italic','lists','link'],
+			plugins: ['fullscreen','source'],
+			toolbarFixedBox: true
+	    });
+	})();
+
+	// Tooltip
+	var btns = document.querySelectorAll('.copy-url');
+	for (var i = 0; i < btns.length; i++) {
+	    btns[i].addEventListener('mouseleave', function(e) {
+	        e.currentTarget.setAttribute('class', 'btn');
+	        e.currentTarget.removeAttribute('aria-label');
+	    });
+	}
+
+	function showTooltip(elem, msg) {
+	    elem.setAttribute('class', 'btn tooltipped tooltipped-s');
+	    elem.setAttribute('aria-label', msg);
+	}
+
+	function fallbackMessage(action) {
+	    var actionMsg = '';
+	    var actionKey = (action === 'cut' ? 'X' : 'C');
+	    if (/iPhone|iPad/i.test(navigator.userAgent)) {
+	        actionMsg = Craft.t('No support');
+	    } else if (/Mac/i.test(navigator.userAgent)) {
+	        actionMsg = 'Press ⌘-' + actionKey + ' to ' + action;
+	    } else {
+	        actionMsg = 'Press Ctrl-' + actionKey + ' to ' + action;
+	    }
+	    return actionMsg;
+	}
+
+	var clipboard = new Clipboard('.copy-url');
+	clipboard.on('success', function(e) {
+	    e.clearSelection();
+	    showTooltip(e.trigger, Craft.t('Copied!'));
+	});
+	clipboard.on('error', function(e) {
+	    //console.error('Action:', e.action);
+	    //console.error('Trigger:', e.trigger);
+	    showTooltip(e.trigger, fallbackMessage(e.action));
+	});
+{% endjs %}

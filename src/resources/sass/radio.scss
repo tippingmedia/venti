@@ -1,0 +1,119 @@
+// Venti Radio Registration Field
+.venti--radio[type="radio"]:not(:checked),
+.venti--radio[type="radio"]:checked {
+  position: absolute;
+  left: -9999px;
+
+}
+
+/* radio aspect */
+/*.venti--radio[type="radio"]:not(:checked) + label:before,
+.venti--radio[type="radio"]:checked + label:before {
+  content: '';
+  position: absolute;
+  left:0; top: 0px;
+  width: 25px !important;
+  height: 25px;
+  background: #f8f8f8;
+  border-radius: 50px;
+  border: 1px solid #e3e5e8;
+  -webkit-box-shadow: 0 0 5px rgba(51, 170, 255, 0);
+  -moz-box-shadow: 0 0 5px rgba(51, 170, 255, 0);
+  box-shadow: 0 0 5px rgba(51, 170, 255, 0);
+  //transition: all .5s 0s;
+}*/
+
+
+
+
+.venti--radio[type="radio"]:not(:checked) + label,
+.venti--radio[type="radio"]:checked + label {
+    display: inline-block;
+    position: relative;
+    border-radius: 3px;
+    padding: 6px 12px;
+    border: none;
+    text-align: center;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: pointer;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    font-weight:600;
+
+    color: #576575;
+    -webkit-box-shadow: inset 0 0 0 1px rgba(0, 0, 20, 0.1);
+    -moz-box-shadow: inset 0 0 0 1px rgba(0, 0, 20, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 20, 0.1);
+}
+
+label[for*=venti-registration-toggle-left] {
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+}
+label[for*=venti-registration-toggle-right] {
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0px !important;
+    left: -4px;
+}
+
+
+/* checked mark aspect */
+/*.venti--radio[type="radio"]:not(:checked) + label:before,
+.venti--radio[type="radio"]:checked + label:before {
+    color: #323A44;
+}*/
+
+.venti--radio[type="radio"]:checked + label {
+    background-color: #576575;
+    color: #f1f1f1;
+    -webkit-box-shadow: inset 0 0 0 2px rgba(0, 0, 5, 0.1);
+    -moz-box-shadow: inset 0 0 0 2px rgba(0, 0, 5, 0.1);
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 5, 0.1);
+}
+
+.venti--registration-url,
+.venti--registration-embed,
+{
+    display: none;
+}
+
+.venti-registration-toggle-left:checked ~ .venti--registration-url {
+    display: block;
+}
+
+.venti-registration-toggle-right:checked ~ .venti--registration-embed {
+    display: block;
+}
+// .venti--radio[type="radio"]:checked:not(:first-child) ~ .venti--registration-embed {
+//     display: block;
+// }
+
+// .venti--radio-label {
+//     display: inline-block;
+//     padding-left: 7px;
+//     margin-right: 15px;
+//     color: #576575;
+//     font-weight: 600;
+// }
+
+/* disabled radio */
+.venti--radio[type="radio"]:disabled:not(:checked) + label,
+.venti--radio[type="radio"]:disabled:checked + label {
+  box-shadow: none;
+  border-color: #bbb;
+  background-color: #ddd;
+}
+
+.venti--radio[type="radio"]:disabled + label {
+  color: #aaa;
+}
+/* accessibility */
+.venti--radio[type="radio"]:checked:focus + label,
+.venti--radio[type="radio"]:not(:checked):focus + label {
+  border: 1px dotted blue !important;
+}

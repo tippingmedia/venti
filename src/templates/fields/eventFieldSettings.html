@@ -1,0 +1,64 @@
+{% import "_includes/forms" as forms %}
+
+{% macro checkboxField(siteHandle, name, label, sources, values) %}
+
+    {% import "_includes/forms" as forms %}
+    {% set input %}
+        {{ forms.checkboxSelectField({
+            label: label,
+            instructions: "Select the groups of events the user can choose from."|t,
+            id: name,
+            name: name,
+            options: sources,
+            values: values
+        }) }}
+    {% endset %}
+
+    {{ forms.field({
+        id: name~'-'~siteHandle,
+        required: false,
+    }, input) }}
+
+{% endmacro %}
+
+{% macro limitField(settings) %}
+    {% import "_includes/forms" as forms %}
+    {% set input %}
+        {{ forms.textField({
+                label: "Limit"|t,
+                instructions: "Limit the number of selectable events."|t,
+                id: 'limit',
+                name: 'limit',
+                value: settings.limit,
+                size: 2,
+                errors: settings.getErrors('limit')
+            }) }}
+    {% endset %}
+
+    {{ forms.field({
+        id:  'limit',
+    }, input) }}
+{% endmacro %}
+
+{% macro errorOnly(label, fill) %}
+    {% import "_includes/forms" as forms %}
+
+    {{ forms.field({
+        label: label,
+    }, '<p class="error">' ~ fill ~ '</p>') }}
+
+{% endmacro %}
+
+
+{% from _self import checkboxField, limitField, errorOnly %}
+
+{% if sources %}
+    {% set site = craft.app.getSiteById(event.siteId) %}
+    {{ checkboxField(site.handle, "eventGroups", "Event Groups"|t, sources, settings.groupSources, true) }}
+    {% block targetLocaleField %}
+		{{ targetLocaleFieldHtml|raw }}
+	{% endblock %}
+    {{ limitField(settings) }}
+{% else %}
+    {{ errorOnly("Event Groups"|t, "No event groups currently exist."|t, true) }}
+{% endif %}

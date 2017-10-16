@@ -1,0 +1,25 @@
+{% include 'venti/events/_titlefield' with { event: event } only %}
+
+<input type="hidden" id="groupId" class='venti-groupId' name="groupId" value="{{ group.id }}">
+<input type="hidden" name="eventId" value="{{ event.id }}">
+
+{#  Field Layout Fields #}
+{% if group.getFieldLayout().getTabs()|length %}
+    <div>
+        {% for tab in group.getFieldLayout().getTabs() %}
+            <div id="tab{{ loop.index }}"{% if not loop.first %} class="hidden"{% endif %}>
+                {% if loop.first %}
+                    {% include 'venti/_venti-fields'  %}
+                {% endif %}
+                {% include "_includes/fields" with {
+                    fields: tab.getFields(),
+                    element: event
+                } only %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    {% include 'venti/_venti-fields' %}
+{% endif %}
+
+<div class="venti-inline"></div>
