@@ -31,10 +31,10 @@
         "handle": "venti",
         "schemaVersion": "3.0.0",
         "changelogUrl": "https://raw.githubusercontent.com/tippingmedia/venti/master/releases.json",
+        "downloadUrl": "https://github.com/tippingmedia/venti/archive/master.zip",
         "class": "tippingmedia\\venti\\Venti"
     },
     "support": {
-        "email": "support@tippingmedia.com",
-        "docs": ""
+        "email": "support@tippingmedia.com"
     }
 }
