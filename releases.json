@@ -1,11 +1,8 @@
-[
-
-    {
-        "version": "3.0.0-dev",
-        "downloadUrl": "",
-        "date": "2016-09-19T15:00:00-08:00",
-        "notes": [
-            "[Added] Initial release"
-        ]
-    }
-]
+[{
+    "version": "3.0.0-dev",
+    "downloadUrl": "https://github.com/tippingmedia/venti/archive/master.zip",
+    "date": "2017-10-16T15:41:00-08:00",
+    "notes": [
+        "[Added] Initial release"
+    ]
+}]
