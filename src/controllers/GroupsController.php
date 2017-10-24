@@ -69,7 +69,6 @@ class GroupsController extends Controller
 		if ($groupId !== null) {
 			if ($group === null) {
 				$group = $groups->getGroupById($groupId);
-
 				if (!$group) {
 					throw new NotFoundHttpException('Group not found');
 				}
@@ -91,7 +90,7 @@ class GroupsController extends Controller
 		];
 
 		$variables['group'] = $group;
-		
+		//VarDumper::dump($variables, 5, true);exit;
 		return $this->renderTemplate('venti/groups/_edit', $variables);
 	}
 
@@ -136,11 +135,12 @@ class GroupsController extends Controller
 			$sitesParams = Craft::$app->getRequest()->getBodyParam('sites', []);
 		} else {
 			$primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
-			$sitesParams = [$primarySiteId];
+			$sitesParams = Craft::$app->getRequest()->getBodyParam('sites',[$primarySiteId]);
+			
 		}
 
 		foreach ($sitesParams as $site => $params) {	
-			//VarDumper::dump($site, 5, true);exit;
+			//VarDumper::dump($params, 5, true);exit;
 			$urlFormat = $params['uriFormat'];
 			$template = $params['template'] != '' ? $params['template'] : 'event/_entry';
 			$hasUrls  = (bool) Craft::$app->getRequest()->getBodyParam('groups.hasUrls', true);

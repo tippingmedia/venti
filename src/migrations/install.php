@@ -21,7 +21,7 @@ class Install extends Migration
     public function safeDown()
     {
         //$this->dropTable('{{%venti_groups}}');
-        //$this->dropTable('{{%venti_groups_i18n}}');
+        //$this->dropTable('{{%venti_groups_sites}}');
         //$this->dropTable('{{%venti_events}}');
         //$this->dropTable('{{%venti_locations}}');
 
@@ -47,7 +47,7 @@ class Install extends Migration
             'uid' => $this->uid(),
         ]);
 
-        $this->createTable('{{%venti_groups_i18n}}', [
+        $this->createTable('{{%venti_groups_sites}}', [
             'id' => $this->primaryKey(),
             'groupId' => $this->integer()->notNull(),
             'siteId' => $this->integer()->notNull(),
@@ -106,14 +106,14 @@ class Install extends Migration
      */
     protected function createIndexes()
     {
-        $this->createIndex($this->db->getIndexName('{{%venti_groups}}', 'handle', true), '{{%venti_groups}}', 'handle', true);
-        $this->createIndex($this->db->getIndexName('{{%venti_groups}}', 'name', true), '{{%venti_groups}}', 'name', true);
-        $this->createIndex(null, '{{%venti_groups_i18n}}', 'groupId,siteId', true);
-        $this->createIndex(null, '{{%venti_groups_i18n}}', 'siteId', false);
-        $this->createIndex($this->db->getIndexName('{{%venti_events}}', 'startDate', false), '{{%venti_events}}', 'startDate', false);
-        $this->createIndex($this->db->getIndexName('{{%venti_events}}', 'endDate', false), '{{%venti_events}}', 'endDate', false);
-        $this->createIndex($this->db->getIndexName('{{%venti_events}}', 'repeat', false), '{{%venti_events}}', 'repeat', false);
-        $this->createIndex($this->db->getIndexName('{{%venti_events}}', 'groupId', false), '{{%venti_events}}', 'groupId', false);
+        $this->createIndex(null, '{{%venti_groups}}', ['handle'], true);
+        $this->createIndex(null, '{{%venti_groups}}', ['name'], true);
+        $this->createIndex(null, '{{%venti_groups_sites}}', ['groupId, siteId'], true);
+        $this->createIndex(null, '{{%venti_groups_sites}}', ['siteId'], false);
+        $this->createIndex(null, '{{%venti_events}}', ['startDate'], false);
+        $this->createIndex(null, '{{%venti_events}}', ['endDate'], false);
+        $this->createIndex(null, '{{%venti_events}}', ['repeat'], false);
+        $this->createIndex(null, '{{%venti_events}}', ['groupId'], false);
         
     }
 
@@ -125,10 +125,10 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {   
-        $this->addForeignKey($this->db->getForeignKeyName('{{%venti_events}}', 'id'), '{{%venti_events}}', 'id', '{{%elements}}', 'id', 'CASCADE', null);
-        $this->addForeignKey($this->db->getForeignKeyName('{{%venti_events}}', 'groupId'), '{{%venti_events}}', 'groupId', '{{%venti_groups}}', 'id', 'CASCADE', null);
-        $this->addForeignKey($this->db->getForeignKeyName('{{%venti_groups_i18n}}', 'siteId'), '{{%venti_groups_i18n}}', 'siteId', '{{%sites}}', 'id', 'CASCADE', 'CASCADE');
-        $this->addForeignKey($this->db->getForeignKeyName('{{%venti_groups_i18n}}', 'groupId'), '{{%venti_groups_i18n}}', 'groupId', '{{%venti_groups}}', 'id', 'CASCADE', null);
-        $this->addForeignKey($this->db->getForeignKeyName('{{%venti_locations}}', 'id'), '{{%venti_locations}}', 'id', '{{%elements}}', 'id', 'CASCADE', null);
+        $this->addForeignKey(null, '{{%venti_events}}', ['id'], '{{%elements}}', ['id'], 'CASCADE', null);
+        $this->addForeignKey(null, '{{%venti_events}}', ['groupId'], '{{%venti_groups}}', ['id'], 'CASCADE', null);
+        $this->addForeignKey(null, '{{%venti_groups_sites}}', ['siteId'], '{{%sites}}', ['id'], 'CASCADE', 'CASCADE');
+        $this->addForeignKey(null, '{{%venti_groups_sites}}', ['groupId'], '{{%venti_groups}}', ['id'], 'CASCADE', null);
+        $this->addForeignKey(null, '{{%venti_locations}}', ['id'], '{{%elements}}', ['id'], 'CASCADE', null);
     }
 }

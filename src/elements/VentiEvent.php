@@ -488,7 +488,6 @@ class VentiEvent extends Element
      * @var int|null Group ID
      */
     public $groupId;
-
 	/**
      * @var datetime|null Start Date
      */

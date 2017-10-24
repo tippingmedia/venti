@@ -71,7 +71,7 @@ class GroupSiteSettings extends Model
     public $template;
 
     /**
-     * @var Section|null
+     * @var Group|null
      */
     private $_group;
 
@@ -97,7 +97,7 @@ class GroupSiteSettings extends Model
             throw new InvalidConfigException('Group site settings model is missing its group ID');
         }
 
-        if (($this->_group = getGroupById($this->groupId)) === null) {
+        if (($this->_group = Groups::getGroupById($this->groupId)) === null) {
             throw new InvalidConfigException('Invalid group ID: '.$this->groupId);
         }
 

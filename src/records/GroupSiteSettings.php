@@ -51,7 +51,7 @@ class GroupSiteSettings extends ActiveRecord
 	 */
 	public static function tableName(): string
 	{
-		return '{{%venti_groups_i18n}}';
+		return '{{%venti_groups_sites}}';
 	}
 
 	/**

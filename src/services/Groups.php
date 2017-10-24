@@ -18,9 +18,12 @@ use tippingmedia\venti\events\GroupEvent;
 use tippingmedia\venti\elements\VentiEvent;
 
 use Craft;
-use craft\base\Component;
+use craft\base\Element;
 use craft\db\Query;
+use craft\queue\jobs\ResaveElements;
 
+use yii\base\Component;
+use yii\base\Exception;
 use yii\helpers\VarDumper;
 
 /**
@@ -237,6 +240,13 @@ class Groups extends Component
 	 */
 	public function saveGroup(Group $group, bool $runValidation = true): bool
 	{
+		$isNewGroup = !$group->id;
+
+		// Fire a 'beforeSaveGroup' event
+        $this->trigger(self::EVENT_BEFORE_SAVE_GROUP, new GroupEvent([
+            'group' => $group,
+            'isNew' => $isNewGroup
+        ]));
 
 		if ($runValidation && !$group->validate()) {
             Craft::info('venti','Group not saved due to validation error.', __METHOD__);
@@ -244,7 +254,7 @@ class Groups extends Component
             return false;
         }
 
-		if ($group->id) {
+		if (!$isNewGroup) {
 			$groupRecord = GroupRecord::find()
 				->where(['id' => $group->id])
 				->one();
@@ -260,10 +270,9 @@ class Groups extends Component
 				'color',
 				'description',
 			]));
-			$isNewGroup = false;
+		
 		} else {
 			$groupRecord = new GroupRecord();
-			$isNewGroup = true;
 		}
 
 		// Main group settings
@@ -275,51 +284,13 @@ class Groups extends Component
 
 
 		// Make sure that all of the URL formats are set properly
-		$groupSiteSettings = $group->getGroupSiteSettings();
+		$allGroupSiteSettings = $group->getGroupSiteSettings();
 
 
-		if (empty($groupSiteSettings)) {
+		if (empty($allGroupSiteSettings)) {
 			throw new Exception('Tried to save a Venti event group without any site settings');
 		}
-
-		// TODO: this may need to be activated and retooled
-		/*foreach ($groupSiteSettings as $siteId => $groupSite) {
-			// Is this the first one?
-			if ($firstGroupSite === null) {
-				$firstGroupSite = $groupSite;
-			}
-
-			$errorKey = 'urlFormat-'.$siteId;
-
-			if (empty($groupSite->urlFormat)) {
-				$group->addError($errorKey, Craft::t('venti','URI cannot be blank.'));
-			} else if ($group) {
-				// Make sure no other elements are using this URI already
-				$query = Craft::$app->db->createCommand()
-					->from('elements_i18n elements_i18n')
-					->where(
-						['and', 'elements_i18n.siteId = :siteId', 'elements_i18n.uri = :uri'],
-						[':siteId' => $siteId, ':uri' => $groupSite->urlFormat]
-					);
-
-				if ($group->id) {
-					$query->join('venti_events venti', 'venti.id = elements_i18n.elementId')
-						->andWhere('venti.groupId != :groupId', [':groupId' => $group->id]);
-				}
-
-				$count = $query->count('elements_i18n.id');
-
-				if ($count) {
-					$group->addError($errorKey, Craft::t('venti','This URI is already in use.'));
-				}
-			}
-		}*/
-
-		// Fire a 'beforeSaveGroup' event
-        $this->trigger(self::EVENT_BEFORE_SAVE_GROUP, new GroupEvent([
-            'group' => $group,
-            'isNew' => $isNewGroup
-        ]));
+	
 
         $db = Craft::$app->getDb();
         $transaction = $db->beginTransaction();
@@ -362,35 +333,35 @@ class Groups extends Component
 
 			if (!$isNewGroup) {
 				// Get the old group sites
-				$oldGroupSiteSettingsRecords = GroupSiteSettingsRecord::find()
+				$allOldGroupSiteSettingsRecords = GroupSiteSettingsRecord::find()
 					->where(['groupId' => $group->id])
 					->indexBy('siteId')
 					->all();
 			} else {
-				$oldGroupSiteSettingsRecords = [];
+				$allOldGroupSiteSettingsRecords = [];
 			}
 
-			foreach ($groupSiteSettings as $siteId => $siteSettings) {
+			foreach ($allGroupSiteSettings as $siteId => $groupSiteSettings) {
 				// Was this already selected?
-				if (!$isNewGroup && isset($oldGroupSiteSettingsRecords[$siteId])) {
-					$groupSiteSettingsRecord = $oldGroupSiteSettingsRecords[$siteId];
+				if (!$isNewGroup && isset($allOldGroupSiteSettingsRecords[$siteId])) {
+					$groupSiteSettingsRecord = $allOldGroupSiteSettingsRecords[$siteId];
 				} else {
 					$groupSiteSettingsRecord = new GroupSiteSettingsRecord();
 					$groupSiteSettingsRecord->groupId = $group->id;
-					$groupSiteSettingsRecord->siteId = $siteSettings->siteId;
-					$newSiteData[] = [$group->id, $siteId, (int)$siteSettings->enabledByDefault, $siteSettings->uriFormat];
+					$groupSiteSettingsRecord->siteId = $groupSiteSettings->siteId;
+					//$newSiteData[] = [$group->id, $siteId, (int)$groupSiteSettings->enabledByDefault, $groupSiteSettings->uriFormat];
 				}
 
-				$groupSiteSettingsRecord->enabledByDefault = $siteSettings->enabledByDefault;
-				$groupSiteSettingsRecord->hasUrls = $siteSettings->hasUrls;
-				$groupSiteSettingsRecord->uriFormat = $siteSettings->uriFormat;
-				$groupSiteSettingsRecord->template = $siteSettings->template;
+				$groupSiteSettingsRecord->enabledByDefault = $groupSiteSettings->enabledByDefault;
+				$groupSiteSettingsRecord->hasUrls = $groupSiteSettings->hasUrls;
+				$groupSiteSettingsRecord->uriFormat = $groupSiteSettings->uriFormat;
+				$groupSiteSettingsRecord->template = $groupSiteSettings->template;
 
 
 				$groupSiteSettingsRecord->save(false);
 
 				// Set the ID on the model
-				$siteSettings->id = $groupSiteSettingsRecord->id;
+				$groupSiteSettings->id = $groupSiteSettingsRecord->id;
 			}
 
 
@@ -398,9 +369,9 @@ class Groups extends Component
 				// Drop any sites that are no longer being used, as well as the associated entry/element site
 				// rows
 
-				$siteIds = array_keys($groupSiteSettings);
+				$siteIds = array_keys($allGroupSiteSettings);
 
-				foreach($oldGroupSiteSettings as $siteId => $groupSiteSettingsRecord) {
+				foreach($allOldGroupSiteSettingsRecords as $siteId => $groupSiteSettingsRecord) {
 					if(!in_array($siteId, $siteIds, false)){
 						$groupSiteSettingsRecord->delete();
 					}
@@ -409,15 +380,14 @@ class Groups extends Component
 
 			
 			// Finally, deal with the existing events...
-			// TODO: FINISH FROM HERE
+
 			if (!$isNewGroup) {
 				
 				// Get the most-primary site that this group was already enabled in
-				$siteIds = array_values(array_intersect(Craft::$app->getSites()->getAllSiteIds(), array_keys($oldGroupSitesSettings)));
+				$siteIds = array_values(array_intersect(Craft::$app->getSites()->getAllSiteIds(), array_keys($allOldGroupSiteSettingsRecords)));
 
 				if (!empty($siteIds)) {
-					Craft::$app->getTasks()->queueTask([
-						'type' => ResaveElements::class,
+					Craft::$app->getQueue()->push(new ResaveElements([
 						'description' => Craft::t('venti','Resaving {group} events', ['group' => $group->name]),
 						'elementType' => VentiEvent::class,
 						'criteria' => [
@@ -427,7 +397,7 @@ class Groups extends Component
 							'enabledForSite' => false,
 							'limit' => null,
 						]
-					]);
+					]));
 				}
 			}
 
@@ -589,17 +559,17 @@ class Groups extends Component
 
 		$groupSiteSettings = (new Query())
 			->select([
-				'venti_groups_i18n.id',
-				'venti_groups_i18n.groupId',
-				'venti_groups_i18n.siteId',
-				'venti_groups_i18n.enabledByDefault',
-				'venti_groups_i18n.hasUrls',
-				'venti_groups_i18n.uriFormat',
-				'venti_groups_i18n.template'
+				'venti_groups_sites.id',
+				'venti_groups_sites.groupId',
+				'venti_groups_sites.siteId',
+				'venti_groups_sites.enabledByDefault',
+				'venti_groups_sites.hasUrls',
+				'venti_groups_sites.uriFormat',
+				'venti_groups_sites.template'
 			])
-			->from(['{{%venti_groups_i18n}} venti_groups_i18n'])
-            ->innerJoin('{{%sites}} sites', '[[sites.id]] = [[venti_groups_i18n.siteId]]')
-            ->where(['venti_groups_i18n.groupId' => $groupId])
+			->from(['{{%venti_groups_sites}} venti_groups_sites'])
+            ->innerJoin('{{%sites}} sites', '[[sites.id]] = [[venti_groups_sites.siteId]]')
+            ->where(['venti_groups_sites.groupId' => $groupId])
             ->orderBy(['sites.sortOrder' => SORT_ASC])
             ->all();
 

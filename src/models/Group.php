@@ -23,6 +23,8 @@ use craft\helpers\UrlHelper;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\behaviors\FieldLayoutTrait;
 
+use yii\helpers\VarDumper;
+
 /**
  * Group Model
  *
@@ -147,7 +149,6 @@ class Group extends Model
 
         // Set them with setGroupSiteSettings() so setGroup() gets called on them
         $this->setGroupSiteSettings(ArrayHelper::index($groups->getGroupSiteSettings($this->id), 'siteId'));
-
 
         return $this->_groupSiteSettings;
     }

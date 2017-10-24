@@ -30,6 +30,8 @@
         "name": "Venti",
         "handle": "venti",
         "schemaVersion": "3.0.0",
+        "hasCpSettings": true,
+        "hasCpSection": true,
         "changelogUrl": "https://raw.githubusercontent.com/tippingmedia/venti/master/releases.json",
         "downloadUrl": "https://github.com/tippingmedia/venti/archive/master.zip",
         "class": "tippingmedia\\venti\\Venti"
