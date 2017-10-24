@@ -40,28 +40,28 @@ class VentiVariable
 
 	public function groups($indexBy = null)
 	{
-		return Venti::getInstance()->groups->getAllGroups($indexBy);
+		return Venti::$plugin->groups->getAllGroups($indexBy);
 		//return craft()->venti_groups->getAllGroups($indexBy);
 	}
 
 	public function groupIds()
 	{
-		return Venti::getInstance()->groups->getAllGroupIds();
+		return Venti::$plugin->groups->getAllGroupIds();
 	}
 
 	public function getGroupById($groupId = null)
 	{
-		return Venti::getInstance()->groups->getGroupById($groupId);
+		return Venti::$plugin->groups->getGroupById($groupId);
 	}
 
 	public function group($groupId = null)
 	{
-		return Venti::getInstance()->groups->getGroupById($groupId);
+		return Venti::$plugin->groups->getGroupById($groupId);
 	}
 
 	public function getGroupByHandle($groupHandle = null)
 	{
-		return Venti::getInstance()->groups->getGroupByHandle($groupHandle);
+		return Venti::$plugin->groups->getGroupByHandle($groupHandle);
 	}
 
 	public function locations()
@@ -76,6 +76,6 @@ class VentiVariable
 
 	public function getCalendarSettingSources()
 	{
-		return Venti::getInstance()->calendar->getCalendarSettingSources();
+		return Venti::$plugin->calendar->getCalendarSettingSources();
 	}
 }

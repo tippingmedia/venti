@@ -19,6 +19,7 @@ use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\ResolveResourcePathEvent;
+use craft\web\twig\variables\CraftVariable;
 
 use yii\base\Event;
 use craft\helpers\UrlHelper;
@@ -48,7 +49,17 @@ class Venti extends Plugin
     {
 		parent::init();
         self::$plugin = $this;
-        $this->name = $this->getName();
+		$this->name = $this->getName();
+		
+		Event::on(
+            CraftVariable::class,
+            CraftVariable::EVENT_INIT,
+            function (Event $event) {
+                /** @var CraftVariable $variable */
+                $variable = $event->sender;
+                $variable->set('venti', VentiVariable::class);
+            }
+        );
 		
         // Add in our Twig extensions
         Craft::$app->view->twig->addExtension(new VentiTwigExtension());
@@ -76,8 +87,6 @@ class Venti extends Plugin
 			$event->rules['venti/<groupHandle:{handle}>/new?/<siteHandle:\w+>'] = 'venti/event/edit-event';
 			$event->rules['venti/<groupHandle:{handle}>/<eventId:\d+><slug:(?:-[^\/]*)?>'] = 'venti/event/edit-event';
 			$event->rules['venti/<groupHandle:{handle}>/<eventId:\d+><slug:(?:-[^\/]*)?>/<siteHandle:{handle}>'] = 'venti/event/edit-event';
-
-			
 
 			// Locations
 			$event->rules['venti/locations'] = ['template' => 'venti/location/locationIndex'];
