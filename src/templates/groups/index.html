@@ -1,5 +1,5 @@
 {% extends "_layouts/cp" %}
-{% set title = "Event Groups"|t %}
+{% set title = "Event Groups"|t('venti') %}
 
 {% set tabs = {
 	venti:    	{ label: "Events"|t, url: url('venti') },
@@ -14,11 +14,11 @@
 
 {% set selectedTab = 'groups' %}
 
-{% set extraPageHeaderHtml %}
+{% block actionButton %}
 	<div id="newgroupcontainer" class="buttons">
-		<a href="{{ url('venti/groups/new') }}" class="btn submit add icon">{{ "New Group"|t }}</a>
+    	<a href="{{ url('venti/groups/new') }}" class="btn submit add icon">{{ "New Group"|t('venti') }}</a>
 	</div>
-{% endset %}
+{% endblock %}
 
 
 {% set content %}
@@ -39,7 +39,7 @@
 					<tr data-id="{{ group.id }}" data-name="{{ group.name|t }}">
 						<th scope="row" data-title="{{ 'Name'|t }}"><a href="{{ url('venti/groups/' ~ group.id) }}">{{ group.name|t }}</a></th>
 						<td data-title="{{ 'Handle'|t }}"><code>{{ group.handle }}</code></td>
-						<td data-title="{{ 'Color'|t }}"><div class="color" ><div class="colorpreview" style="background-color:{{group.color}}"></div></div></td>
+						<td data-title="{{ 'Color'|t }}"><div class="color" ><div class="color-preview" style="background-color:{{group.color}}"></div></div></td>
 						<td class="thin"><a class="delete icon" title="{{ 'Delete'|t }}" role="button"></a></td>
 					</tr>
 				{% endfor %}
@@ -52,9 +52,16 @@
 {% js %}
 	var adminTable = new Craft.AdminTable({
 		tableSelector: '#groups',
-		noObjectsSelector: '#nogroups',
-		newObjectBtnSelector: '#newgroupcontainer',
+		noItemsSelector: '#nogroups',
 		deleteAction: 'venti/groups/delete-group',
-		confirmDeleteMessage: '{{ "Are you sure you want to delete “{name}” and all its events?"|t('venti') }}'
+		confirmDeleteMessage: '{{ "Are you sure you want to delete “{name}” and all its events?"|t('venti') }}',
+		onDeleteItem: function()
+        {
+            // Hide the Events tab if that was the last one
+            if (adminTable.totalItems == 0)
+            {
+                $('#tab-events').remove();
+            }
+        }
 	});
 {% endjs %}

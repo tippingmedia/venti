@@ -133,7 +133,7 @@ var VentiInput = function () {
                     modal.show();
                 } else if (elm.classList.contains('venti-allday--input')) {
                     $this.toggleAllDay(evt);
-                } else if (elm.classList.contains('venti-repeat--input')) {
+                } else if (elm.classList.contains('venti-recurring--input')) {
                     if (elm.checked) {
                         $this.endDateValidate(endDateInput);
                         modal.show();
@@ -207,7 +207,7 @@ var VentiInput = function () {
                 if (evt.srcElement.id === modal.container.id) {
                     if (rrule.value === "" || rruleDeposite !== rrule.value && rruleDeposite === "") {
                         setTimeout(function () {
-                            repeat.checked = false;
+                            recurring.checked = false;
                             rrule.value = rruleDeposite;
                             $this.clearSummary();
                         }, 400);
@@ -329,7 +329,7 @@ var VentiInput = function () {
                 endDateInput = input.querySelectorAll('.venti-enddate--input')[0],
                 endDateTimeInput = input.querySelectorAll('.venti-enddate--input')[1],
                 edValue = endDateInput.value,
-                repeatChbx = input.querySelectorAll('.venti-repeat--input')[0],
+                repeatChbx = input.querySelectorAll('.venti-recurring--input')[0],
                 rruleInput = input.querySelectorAll('.venti-rrule--input')[0],
                 timeFormat = input.dataset['timeFormat'];
 
@@ -398,7 +398,7 @@ var VentiInput = function () {
                 edValue = endDateInput.value,
                 startDateInput = input.querySelectorAll('.venti-startdate--input')[0],
                 sdValue = startDateInput.value,
-                repeatChbx = input.querySelectorAll('.venti-repeat--input')[0],
+                repeatChbx = input.querySelectorAll('.venti-recurring--input')[0],
                 rruleInput = input.querySelectorAll('.venti-rrule--input')[0];
 
             if (sdValue !== "") {
@@ -830,7 +830,7 @@ var VentiModal = function () {
                 tabContainer = mdl.querySelector('.venti_modal_tabs'),
                 occurencesInput = mdl.querySelector('.venti-endson-afterfield'),
                 rrule = input.querySelectorAll('.venti-rrule--input')[0],
-                repeat = input.querySelectorAll('.venti-repeat--input')[0],
+                repeat = input.querySelectorAll('.venti-recurring--input')[0],
                 form = mdl.querySelector('form');
             var rruleValueDeposite = rrule.value;
 
@@ -858,35 +858,33 @@ var VentiModal = function () {
                 $this.toggleTab(evt.delegateTarget, $(this));
             });
 
-            form.addEventListener('focusout', function (evt) {
+            /*form.addEventListener('focusout', function(evt) {
                 //if(evt.target.tagName == "SELECT" || evt.target.tagName == "INPUT") {
                 if (!evt.target.classList.contains('cancel')) {
-                    sch.getRuleString(mdl, function (data) {
-                        setTimeout(function () {
+                    sch.getRuleString(mdl, function(data) {
+                        setTimeout(function() {
                             $this.setInputValues(data);
                         }, 200);
                     });
                 }
                 //}
             });
-
-            form.addEventListener('change', function (evt) {
+             form.addEventListener('change', function(evt) {
                 if (!evt.target.classList.contains('cancel')) {
-                    sch.getRuleString(mdl, function (data) {
-                        setTimeout(function () {
+                    sch.getRuleString(mdl, function(data) {
+                        setTimeout(function() {
                             $this.setInputValues(data);
                         }, 200);
                     });
                 }
             });
-
-            occurencesInput.addEventListener('keyup', function (evt) {
-                sch.getRuleString(mdl, function (data) {
-                    setTimeout(function () {
+             occurencesInput.addEventListener('keyup', function(evt) {
+                sch.getRuleString(mdl, function(data) {
+                    setTimeout(function() {
                         $this.setInputValues(data);
                     }, 200);
                 });
-            });
+            });*/
 
             $('#venti-fields-venti-endsOn-date').datepicker($.extend({}, Craft.datepickerOptions));
             $('#venti-fields-venti-exclude-date').datepicker($.extend({}, Craft.datepickerOptions));

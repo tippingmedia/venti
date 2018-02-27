@@ -83,7 +83,7 @@ class VentiModal {
             tabContainer = mdl.querySelector('.venti_modal_tabs'),
             occurencesInput = mdl.querySelector('.venti-endson-afterfield'),
             rrule = input.querySelectorAll('.venti-rrule--input')[0],
-            repeat = input.querySelectorAll('.venti-repeat--input')[0],
+            repeat = input.querySelectorAll('.venti-recurring--input')[0],
             form = mdl.querySelector('form');
         const rruleValueDeposite = rrule.value;
 
@@ -116,7 +116,7 @@ class VentiModal {
             );
         });
 
-        form.addEventListener('focusout', function(evt) {
+        /*form.addEventListener('focusout', function(evt) {
             //if(evt.target.tagName == "SELECT" || evt.target.tagName == "INPUT") {
             if (!evt.target.classList.contains('cancel')) {
                 sch.getRuleString(mdl, function(data) {
@@ -144,7 +144,7 @@ class VentiModal {
                     $this.setInputValues(data);
                 }, 200);
             });
-        });
+        });*/
 
         $('#venti-fields-venti-endsOn-date').datepicker($.extend({}, Craft.datepickerOptions));
         $('#venti-fields-venti-exclude-date').datepicker($.extend({}, Craft.datepickerOptions));

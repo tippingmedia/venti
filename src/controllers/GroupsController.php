@@ -130,33 +130,57 @@ class GroupsController extends Controller
 
 
 		// Site-specific attributes
-		$sites = [];
-		if (Craft::$app->getIsMultiSite()) {
-			$sitesParams = Craft::$app->getRequest()->getBodyParam('sites', []);
-		} else {
-			$primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
-			$sitesParams = Craft::$app->getRequest()->getBodyParam('sites',[$primarySiteId]);
+		$allSitesSettings = [];
+		// if (Craft::$app->getIsMultiSite()) {
+		// 	$sitesParams = Craft::$app->getRequest()->getBodyParam('sites', []);
+		// } else {
+		// 	$primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
+		// 	$sitesParams = Craft::$app->getRequest()->getBodyParam('sites',[$primarySiteId]);
 			
-		}
+		// }
 
-		foreach ($sitesParams as $site => $params) {	
-			//VarDumper::dump($params, 5, true);exit;
-			$urlFormat = $params['uriFormat'];
-			$template = $params['template'] != '' ? $params['template'] : 'event/_entry';
-			$hasUrls  = (bool) Craft::$app->getRequest()->getBodyParam('groups.hasUrls', true);
-			$siteId = Craft::$app->getSites()->getSiteByHandle($site);
-			$sites[$site] = new GroupSiteSettings([
-				'siteId'           => $siteId->id,
-				'enabledByDefault' => (bool) Craft::$app->getRequest()->getBodyParam('defaultSiteStatuses_'.$site),
-				'uriFormat'        => $urlFormat,
-				'hasUrls'		   => $hasUrls,
-				'template'         => $template,
-			]);
+		foreach (Craft::$app->getSites()->getAllSites() as $site) {	
+			$postedSettings = $request->getBodyParam('sites.'.$site->handle);
+
+			if (Craft::$app->getIsMultiSite() && empty($postedSettings['enabled'])) {
+                continue;
+			}
+				//VarDumper::dump($postedSettings, 5, true);exit;
+
+			$groupSiteSettings = new GroupSiteSettings();
+			$groupSiteSettings->siteId = $site->id;
+
+			$groupSiteSettings->hasUrls = !empty($postedSettings['uriFormat']);
+
+			if ($groupSiteSettings->hasUrls) {
+				$groupSiteSettings->uriFormat = $postedSettings['uriFormat'];
+				$groupSiteSettings->template = $postedSettings['template'] != '' ? $postedSettings['template'] : 'event/_entry';
+			} else {
+				$groupSiteSettings->uriFormat = null;
+				$groupSiteSettings->template = null;
+			}
+
+            $groupSiteSettings->enabledByDefault = (bool)$postedSettings['enabledByDefault'];
+
+			
+			$allSitesSettings[$site->id] = $groupSiteSettings;
+			//VarDumper::dump($postedSettings, 5, true);exit;
+			// $urlFormat = $postedSettings['uriFormat'];
+			// $template = $postedSettings['template'] != '' ? $postedSettings['template'] : 'event/_entry';
+			// $hasUrls  = (bool) Craft::$app->getRequest()->getBodyParam('groups.hasUrls', true);
+			// $siteId = Craft::$app->getSites()->getSiteByHandle($site);
+			// $sites[$site] = new GroupSiteSettings([
+			// 	'siteId'           => $siteId->id,
+			// 	'enabledByDefault' => (bool) Craft::$app->getRequest()->getBodyParam('defaultSiteStatuses_'.$site),
+			// 	'uriFormat'        => $urlFormat,
+			// 	'hasUrls'		   => $hasUrls,
+			// 	'template'         => $template,
+			// ]);
 		}
 
 		//VarDumper::dump($sites, 5, true);exit;
 
-		$group->setGroupSiteSettings($sites);
+		$group->setGroupSiteSettings($allSitesSettings);
 
 		// Save it
 		if (!$groups->saveGroup($group)) {
@@ -165,11 +189,13 @@ class GroupsController extends Controller
 			Craft::$app->getUrlManager()->setRouteParams([
 				'group' => $group
 			]);
+
+			return null;
 		}
 		
 		Craft::$app->getSession()->setNotice(Craft::t('venti','Group saved'));
 		
-		$this->redirectToPostedUrl($group);
+		return $this->redirectToPostedUrl($group);
 
 	}
 

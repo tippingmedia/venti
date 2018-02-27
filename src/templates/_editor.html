@@ -209,13 +209,13 @@
 	{{ checkboxField(event, 'allDay', "All Day"|t, "venti--checkbox checkbox", false ) }}
 	{{ dateTimeField(event, 'startDate', "Start Date"|t, true) }}
 	{{ dateTimeField(event, 'endDate', "End Date"|t, false) }}
-	{{ toggleField(event, 'repeat', "Recurring Schedule"|t, "venti-toggle venti-toggle-round", false) }}
+	{{ toggleField(event, 'recurring', "Recurring Schedule"|t, "venti-toggle venti-toggle-round", false) }}
 
 	<div class="field venti-summary--wrap">
 		<div class='venti-summary--human'>{{ event.summary is defined ? event.summary : "" }}</div>
 
-		{% if event.repeat is defined %}
-			{% if event.repeat == 1 %}
+		{% if event.recurring is defined %}
+			{% if event.recurring == 1 %}
 					<a data-events-edit class="venti-eventRepeat-edit" style='display:inline;'>{{ 'Edit'|t }}</a>
 			{% else %}
 					<a data-events-edit class="venti-eventRepeat-edit" style='display:none;'>{{ 'Edit'|t }}</a>
@@ -248,7 +248,7 @@
 	<div class='venti-hidden--wrap'>
 		{{ hiddenField(event, 'summary', 'venti', false) }}
 		{{ hiddenField(event, 'rRule', 'venti', false) }}
-		{{ hiddenField(event, 'isrepeat', 'venti', false) }}
+		{{ hiddenField(event, 'isrecurring', 'venti', false) }}
 	</div>
 	<div class="venti-inline" id="venti-inline" style="display:none;"></div>
 

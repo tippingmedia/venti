@@ -137,7 +137,7 @@ class Venti extends Plugin
 	public function registerSiteRoutes()
 	{
 	    return array(
-	        'event/(?P<slug>{slug})/(?P<eid>\w+)' => array('action' => 'venti/event/viewEventByEid'),
+	        //'event/(?P<slug>{slug})/(?P<eid>\w+)' => array('action' => 'venti/event/viewEventByEid'),
 			'event/(?P<slug>{slug})/(?P<year>\d{4})-(?P<month>(?:0?[1-9]|1[012]))-(?P<day>(?:0?[1-9]|[12][0-9]|3[01]))' => array('action' => 'venti/event/viewEventByStartDate'),
 			'calendar/ics/(?P<groupId>\d+)' => array('action' => 'venti/event/viewICS')
 	    );

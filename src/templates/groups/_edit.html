@@ -127,7 +127,7 @@
 {% block content %}
 	<form method="post" accept-charset="UTF-8" data-saveshortcut="1">
 		<input type="hidden" name="action" value="venti/groups/save-group">
-		<input type="hidden" name="redirect" value="venti/groups">
+		{{ redirectInput('venti/groups') }}
 
 		{% if group.id %}
 			<input type="hidden" name="groupId" value="{{ group.id }}">
@@ -197,13 +197,10 @@
 					enabled: include('_includes/forms/lightswitch', {
 						name: 'sites['~site.handle~'][enabled]',
 						on: brandNewGroup or siteSettings,
-						value: group.id,
+						value: site.id,
 						small: true
 					}),
-					singleUri: {
-						value: (siteSettings and siteSettings.uriFormat != '__home__') ? siteSettings.uriFormat,
-						hasErrors: (siteSettings ? siteSettings.hasErrors('uriFormat'))
-					},
+					
 					uriFormat: {
 						value: siteSettings ? siteSettings.uriFormat,
 						hasErrors: (siteSettings ? siteSettings.hasErrors('uriFormat'))

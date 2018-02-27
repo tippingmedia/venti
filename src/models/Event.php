@@ -81,9 +81,9 @@ class Event extends Model
      */
     public $rRule;
 	/**
-     * @var int|null Repeat
+     * @var int|null recurring
      */
-    public $repeat;
+    public $recurring;
 	/**
      * @var int|null AllDay
      */
@@ -101,9 +101,9 @@ class Event extends Model
      */
     public $diff;
 	/**
-     * @var int|null IS REPEAT
+     * @var int|null IS RECURRIN
      */
-    public $isrepeat;
+    public $isrecurring;
 	/**
      * @var mixed|null Location
      */
@@ -132,9 +132,9 @@ class Event extends Model
 			'endDate'    		=> array(AttributeType::DateTime, 'required'=> true, 'compare' => '>startDate'),
 			'endRepeat'  		=> array(AttributeType::DateTime),
             'allDay'     		=> AttributeType::Number,
-            'repeat'     		=> AttributeType::Number,
+            'recurring'     	=> AttributeType::Number,
 			'diff'     			=> AttributeType::Number,
-			'isrepeat'     		=> AttributeType::Number,
+			'isrecurring'     	=> AttributeType::Number,
             'rRule'      		=> AttributeType::String,
             'summary'    		=> AttributeType::String,
 			'location'   		=> Attributetype::Mixed,
@@ -149,7 +149,7 @@ class Event extends Model
     public function rules()
     {
         return [
-            [['id','elementId,repeat,allDay'], 'number', 'integerOnly' => true],
+            [['id','elementId,recurring,allDay'], 'number', 'integerOnly' => true],
             [['handle'], HandleValidator::class, 'reservedWords' => ['id', 'dateCreated', 'dateUpdated', 'uid', 'title']],
             [['name', 'handle'], UniqueValidator::class, 'targetClass' => GroupRecord::class],
             [['name', 'handle'], 'string', 'max' => 255],
@@ -308,7 +308,7 @@ class Event extends Model
 	public function excludedDates()
 	{
 		$datesDict = array();
-		if($this->repeat == true)
+		if($this->recurring == true)
 		{
 			$exdates = getIncludedExcludedDates($this->rRule);
 			if ($exdates && array_key_exists('excludedDates',$exdates))

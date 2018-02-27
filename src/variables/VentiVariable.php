@@ -10,6 +10,8 @@
 namespace tippingmedia\venti\variables;
 
 use tippingmedia\venti\Venti;
+use tippingmedia\venti\elements\VentiEvent;
+use tippingmedia\venti\elements\db\VentiEventQuery;
 
 use Craft;
 
@@ -28,10 +30,15 @@ use Craft;
  
 class VentiVariable
 {
-	public function events($criteria = null)
-	{
-		return craft()->elements->getCriteria('VentiEvent',$criteria);
-	}
+
+	public function events($criteria = null): VentiEventQuery
+    {
+        $query = VentiEvent::find();
+        if ($criteria) {
+            Craft::configure($query, $criteria);
+        }
+        return $query;
+    }
 
 	public function nextEvent($criteria = null)
 	{

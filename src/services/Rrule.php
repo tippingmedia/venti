@@ -10,8 +10,12 @@
 namespace tippingmedia\venti\services;
 
 use tippingmedia\venti\Venti;
-use tippingmedia\venti\models\Rrule as RruleModel;
-use tippingmedia\venti\records\Rrule as RruleRecord;
+use tippingmedia\venti\models\Rrule as RRuleModel;
+use tippingmedia\venti\model\Exdate;
+use tippingmedia\venti\model\Rdate;
+use tippingmedia\venti\models\Event;
+use tippingmedia\venti\records\Rrule as RRuleRecord;
+use tippingmedia\venti\elements\VentiEvent;
 
 use Recurr\Rule;
 use Recurr\transformer\ArrayTransformer;
@@ -40,6 +44,59 @@ use craft\i18n\Locale;
 
 class Rrule extends Component
 {
+
+    /**
+    * Save Rrule
+    * @param VentiEvent element
+    * @return Event model
+    */
+
+    public function saveRrule( VentiEvent $event )
+    {
+
+        $dateFormat = Craft::$app->locale->getDateFormat('short',Locale::FORMAT_PHP);
+        $timeFormat = Craft::$app->locale->getTimeFormat('short',Locale::FORMAT_PHP);
+        $format = $dateFormat . ' ' . $timeFormat;
+
+        $timezone = new DateTimeZone(Craft::$app->getTimeZone());
+        
+        if(!$event->recurring || $event->rRule == "") {
+            return false;
+        }
+
+        $rruleModel = $this->_populateRRuleModel($event);
+
+        $RuleRecord = RRuleRecord::find()
+            ->where(['event_id' => $event->id])
+            ->one();
+
+        if (!$RuleRecord) {
+            $RuleRecord = new RRuleRecord();
+        }
+
+        $RuleRecord->event_id = $event->id;
+
+        //$start = DateTime::createFromFormat('Ymd\Tgia\Z', $rruleModel->start, new DateTimeZone('UTC'));
+        //$start->setTimezone(new DateTimeZone('UTC'));
+        $start = new DateTime($rruleModel->start);
+
+        $RuleRecord->start = $start;
+        $RuleRecord->until = $rruleModel->until;
+        $RuleRecord->count = $rruleModel->count;
+        $RuleRecord->interval = $rruleModel->interval;
+        $RuleRecord->frequency = $rruleModel->frequency;
+        $RuleRecord->byDay = $rruleModel->byDay;
+        $RuleRecord->byMonth = $rruleModel->byMonth;
+        $RuleRecord->byYear = $rruleModel->byYear;
+        $RuleRecord->byWeekNo = $rruleModel->byWeekNo;
+        $RuleRecord->firstDayOfTheWeek = $rruleModel->firstDayOfTheWeek;
+
+        $RuleRecord->save(false);
+
+        return true;
+       // \yii\helpers\VarDumper::dump($event, 5, true); exit;
+
+    }
 
 
     /**
@@ -583,6 +640,98 @@ class Rrule extends Component
     }
 
 
+   /**
+    *  Parse the RRule into RRuleModel
+    *  @return RRuleModel
+    */
+
+    public function _populateRRuleModel(VentiEvent $event): RRuleModel
+    {
+        $dateFormat = Craft::$app->locale->getDateFormat('short',Locale::FORMAT_PHP);
+        $timeFormat = Craft::$app->locale->getTimeFormat('short',Locale::FORMAT_PHP);
+        $format = $dateFormat . ' ' . $timeFormat;
+
+        $ruleAry = explode(";",$event->rRule);
+        $keyValueAry = [];
+
+        $outputAry = [];
+
+        for ($i=0; $i < count($ruleAry); $i++)
+        {
+            $keyAry = explode("=",$ruleAry[$i]);
+            $keyValueAry[$keyAry[0]] = $keyAry[1];
+        }
+
+        $rrule = new RRuleModel();
+
+        $rrule->event_id = $event->id;
+
+        // Loop through assign values to rrule model
+        foreach ($keyValueAry as $key => $value)
+        {
+            switch ($key)
+            {
+                case 'FREQ':
+                    $rrule->frequency = strtolower($value);
+                    break;
+
+                case 'BYDAY':
+
+                    if(array_key_exists('FREQ', $keyValueAry)) {
+                        if($keyValueAry['FREQ'] == 'MONTHLY') {
+                            // matches -1FR, +2TU adds number to byWeekNo and Day of week to byDay
+                            preg_match('/([-|+]\d*)(MO|TU|WE|TH|FR|SA|SU)/', $value, $bydayMatches);
+                            $rrule->byWeekNo = $bydayMatches[1];
+                            $rrule->byDay = strtolower($bydayMatches[2]);
+                        } else {
+                            $rrule->byDay = strtolower($value);
+                        }
+                    }
+                    break;
+
+                case 'COUNT':
+                    $rrule->count = $value;
+                    break;
+
+                case 'DTSTART':
+                    //$date = new DateTime($value, new DateTimeZone(Craft::$app->getTimeZone()));
+                    //$date->format($dateFormat) .' '.$date->format($timeFormat);
+                    $rrule->start = $value;
+                    //Procedure uses byYear for the day of the year.
+                    if(array_key_exists('FREQ',$keyValueAry)) {
+                        if($keyValueAry['FREQ'] == 'YEARLY') {
+                            $rrule->byYear = $date->format('d');
+                        }
+                    }
+                    break;
+
+                case 'INTERVAL':
+                    $rrule->interval = $value;
+                    break;
+
+                case 'UNTIL':
+                    #-- remove Z from date for date output to be correct.
+                    //$dte = str_replace("Z", "", $value);
+                    $date = DateTime::createFromFormat("Ymd\THis\Z", $value, Craft::$app->getTimeZone());
+                    $rrule->until = $date;
+                    break;
+
+                case 'BYMONTHDAY':
+                    $rrule->byMonthDay = $value;
+                    break;
+
+                case 'WKST':
+                    $rrule->firstDayOfTheWeek = strtolower($value);
+                    break;
+            }
+        }
+        
+    
+        return $rrule;
+
+    }
+
+
 
     /**
     *  Map Array for populating modal
@@ -877,14 +1026,14 @@ class Rrule extends Component
     {
 
         //- Recurr's supported locales
-        //$locales = ['de','en','eu','fr','it','sv','es'];
-        $locales = array();
+        $locales = ['de','en','eu','fr','it','sv','es'];
+        //$locales = array();
 
-        foreach (glob(Craft::$app->getPath()->getPluginsPath().'/venti/vendor/simshaun/recurr/translations/*.php') as $filepath)
-        {
-            $path = pathinfo($filepath);
-            array_push($locales,$path['filename']);
-        }
+        // foreach (glob(Craft::$app->getPath()->getPluginsPath().'/venti/vendor/simshaun/recurr/translations/*.php') as $filepath)
+        // {
+        //     $path = pathinfo($filepath);
+        //     array_push($locales,$path['filename']);
+        // }
 
         $locale = in_array(Craft::$app->locale->id, $locales) ? Craft::$app->locale->id : "en";
         if ($lang != null && in_array($lang, $locales))

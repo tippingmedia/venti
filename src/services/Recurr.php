@@ -13,7 +13,6 @@ use tippingmedia\venti\Venti;
 use tippingmedia\venti\services\Rrule;
 use tippingmedia\venti\models\Event;
 use tippingmedia\venti\records\Event as EventsRecord;
-// ******* NEEDS RECURR LIBRARY USED
 
 use Recurr\Rule;
 use Recurr\transformer\ArrayTransformer;
@@ -157,7 +156,7 @@ class Recurr extends Component
         $recurrRecord->cid          = $event->cid;
         $recurrRecord->startDate    = $event->startDate;
         $recurrRecord->endDate      = $event->endDate;
-        $recurrRecord->isrepeat     = $event->isrepeat;
+        $recurrRecord->isrecurring     = $event->isrecurring;
 
         $recurrRecord->validate();
         $event->addErrors($recurrRecord->getErrors());

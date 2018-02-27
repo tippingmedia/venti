@@ -85,7 +85,7 @@ class VentiInput {
                 modal.show();
             } else if (elm.classList.contains('venti-allday--input')) {
                 $this.toggleAllDay(evt);
-            } else if (elm.classList.contains('venti-repeat--input')) {
+            } else if (elm.classList.contains('venti-recurring--input')) {
                 if (elm.checked) {
                     $this.endDateValidate(endDateInput);
                     modal.show();
@@ -160,7 +160,7 @@ class VentiInput {
             if (evt.srcElement.id === modal.container.id) {
                 if (rrule.value === "" || (rruleDeposite !== rrule.value && rruleDeposite === "")) {
                     setTimeout(function() {
-                        repeat.checked = false;
+                        recurring.checked = false;
                         rrule.value = rruleDeposite;
                         $this.clearSummary();
                     }, 400);
@@ -282,7 +282,7 @@ class VentiInput {
             endDateInput = input.querySelectorAll('.venti-enddate--input')[0],
             endDateTimeInput = input.querySelectorAll('.venti-enddate--input')[1],
             edValue = endDateInput.value,
-            repeatChbx = input.querySelectorAll('.venti-repeat--input')[0],
+            repeatChbx = input.querySelectorAll('.venti-recurring--input')[0],
             rruleInput = input.querySelectorAll('.venti-rrule--input')[0],
             timeFormat = input.dataset['timeFormat'];
 
@@ -350,7 +350,7 @@ class VentiInput {
             edValue = endDateInput.value,
             startDateInput = input.querySelectorAll('.venti-startdate--input')[0],
             sdValue = startDateInput.value,
-            repeatChbx = input.querySelectorAll('.venti-repeat--input')[0],
+            repeatChbx = input.querySelectorAll('.venti-recurring--input')[0],
             rruleInput = input.querySelectorAll('.venti-rrule--input')[0];
 
         if (sdValue !== "") {

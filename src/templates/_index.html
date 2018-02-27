@@ -16,7 +16,7 @@
 	{% set tabs = tabs|merge({settings: { label: "Settings"|t, url: url('venti/settings') }}) %}
 {% endif %}
 
-{% set extraPageHeaderHtml %}
+{% block actionButton %}
 	{% if groups|length %}
 		<div class="buttons right">
 			{% if groups|length > 1 %}
@@ -36,7 +36,7 @@
 			{% endif %}
 		</div>
 	{% endif %}
-{% endset %}
+{% endblock %}
 
 {% block sidebar %}
 	{# parent() #}

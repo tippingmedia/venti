@@ -31,22 +31,22 @@ class Rrule extends Model
     //protected $elementType = 'VentiEvent';
 
     /**
-     * @var int|null elementId
+     * @var int|null id
      */
-    public $elementId;
+    public $id;
 
     /**
-     * @var int|null siteId
+     * @var int|null event_id
      */
-    public $siteId;
+    public $event_id;
 
     /**
-     * @var datetime|null start
+     * @var date|null start
      */
     public $start;
 
     /**
-     * @var datetime|null until
+     * @var date|null until
      */
     public $until;
 
@@ -61,22 +61,17 @@ class Rrule extends Model
     public $interval;
 
     /**
-       * @var string|null bySecond
-    */
-    public $bySecond;
+     * @var int|null count
+     */
+    public $count;
 
     /**
-       * @var string|null byMinute
+       * @var string|null firstDayOfTheWeek
     */
-    public $byMinute;
-    
+    public $firstDayOfTheWeek;
+
     /**
-       * @var string|null byHour
-    */
-    public $byHour;
-    
-    /**
-       * @var string|null byMonth
+       * @var int|null byMonth
     */
     public $byMonth;
     
@@ -84,26 +79,21 @@ class Rrule extends Model
        * @var string|null byDay
     */
     public $byDay;
+
+    /**
+       * @var int|null byYear
+    */
+    public $byYear;
     
     /**
-       * @var string|null byWeekNo
+       * @var int|null byWeekNo
     */
     public $byWeekNo;
     
     /**
-       * @var string|null byMonthDay
+       * @var int|null byMonthDay
     */
     public $byMonthDay;
-    
-    /**
-       * @var string|null yearDay
-    */
-    public $yearDay;
-    
-    /**
-       * @var string|null wkSt
-    */
-    public $wkSt;
     
     /**
        * @var string|null bySetPos

@@ -10,6 +10,7 @@
 namespace tippingmedia\venti\records;
 
 use tippingmedia\venti\Venti;
+use tippingmedia\venti\elements\VentiEvent;
 
 use Craft;
 use craft\db\ActiveRecord;
@@ -60,6 +61,7 @@ class Event extends ActiveRecord
     public function getElement(): ActiveQueryInterface
     {
         return $this->hasOne(Element::class, ['id' => 'id']);
+
     }
 
 }

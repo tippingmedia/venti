@@ -14,7 +14,9 @@ use tippingmedia\venti\models\Event;
 use tippingmedia\venti\models\Group;
 use tippingmedia\venti\records\Event as EventRecord;
 use tippingmedia\venti\services\Rrule;
-use tippingmedia\venti\events\EventEvent as VentiEvent;
+use tippingmedia\venti\events\EventEvent;
+use tippingmedia\venti\elements\VentiEvent;
+
 
 
 use Craft;
@@ -96,20 +98,24 @@ class Events extends Component
 	 * @throws Exception
 	 * @return array
 	 */
-	public function saveEvent(Event $event, bool $runValidation = true)
+	public function saveEvent(VentiEvent $event, bool $runValidation = true)
 	{
-		if ($runValidation && !$event->validate()) {
-            Craft::info('Event not saved due to validation error.', __METHOD__);
+		$isNewEvent = !$event->id;
 
+		//\yii\helpers\VarDumper::dump($event->validate(), 5, true); exit;
+		if ($runValidation && !$event->validate()) {
+            Craft::info('Event not saved due to validation error.'.print_r($event->errors, true), __METHOD__);
+			
             return false;
         }
 
 		// Venti Settings
 		$settings = Craft::$app->getPlugins()->getPlugin('venti')->getSettings();
 
+		
 		// Event data
-		if ($event->id) {
-			 //cid ?
+		/*if (!$isNewEvent) {
+			 
 			$eventRecord = EventRecord::find()
 				->where(['id' => $event->id])
 				->one();
@@ -123,56 +129,66 @@ class Events extends Component
 				'groupId',
 				'startDate',
 				'endDate',
-				'repeat',
+				'recurring',
 				'allDay',
 				'summary',
 				'rRule',
 				'siteId',
+				'diff',
+				'endRepeat',
 				'location',
 				'specificLocation',
 				'registration'
 			]));
-			$isNewEvent = false;
 		} else {
-			$eventRecord = new VentiRecord();
-			$isNewEvent = true;
+			$eventRecord = new EventRecord();
 		}
 
 		$eventRecord->groupId 	= $event->groupId;
 		$eventRecord->startDate = $event->startDate;
 		$eventRecord->endDate   = $event->endDate;
-		$eventRecord->repeat    = $event->repeat;
+		$eventRecord->recurring = $event->recurring;
 		$eventRecord->allDay    = $event->allDay;
 		$eventRecord->summary   = $event->summary;
 		$eventRecord->rRule     = $event->rRule;
 		$eventRecord->siteId    = $event->siteId;
 		$eventRecord->location  = $event->location;
 		$eventRecord->specificLocation = $event->specificLocation;
-		$eventRecord->registration = $event->registration;
+		$eventRecord->registration = $event->registration;*/
 
-		$this->trigger(self::EVENT_BEFORE_SAVE_EVENT, new VentiEvent([
-			'event' => $event,
-			'isNew' => $isNewEvent
-		]));
+
+		if ($this->hasEventHandlers(self::EVENT_BEFORE_SAVE_EVENT)) {
+			$this->trigger(self::EVENT_BEFORE_SAVE_EVENT, new EventEvent([
+				'event' => $event,
+				'isNew' => $isNewEvent
+			]));
+		}
 
 		$db = Craft::$app->getDb();
-        $transaction = $db->beginTransaction();
-
+		$transaction = $db->beginTransaction();
+		
 		try {
 
 			if (Craft::$app->getElements()->saveElement($event)) {
+				//\yii\helpers\VarDumper::dump($event->recurring, 5, true); exit;
 
-				$eventRecord->save(false);
-
-				// Now that we have an element ID, save it on the model
-				if ($isNewEvent) {
-					$eventRecord->id = $event->id;
-				}
+				//$eventRecord->save(false);
 
 				$this->_eventsById[$event->id] = $event;
 
+				// Now that we have an element ID, save it on the model
+				// if ($isNewEvent) {
+				// 	$eventRecord->id = $event->id;
+				// }
 			
 				// TODO: save rrule record
+
+				if($event->recurring == true) {
+					if(!Venti::getInstance()->rrule->saveRrule($event)){
+						throw new Exception(Craft::t('RRule was not saved for event “{id}”', array('id' => $event->id)));	
+					}
+					//\yii\helpers\VarDumper::dump($event->rRule, 5, true);exit;
+				}
 	
 
 				// Update search index with event
@@ -184,20 +200,20 @@ class Events extends Component
 				// We're saving all of the element's locales here to ensure that they all exist and to update the URI in
 				// the event that the URL format includes some value that just changed
 
-				$eventRecords = [];
+				// $eventRecords = [];
 
-				if (!$isNewEvent)
-				{
+				// if (!$isNewEvent)
+				// {
 
-					$existingEventRecords = EventRecord::find()
-						->id($event->id)
-						->all();
+				// 	$existingEventRecords = EventRecord::find()
+				// 		->id($event->id)
+				// 		->all();
 
-					foreach ($existingEventRecords as $record)
-					{
-						$eventRecords[$record->siteId] = $record;
-					}
-				}
+				// 	foreach ($existingEventRecords as $record)
+				// 	{
+				// 		$eventRecords[$record->siteId] = $record;
+				// 	}
+				// }
 
 				/* 
 					$mainEventSiteId = $event->siteId;
@@ -343,10 +359,12 @@ class Events extends Component
 
 
 		// Fire an 'afterSaveEvent' event
-        $this->trigger(self::EVENT_AFTER_SAVE_EVENT, new VentiEvent([
-            'event' => $event,
-            'isNew' => $isNewEvent
-        ]));
+		if ($this->hasEventHandlers(self::EVENT_AFTER_SAVE_EVENT)) {
+			$this->trigger(self::EVENT_AFTER_SAVE_EVENT, new EventEvent([
+				'event' => $event,
+				'isNew' => $isNewEvent
+			]));
+		}
 
 		return true;
 	}

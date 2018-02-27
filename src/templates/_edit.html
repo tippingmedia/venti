@@ -55,132 +55,128 @@
 
 {% from _self import groupMenu %}
 
-{% block saveButton %}
+{% block actionButton %}
 	{% if canSave %}
 		<input type="hidden" name="action" value="venti/event/save-event">
-		<input type="hidden" name="continueEditingUrl" value="{{ continueEditingUrl|hash }}">
-		<input type="hidden" name="redirect" value="venti">
+		{{ redirectInput('venti/') }}
+
 		<div class="btngroup">
-			<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+			<input type="submit" class="btn submit" value="{{ 'Save'|t('venti') }}">
 
 			<div class="btn submit menubtn"></div>
 			<div class="menu">
 				<ul>
-					<li><a class="formsubmit save-continue-editing" data-redirect="{{ continueEditingUrl|hash }}">{{ "Save and continue editing"|t }}</a></li>
-					<li><a class="formsubmit save-add-another" data-redirect="{{ 'venti/{group.handle}/new'|hash }}">{{ "Save and add another"|t }}</a></li>
+					<li><a class="formsubmit" data-redirect="{{ continueEditingUrl|hash }}">
+                            {{ forms.optionShortcutLabel('S') }}
+                            {{ "Save and continue editing"|t('venti') }}
+                        </a></li>
+					<li><a class="formsubmit" data-redirect="{{ 'venti/{group.handle}/new'|hash }}">{{ "Save and add another"|t('venti') }}</a></li>
 				</ul>
 			</div>
 		</div>
 	{% endif %}
 {% endblock %}
 
-{% block main %}
-	<!-- //<form id="venti-form" method="post" accept-charset="UTF-8" data-saveshortcut="1" data-saveshortcut-redirect="{{ continueEditingUrl }}"> -->
+{% block content %}
 
-		{% if craft.app.isMultiSite() %}
-			<input type="hidden" name="siteId" value="{{ event.siteId }}">
-		{% endif %}
-		{{ csrfInput() }}
-		<div class="grid first" data-max-cols="3">
+	{% if craft.app.isMultiSite() %}
+		<input type="hidden" name="siteId" value="{{ event.siteId }}">
+	{% endif %}
 
-			<div class="item" data-position="left" data-colspan="2">
-				{#{{ craft.venti.settings.eventDuration }}#}
-				<div id="venti-fields" class="pane {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{ craft.venti.settings.eventDuration }}">
-					{% include 'venti/events/_tabs' with { group: eventGroup } only  %}
+	<div id="venti-fields" class="fields {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{ craft.venti.settings.eventDuration }}">
+		{% include 'venti/events/_tabs' with { group: eventGroup } only  %}
 
-					{% include 'venti/events/_fields' with {
-						event: event,
-						group: eventGroup,
-						dateFormat: dateFormat,
-						timeFormat: timeFormat } only %}
+		{% include 'venti/events/_fields' with {
+			event: event,
+			group: eventGroup,
+			dateFormat: dateFormat,
+			timeFormat: timeFormat } only %}
 
-				</div>
-			</div>
+	</div>
+	
+{% endblock %}
 
 
-			{# Sidebar #}
-			<div class="item last" data-position="right">
-
-				{% if craft.app.isMultiSite() and group.getGroupSiteSettings() | length > 1 %}
-					<ul id="sites" class="pane">
-						{% for siteId in siteIds %}
-							{% set site = craft.app.sites.getSiteById(siteId) %}
-                            <li{% if siteId == event.siteId %} class="sel"{% endif %}>
-                                {%- if siteId == event.siteId -%}
-                                    {{ site.name|t('site') }}
-                                    {{ forms.lightswitch({
-                                        name: 'enabledForSite',
-                                        on:   event.enabledForSite,
-                                        small: true,
-                                        disabled: isVersion
-                                    }) }}
-                                {%- else -%}
-									{% set siteEventUrl = url(
-										'venti/'~group.handle~'/'~craft.app.request.getSegment(3)~'/'~siteId
-									) -%}
-									<a href="{{ siteEventUrl }}">{{ site.name|t('site') }}</a>
-									<div class="status {{ siteId in enabledSiteIds ? 'enabled' : 'disabled' }}"></div>
-								{%- endif -%}
-							</li>
-						{% endfor %}
-					</ul>
-				{% endif %}
-				{% if canPublish %}
-					<div id="settings" class="pane meta">
-						{{ forms.textField({
-							label: "Slug"|t,
-							siteId: event.siteId,
-							id: 'slug',
-							name: 'slug',
-							value: event.slug,
-							placeholder: "Enter slug"|t('app'),
-							errors: (not isVersion ? event.getErrors('slug')|merge(event.getErrors('uri'))),
+{% block details %}
+	{% if craft.app.isMultiSite() and group.getGroupSiteSettings() | length > 1 %}
+		<ul id="sites" class="pane">
+			{% for siteId in siteIds %}
+				{% set site = craft.app.sites.getSiteById(siteId) %}
+				<li{% if siteId == event.siteId %} class="sel"{% endif %}>
+					{%- if siteId == event.siteId -%}
+						{{ site.name|t('site') }}
+						{{ forms.lightswitch({
+							name: 'enabledForSite',
+							on:   event.enabledForSite,
+							small: true,
 							disabled: isVersion
 						}) }}
+					{%- else -%}
+						{% set siteEventUrl = url(
+							'venti/'~group.handle~'/'~craft.app.request.getSegment(3)~'/'~siteId
+						) -%}
+						<a href="{{ siteEventUrl }}">{{ site.name|t('site') }}</a>
+						<div class="status {{ siteId in enabledSiteIds ? 'enabled' : 'disabled' }}"></div>
+					{%- endif -%}
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+	{% if canPublish %}
+		<div id="settings" class="meta">
+			{{ forms.textField({
+				label: "Slug"|t,
+				siteId: event.siteId,
+				id: 'slug',
+				name: 'slug',
+				value: event.slug,
+				placeholder: "Enter slug"|t('app'),
+				errors: (event.getErrors('slug')|merge(event.getErrors('uri'))),
+				disabled: false
+			}) }}
 
-						{% if canPublish or (canDeleteEvent) %}
+			{% if canPublish or (canDeleteEvent) %}
 
-							{# Group Menu Button #}
-							{{ groupMenu(eventGroup) }}
+				{# Group Menu Button #}
+				{{ groupMenu(eventGroup) }}
 
-							{#{% set eventGroup = eventGroup %}
-							{% set sites = group.getGroupSiteSettings() %}#}
-							{% set statusInput %}
-								{% if canPublish %}
-									<div class="left">
-										{{ forms.lightswitch({
-											id: 'enabled',
-											name: 'enabled',
-											on: event.enabled,
-											disabled: isVersion
-										}) }}
-									</div>
-								{% endif %}
+				{#{% set eventGroup = eventGroup %}
+				{% set sites = group.getGroupSiteSettings() %}#}
+				{% set statusInput %}
+					{% if canPublish %}
+						<div class="left">
+							{{ forms.lightswitch({
+								id: 'enabled',
+								name: 'enabled',
+								on: event.enabled,
+								disabled:false
+							}) }}
+						</div>
+					{% endif %}
 
-								{% if canDeleteEvent %}
-									<div class="right">
-										<input type="button" class="btn formsubmit" value="{{ 'Delete'|t }}" data-action="venti/event/delete-event"
-											data-confirm="{{ 'Are you sure you want to delete this event?'|t }}"
-											data-redirect="venti">
-									</div>
-								{% endif %}
-							{% endset %}
+					{% if canDeleteEvent %}
+						<div class="right">
+							<input type="button" class="btn formsubmit" value="{{ 'Delete'|t }}" data-action="venti/event/delete-event"
+								data-confirm="{{ 'Are you sure you want to delete this event?'|t }}"
+								data-redirect="venti">
+						</div>
+					{% endif %}
+				{% endset %}
 
-							{{ forms.field({
-								label: "Enabled"|t,
-								id: 'enabled'
-							}, statusInput) }}
+				{{ forms.field({
+					label: "Enabled"|t,
+					id: 'enabled'
+				}, statusInput) }}
 
-						{% endif %}
-					</div>
-				{% endif %}
-			</div>
+			{% endif %}
 		</div>
-	<!-- </form> -->
+	{% endif %}
 {% endblock %}
 
 {% if not event.slug %}
-	{% js "window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');" %}
+    {% js %}
+        window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');
+    {% endjs %}
 {% endif %}
 
 {% set fieldData = {

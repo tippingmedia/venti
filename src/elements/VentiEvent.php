@@ -88,10 +88,14 @@ class VentiEvent extends Element
 	const STATUS_LIVE = 'live';
     const STATUS_EXPIRED = 'expired';
 	
-
+	/**
+     * @inheritdoc
+     *
+     * @return VentiEventQuery The newly created [[VentiEventQuery]] instance.
+     */
 	public static function find(): ElementQueryInterface
     {
-        return new VentiEventQuery(get_called_class());
+        return new VentiEventQuery(static::class);
     }
 
 	/**
@@ -167,11 +171,13 @@ class VentiEvent extends Element
 
 	protected static function defineSources(string $context = null): array 
 	{
+		
 		$sources = [
 			[
 				'key' => '*',
 				'label'    => Craft::t('venti','All Events'),
 				'criteria' => [
+					'cpindex' => true
 					//'isrepeat' => 'null'
 				]
 			]
@@ -180,22 +186,22 @@ class VentiEvent extends Element
 		$groups = new Groups();
 
 		foreach ($groups->getAllGroups() as $group) {
-			$key = 'group:'.$group->id;
+
 			$sources[] = [
-				'key'      => $key,
+				'key'      => 'group:'.$group->id,
 				'label'    => Craft::t('site', $group->name),
 				'data' =>[
 					'handle' => $group->handle
 				],
 				'criteria' => [
 					'groupId' => $group->id,
+					'cpindex' => true
 					//'isrepeat' => 'is not null'
 				]
 			];
 		}
 
-		$sources[] = ['heading' => 'Groups'];
-		
+		//$sources[] = ['heading' => 'Groups'];
 		return $sources;
 	}
 
@@ -210,41 +216,41 @@ class VentiEvent extends Element
             throw new Exception("The group '{$group->name}' is not enabled for the site '{$this->siteId}'");
         }
 
-		
-
         return parent::beforeSave($isNew);
     }
 
 
-	 public function afterSave(bool $isNew)
+	public function afterSave(bool $isNew)
     {
-        $group = $this->getGroup();
-
-        // Get the entry record
+		$group = $this->getGroup();
+		
+        // Get the event record
         if (!$isNew) {
-            $record = EntryRecord::findOne($this->id);
+			$record = EventRecord::findOne($this->id);
 
             if (!$record) {
-                throw new Exception('Invalid entry ID: '.$this->id);
+                throw new Exception('Invalid event ID: '.$this->id);
             }
         } else {
             $record = new EventRecord();
             $record->id = $this->id;
-        }
-
+		}
+		
+		$record->siteId = $this->siteId;
         $record->groupId = $this->groupId;
         $record->startDate = $this->startDate;
         $record->endDate = $this->endDate;
 		$record->endRepeat = $this->endRepeat;
-		$record->diff = $end->diff;
+		$record->diff = $this->diff;
         $record->allDay = $this->allDay;
-		$record->repeat = $this->repeat;
+		$record->recurring = $this->recurring;
 		$record->rRule = $this->rRule;
-		$record->isrepeat = $this->isrepeat;
+		//$record->isrecurring = $this->isrecurring;
 		$record->summary = $this->summary;
 		$record->registration = $this->registration;
 		$record->location = $this->location;
 		$record->specificLocation = $this->specificLocation;
+
         $record->save(false);
 
 
@@ -375,7 +381,7 @@ class VentiEvent extends Element
 			'endDate' => ['label' => Craft::t('venti', 'End Date')],
 			'endRepeat' => ['label' => Craft::t('venti', 'End Repeat')],
 			'rRule' => ['label' => Craft::t('venti', 'Rrule')],
-			'repeat' => ['label' => Craft::t('venti', 'Repeat')],
+			'recurring' => ['label' => Craft::t('venti', 'Recurring')],
 			'allDay' => ['label' => Craft::t('venti', 'All Day')],
 			'summary' => ['label' => Craft::t('venti', 'Summary')],
             'dateCreated' => ['label' => Craft::t('app', 'Date Created')],
@@ -391,6 +397,7 @@ class VentiEvent extends Element
      */
     protected function tableAttributeHtml(string $attribute): string
 	{
+		//todo:these need to return string then we are in business after we fix VentiEventQuery
 		switch ($attribute)
 		{
 			case 'startDate':
@@ -419,17 +426,17 @@ class VentiEvent extends Element
 			{
 				if($this->allDay == 1)
 				{
-					return Craft::t('Venti','Yes');
+					return Craft::t('venti','Yes');
 				}
 				else
 				{
-					return Craft::t('Venti','No');
+					return Craft::t('venti','No');
 				}
 			}
 			case 'group':
 			{
 				$group = $this->getGroup();
-				$color = $group->getColor();
+				$color = $group->color;
 				return "<div class='group-label-color'><span class='menu-label-color' style='background-color:".$color.";'></span></div>";
 			}
 			case 'summary':
@@ -438,11 +445,8 @@ class VentiEvent extends Element
 				$summary = $this->summary;
 				return $this->summary != "" ? $summary : '';
 			}
-
-			$r = parent::tableAttributeHtml($attribute);
-			return $r;
-			
 		}
+		return parent::tableAttributeHtml($attribute);
 	}
 
 
@@ -501,9 +505,9 @@ class VentiEvent extends Element
      */
     public $rRule;
 	/**
-     * @var int|null Repeat
+     * @var int|null Recurring
      */
-    public $repeat;
+    public $recurring;
 	/**
      * @var int|null AllDay
      */
@@ -521,9 +525,9 @@ class VentiEvent extends Element
      */
     public $diff;
 	/**
-     * @var int|null Is Repeat
+     * @var int|null Is Recurring
      */
-    public $isrepeat;
+    public $isrecurring;
 	/**
      * @var mixed|null Location
      */
@@ -535,9 +539,38 @@ class VentiEvent extends Element
 	/**
      * @var string|null Summary
      */
-    public $registration;
+	public $registration;
+	
+	public $authorId;
+	/**
+     * @var int|null Event Id
+     */
+	public $event_id;
+	/**
+     * @var datetime|null Scheduled Date
+     */
+	public $scheduled_date;
 
 
+	// Public methods
+    // =========================================================================
+
+
+	/**
+     * @inheritdoc
+     */
+    // public function __get($name)
+    // {
+			
+    //     switch ($name) {
+	// 		case 'startDate':
+	// 			$this->altStartDate();
+    //             break;
+    //         default:
+    //             parent::__get($name);
+    //     }
+	// }
+	
 
 
 	/**
@@ -547,7 +580,8 @@ class VentiEvent extends Element
     {
         $names = parent::datetimeAttributes();
         $names[] = 'startDate';
-        $names[] = 'endDate';
+		$names[] = 'endDate';
+		$names[] = 'scheduled_date';
 
         return $names;
     }
@@ -573,8 +607,8 @@ class VentiEvent extends Element
         $rules = parent::rules();
 
 
-        $rules[] = [['groupId', 'repeat', 'allDay','diff','isrepeat'], 'number', 'integerOnly' => true];
-        $rules[] = [['startDate', 'endDate','endRepeat'], DateTimeValidator::class];
+        $rules[] = [['groupId', 'recurring', 'allDay','diff','isrecurring','event_id'], 'number', 'integerOnly' => true];
+        $rules[] = [['startDate', 'endDate','endRepeat','scheduled_date'], DateTimeValidator::class];
 
         return $rules;
     }
@@ -649,7 +683,7 @@ class VentiEvent extends Element
     protected function route()
     {
         // Make sure that the event is actually live
-        if ($this->getStatus() != Event::STATUS_LIVE) {
+        if ($this->getStatus() != VentiEvent::STATUS_LIVE) {
             return null;
         }
 
@@ -707,7 +741,7 @@ class VentiEvent extends Element
         $group = $this->getGroup();
 
         // The slug *might* not be set if this is a Draft and they've deleted it for whatever reason
-        $url = UrlHelper::cpUrl('events/'.$group->handle.'/'.$this->id.($this->slug ? '-'.$this->slug : ''));
+        $url = UrlHelper::cpUrl('venti/'.$group->handle.'/'.$this->id.($this->slug ? '-'.$this->slug : ''));
 
         if (Craft::$app->getIsMultiSite() && $this->siteId != Craft::$app->getSites()->currentSite->id) {
             $url .= '/'.$this->getSite()->handle;

@@ -198,14 +198,11 @@ class Groups extends Component
         }
 
 		$result = $this->_createGroupQuery()
-			->where(['groups.id' => $groupId])
+			->where(['venti_groups.id' => $groupId])
 			->one();
 
-		if (!$result) {
-			return $this->_groupsById[$groupId] = null;
-		}
 
-		return $this->_groupsById[$groupId] = new Group($result);
+		return $this->_groupsById[$groupId] = $result ? new Group($result) : null;
 
 	}
 
@@ -218,7 +215,7 @@ class Groups extends Component
 	public function getGroupByHandle(string $groupHandle) 
 	{
 		$result = $this->_createGroupQuery()
-			->where(['groups.handle' => $groupHandle])
+			->where(['venti_groups.handle' => $groupHandle])
 			->one();
 
 
@@ -243,10 +240,12 @@ class Groups extends Component
 		$isNewGroup = !$group->id;
 
 		// Fire a 'beforeSaveGroup' event
-        $this->trigger(self::EVENT_BEFORE_SAVE_GROUP, new GroupEvent([
-            'group' => $group,
-            'isNew' => $isNewGroup
-        ]));
+		if ($this->hasEventHandlers(self::EVENT_BEFORE_SAVE_GROUP)) {
+			$this->trigger(self::EVENT_BEFORE_SAVE_GROUP, new GroupEvent([
+				'group' => $group,
+				'isNew' => $isNewGroup
+			]));
+		}
 
 		if ($runValidation && !$group->validate()) {
             Craft::info('venti','Group not saved due to validation error.', __METHOD__);
@@ -395,7 +394,6 @@ class Groups extends Component
 							'groupId' => $group->id,
 							'status' => null,
 							'enabledForSite' => false,
-							'limit' => null,
 						]
 					]));
 				}
@@ -409,10 +407,12 @@ class Groups extends Component
 		}
 
 		// Fire an 'afterSaveGroup' event
-        $this->trigger(self::EVENT_AFTER_SAVE_GROUP, new GroupEvent([
-            'group' => $group,
-            'isNew' => $isNewGroup
-        ]));
+		if ($this->hasEventHandlers(self::EVENT_AFTER_SAVE_GROUP)) {
+			$this->trigger(self::EVENT_AFTER_SAVE_GROUP, new GroupEvent([
+				'group' => $group,
+				'isNew' => $isNewGroup
+			]));
+		}
 
 
 		return true;
@@ -447,9 +447,11 @@ class Groups extends Component
     public function deleteGroup(Group $group): bool
     {
 		// Fire a 'beforeDeleteGroup' event
-        $this->trigger(self::EVENT_BEFORE_DELETE_GROUP, new GroupEvent([
-            'group' => $group
-        ]));
+		if ($this->hasEventHandlers(self::EVENT_BEFORE_DELETE_GROUP)) {
+			$this->trigger(self::EVENT_BEFORE_DELETE_GROUP, new GroupEvent([
+				'group' => $group
+			]));
+		}
 
 		$transaction = Craft::$app->getDb()->beginTransaction();
         try {
@@ -491,10 +493,12 @@ class Groups extends Component
             throw $e;
         }
 
-        // Fire an 'afterDeleteGroup' event
-        $this->trigger(self::EVENT_AFTER_DELETE_GROUP, new GroupEvent([
-            'group' => $group
-        ]));
+		// Fire an 'afterDeleteGroup' event
+		if ($this->hasEventHandlers(self::EVENT_AFTER_DELETE_GROUP)) {
+			$this->trigger(self::EVENT_AFTER_DELETE_GROUP, new GroupEvent([
+				'group' => $group
+			]));
+		}
 
         return true;
 	}
@@ -514,7 +518,7 @@ class Groups extends Component
 		
 		$query = (new Query())
 			->select('*')
-			->from('venti_groups venti_groups')
+			->from('{{%venti_groups}} venti_groups')
 			->where('venti_groups.fieldLayoutId = :fieldLayoutId', [':fieldLayoutId' => $layoutId])
 			->all();
 
@@ -615,13 +619,13 @@ class Groups extends Component
     {
         return (new Query())
             ->select([
-                'groups.id',
-                'groups.name',
-                'groups.handle',
-				'groups.description',
-                'groups.color',
+                'venti_groups.id',
+                'venti_groups.name',
+                'venti_groups.handle',
+				'venti_groups.description',
+                'venti_groups.color',
             ])
-            ->from(['{{%venti_groups}} groups'])
+            ->from(['{{%venti_groups}} venti_groups'])
             ->orderBy(['name' => SORT_ASC]);
     }
 	

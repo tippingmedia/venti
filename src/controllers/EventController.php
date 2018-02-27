@@ -231,6 +231,7 @@ class EventController extends BaseEventController
 	public function actionSaveEvent() 
 	{
 		$this->requirePostRequest();
+		$events = new Events();
 
 		$event = $this->_getEventModel();
 		$request = Craft::$app->getRequest();
@@ -256,15 +257,17 @@ class EventController extends BaseEventController
 		//permission enforcement
 		if ($event->enabled) {
 			if ($event->id) {
-				$userSessionService->requirePermission('publishEvents:'.$event->groupId);
+				$this->requirePermission('publishEvents:'.$event->groupId);
 			} else if (!$currentUser->can('publishEvents:'.$event->groupId)) {
 				$event->enabled = false;
 			}
 		}
 
 		//\yii\helpers\VarDumper::dump($event, 5, true); exit;
+		//Craft::$app->getElements()->saveElement($event)
 
-		if (!Craft::$app->getElements()->saveElement($event)) {
+
+		if (!$events->saveEvent($event)) {
 			if ($request->getAcceptsJson()) {
 				return $this->asJson([
 					'errors' => $event->getErrors(),
@@ -300,8 +303,8 @@ class EventController extends BaseEventController
 			$return['endRepeat'] = $event->endRepeat;
 			$return['rRule'] = $event->rRule;
 			$return['summary'] = $event->summary;
-			$return['repeat'] = $event->repeat;
-			$return['isrepeat'] = $event->isrepeat;
+			$return['recurring'] = $event->recurring;
+			$return['isrecurring'] = $event->isrecurring;
 			$return['diff'] = $event->diff;
 			$return['allDay'] = $event->allDay;
 			$return['location'] = $event->location;
@@ -371,7 +374,11 @@ class EventController extends BaseEventController
 		$groups = new Groups();
 
 		if ($eventId) {
-			$event = $groups->getEventById($eventId, $siteId);
+			$event = VentiEvent::find()
+					->id($eventId)
+					->siteId($siteId)
+					->cpindex(true)
+					->one();
 
 			if (!$event) {
 				throw new Exception(Craft::t('venti','No event exists with the ID “{id}”.', array('id' => $eventId)));
@@ -584,11 +591,16 @@ class EventController extends BaseEventController
 
         if (empty($variables['event'])) {
             if (!empty($variables['eventId'])) {
-                
-				$variables['event'] = Venti::getInstance()->events->getEventById($variables['eventId'], $site->id);
+                //\yii\helpers\VarDumper::dump($variables, 5, true); exit;
+				$variables['event'] = VentiEvent::find()
+					->id($variables['eventId'])
+					->siteId($site->id)
+					->cpindex(true)
+					->one();
+					//Venti::getInstance()->events->getEventById($variables['eventId'], $site->id);
 
                 if (!$variables['event']) {
-                    throw new NotFoundHttpException('Entry not found');
+                    throw new NotFoundHttpException('Event not found');
                 }
             } else {
                 $variables['event'] = new VentiEvent();
@@ -638,7 +650,7 @@ class EventController extends BaseEventController
 	{
 
 		$event = VentiEvent::find()
-    		->eid($variables['eid'])
+    		->iid($variables['eventId'])
     		->siteEndabled(null)
     		->one();
 
@@ -795,12 +807,13 @@ class EventController extends BaseEventController
 	 */
 	public function _populateEventModel(VentiEvent $event) 
 	{
+		//\yii\helpers\VarDumper::dump($event->id, 5, true); exit;
 		$event->slug          = Craft::$app->getRequest()->getBodyParam('slug', $event->slug);
 		$event->groupId       = Craft::$app->getRequest()->getBodyParam('groupId', $event->groupId);
 		$event->startDate     = (($startDate = Craft::$app->getRequest()->getBodyParam('startDate')) ? DateTimeHelper::toDateTime($startDate) : null);
 		$event->endDate    	  = (($endDate   = Craft::$app->getRequest()->getBodyParam('endDate'))   ? DateTimeHelper::toDateTime($endDate) : null);
 		$event->rRule     	  = Craft::$app->getRequest()->getBodyParam('rRule', $event->rRule);
-		$event->repeat 		  = (bool) Craft::$app->getRequest()->getBodyParam('repeat', $event->repeat);
+		$event->recurring 	  = (bool) Craft::$app->getRequest()->getBodyParam('recurring', $event->recurring);
 		$event->summary 	  = Craft::$app->getRequest()->getBodyParam('summary', $event->summary);
 		$event->allDay 		  = (bool) Craft::$app->getRequest()->getBodyParam('allDay', $event->allDay);
 		$event->location 	  = Craft::$app->getRequest()->getBodyParam('location', $event->location);
@@ -809,23 +822,31 @@ class EventController extends BaseEventController
         $event->enabledForSite = (bool)Craft::$app->getRequest()->getBodyParam('enabledForSite', $event->enabledForSite);
         $event->title = Craft::$app->getRequest()->getBodyParam('title', $event->title);
 
-		$event->isrepeat 	  = null;
+		$event->isrecurring   = null;
 		$event->diff     	  = null;
 		$event->endRepeat     = null;
 
-		if($event->repeat) {
+		if($event->allDay == "") {
+			$event->allDay = 0;
+		}
+
+		if($event->recurring) {
 			$recurr = new Recurr();
 			$dates  = $recurr->getRecurDates($event->startDate,$event->rRule);
         	$dates  = $dates->toArray();
 			$lastDate = end($dates);
+
+			$date1 = $event->startDate;
+			$date2 = $event->endDate;
 			
-			$event->diff = $event->startDate->diff($event->endDate);
+			$event->diff = $date2->getTimestamp() - $date1->getTimestamp();
 			$event->endRepeat = $lastDate->getEnd();
 		}
 
 		$event->fieldLayoutId = $event->getGroup()->fieldLayoutId;
 		$fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
 		$event->setFieldValuesFromRequest($fieldsLocation);
+		
 	}
 
 }

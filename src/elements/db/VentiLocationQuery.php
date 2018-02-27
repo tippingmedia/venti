@@ -5,6 +5,7 @@ use tippingmedia\venti\Venti;
 use tippingmedia\venti\models\Location;
 use tippingmedia\venti\services\Locations;
 
+use Craft;
 use craft\db\Query;
 use craft\elements\db\ElementQuery;
 use craft\db\QueryAbortedException;
@@ -317,3 +318,4 @@ class VentiLocationQuery extends ElementQuery
 
         return parent::beforePrepare();
     }
+}
