@@ -10,6 +10,7 @@ namespace tippingmedia\venti;
 
 use Craft;
 use craft\base\Plugin;
+use craft\base\Element;
 use craft\services\Elements;
 use craft\services\Fields;
 use craft\services\Plugins;
@@ -17,6 +18,10 @@ use craft\services\Resources;
 use craft\web\UrlManager;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterTemplateRootsEvent;
+use craft\events\TemplateEvent;
+use craft\events\SetElementRouteEvent;
+use craft\web\View;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\ResolveResourcePathEvent;
 use craft\web\twig\variables\CraftVariable;
@@ -68,7 +73,7 @@ class Venti extends Plugin
             'groups' => \tippingmedia\venti\services\Groups::class,
             'events' => \tippingmedia\venti\services\Events::class,
 			'calendar' => \tippingmedia\venti\services\Calendar::class,
-            'locations' => \tippingmedia\venti\services\locations::class,
+            'locations' => \tippingmedia\venti\services\Locations::class,
             'ics' => \tippingmedia\venti\services\Ics::class,
 			'settings' => \tippingmedia\venti\services\Settings::class,
 			'rrule' => \tippingmedia\venti\services\Rrule::class,
@@ -91,11 +96,11 @@ class Venti extends Plugin
 			// Locations
 			$event->rules['venti/locations'] = ['template' => 'venti/location/locationIndex'];
 			$event->rules['venti/locations/new'] = ['template' => 'venti/locations/editLocation'];
-			$event->rules['venti/location/(?P<locationId>\d+)(?:-{slug})'] = ['template' => 'venti/locations/editLocation'];
+			$event->rules['venti/location/<locationId:\d+>(?:-{slug})'] = ['template' => 'venti/locations/editLocation'];
 
 			// Calendar
 			$event->rules['venti/calendar'] = ['template' => 'venti/calendar/calendarIndex'];
-			$event->rules['venti/feed/(?P<groupId>\d+)/(?P<siteId>\w+)'] = ['template' => 'venti/calendar/calendarFeed'];
+			$event->rules['venti/feed/<groupId:\d+>/<siteId:\w+>'] = ['template' => 'venti/calendar/calendarFeed'];
 
 			// Settings
 			$event->rules['venti/settings'] = 'venti/settings/index';
@@ -104,6 +109,30 @@ class Venti extends Plugin
 			$event->rules['venti/settings/events'] = 'venti/settings/events';
 			$event->rules['venti/settings/groups'] = 'venti/settings/groups';
 		});
+
+		Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) {
+
+			$rules = [
+				'event/<slug:(?:-[^\/]*)?>/<year:\d{4}>-<month:(?:0?[1-9]|1[012])>-<day:(?:0?[1-9]|[12][0-9]|3[01])>' => 'venti/event/view-event',
+				'<groupHandle:{handle}>/<slug:(?:-[^\/]*)?>/<year:\d{4}>-<month:(?:0?[1-9]|1[012])>-<day:(?:0?[1-9]|[12][0-9]|3[01])>' => 'venti/event/view-event',
+				'calendar/ics/<groupId:\d+>' => 'venti/event/view-ics',
+			];
+
+			//\yii\helpers\VarDumper::dump($event->rules, 5, true);exit;
+
+			$event->rules = array_merge($event->rules, $rules);
+		});
+
+		// Event::on(EventElement::class, Element::EVENT_SET_ROUTE, function(SetElementRouteEvent $e) {
+		// 	// @var craft\elements\Entry $entry
+		// 	//\yii\helpers\VarDumper::dump($e, 5, true);exit;
+		// 	$ventiEvent = $e->sender;
+		// 	//if ($ventiEvent->uri === 'pricing') {
+		// 		$e->route = 'venti/event/view-event';
+		// 	//}
+		// 	$event->handled = true;
+		// });
+
     }
 
 	public function getName()
@@ -131,17 +160,6 @@ class Venti extends Plugin
         return Craft::$app->getPath()->getPluginsPath().'/resources/img/venti.svg';
     }
 
-
-
-
-	public function registerSiteRoutes()
-	{
-	    return array(
-	        //'event/(?P<slug>{slug})/(?P<eid>\w+)' => array('action' => 'venti/event/viewEventByEid'),
-			'event/(?P<slug>{slug})/(?P<year>\d{4})-(?P<month>(?:0?[1-9]|1[012]))-(?P<day>(?:0?[1-9]|[12][0-9]|3[01]))' => array('action' => 'venti/event/viewEventByStartDate'),
-			'calendar/ics/(?P<groupId>\d+)' => array('action' => 'venti/event/viewICS')
-	    );
-	}
 
 
 	public function registerCachePaths()

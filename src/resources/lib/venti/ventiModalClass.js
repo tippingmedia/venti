@@ -146,9 +146,9 @@ class VentiModal {
             });
         });*/
 
-        $('#venti-fields-venti-endsOn-date').datepicker($.extend({}, Craft.datepickerOptions));
-        $('#venti-fields-venti-exclude-date').datepicker($.extend({}, Craft.datepickerOptions));
-        $('#venti-fields-venti-include-date').datepicker($.extend({}, Craft.datepickerOptions));
+        $('[id*=venti-fields-venti-endsOn]').datepicker($.extend({}, Craft.datepickerOptions));
+        $('[id*=venti-fields-venti-exclude]').datepicker($.extend({}, Craft.datepickerOptions));
+        $('[id*=venti-fields-venti-include]').datepicker($.extend({}, Craft.datepickerOptions));
     }
 
     //[jQ]

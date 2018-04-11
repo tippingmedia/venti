@@ -21,6 +21,8 @@ use craft\base\Model;
 use DateTime;
 use DateTimeZone;
 
+use craft\helpers\UrlHelper;
+
 use craft\i18n\Formatter;
 use craft\i18n\Locale;
 
@@ -55,7 +57,6 @@ class Event extends Model
      * @var int|null Element ID
      */
     public $id;
-
 	/**
      * @var mixed|null Group 
      */
@@ -101,10 +102,6 @@ class Event extends Model
      */
     public $diff;
 	/**
-     * @var int|null IS RECURRIN
-     */
-    public $isrecurring;
-	/**
      * @var mixed|null Location
      */
     public $location;
@@ -134,7 +131,6 @@ class Event extends Model
             'allDay'     		=> AttributeType::Number,
             'recurring'     	=> AttributeType::Number,
 			'diff'     			=> AttributeType::Number,
-			'isrecurring'     	=> AttributeType::Number,
             'rRule'      		=> AttributeType::String,
             'summary'    		=> AttributeType::String,
 			'location'   		=> Attributetype::Mixed,
@@ -177,7 +173,6 @@ class Event extends Model
 
 		if($name === 'location' && is_array(parent::getAttribute('location')) && Craft::$app->getRequest()->isSiteRequest())
 		{
-			
 			$location = VentiLocation::find()
     			->id(parent::getAttribute('location')[0])
     			->localeEndabled(null)
@@ -359,22 +354,22 @@ class Event extends Model
 	 *
 	 * @return string|null
 	 */
-	public function getUrlFormat()
-	{
-		$group = $this->getGroup();
+	// public function getUrlFormat()
+	// {
+	// 	$group = $this->getGroup();
 
-		if ($group && $group->hasUrls)
-		{
-			$groupLocales = $group->getLocales();
+	// 	if ($group && $group->hasUrls)
+	// 	{
+	// 		$groupLocales = $group->getLocales();
 
-			if (isset($groupLocales[$this->locale]))
-			{
+	// 		if (isset($groupLocales[$this->locale]))
+	// 		{
 
-				return $groupLocales[$this->locale]->urlFormat;
+	// 			return $groupLocales[$this->locale]->urlFormat;
 
-			}
-		}
-	}
+	// 		}
+	// 	}
+	// }
 
 
 

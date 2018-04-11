@@ -23,7 +23,13 @@ use yii\db\Connection;
 
 class VentiEventQuery extends ElementQuery
 {
-     /**
+     // Properties
+    // =========================================================================
+
+    // General parameters
+    //
+
+    /**
      * @var bool Whether to only return entries that the user has permission to edit.
      */
     public $editable = false;
@@ -72,26 +78,36 @@ class VentiEventQuery extends ElementQuery
         }
     }
 
+    
+
     /**
      * Sets the [[editable]] property.
      *
      * @param bool $value The property value (defaults to true)
-     *
      * @return static self reference
      */
     public function editable(bool $value = true)
     {
         $this->editable = $value;
-
         return $this;
     }
 
+    /**
+     * Sets the [[groupId]] property.
+     *
+     * @param int|int[]|null $value The property value
+     * @return static self reference
+     */
+    public function groupId($value)
+    {
+        $this->groupId = $value;
+        return $this;
+    }
 
     /**
      * Sets the [[groupId]] property based on a given group(s)’s handle(s).
      *
-     * @param string|string[]|group|null $value The property value
-     *
+     * @param string|string[]|Group|null $value The property value
      * @return static self reference
      */
     public function group($value)
@@ -102,7 +118,7 @@ class VentiEventQuery extends ElementQuery
             $this->groupId = (new Query())
                 ->select(['id'])
                 ->from(['{{%venti_groups}} groups'])
-                ->where(Db::parseParam('groups.handle', $value))
+                ->where(Db::parseParam('handle', $value))
                 ->column();
         } else {
             $this->groupId = null;
@@ -111,35 +127,15 @@ class VentiEventQuery extends ElementQuery
         return $this;
     }
 
-    // Properties
-    // =========================================================================
-
-
-    /**
-     * Sets the [[groupId]] property.
-     *
-     * @param int|int[]|null $value The property value
-     *
-     * @return static self reference
-     */
-    public function groupId($value)
-    {
-        $this->groupId = $value;
-
-        return $this;
-    }
-
     /**
      * Sets the [[startDate]] property.
      *
      * @param DateTime|string $value The property value
-     *
      * @return static self reference
      */
     public function startDate($value)
     {
         $this->startDate = $value;
-
         return $this;
     }
 
@@ -147,13 +143,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[endDate]] property.
      *
      * @param DateTime|string $value The property value
-     *
      * @return static self reference
      */
     public function endDate($value)
     {
         $this->endDate = $value;
-
         return $this;
     }
 
@@ -161,13 +155,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[diff]] property.
      *
      * @param Time|string $value The property value
-     *
      * @return static self reference
      */
     public function diff($value)
     {
         $this->diff = $value;
-
         return $this;
     }
 
@@ -175,13 +167,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[rRule]] property.
      *
      * @param $string|null $value The property value
-     *
      * @return static self reference
      */
     public function rRule($value)
     {
         $this->rRule = $value;
-
         return $this;
     }
 
@@ -189,13 +179,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[recurring]] property.
      *
      * @param $int|null $value The property value
-     *
      * @return static self reference
      */
     public function recurring($value)
     {
         $this->recurring = $value;
-
         return $this;
     }
     
@@ -203,13 +191,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[allDay]] property.
      *
      * @param $int|null $value The property value
-     *
      * @return static self reference
      */
     public function allDay($value)
     {
         $this->allDay = $value;
-
         return $this;
     }
 
@@ -217,13 +203,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[summary]] property.
      *
      * @param $string|null $value The property value
-     *
      * @return static self reference
      */
     public function summary($value)
     {
         $this->summary = $value;
-
         return $this;
     }
 
@@ -231,13 +215,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[isrecurring]] property.
      *
      * @param $int|null $value The property value
-     *
      * @return static self reference
      */
     public function isrecurring($value)
     {
         $this->isrecurring = $value;
-
         return $this;
     }
 
@@ -245,13 +227,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[location]] property.
      *
      * @param int|int[]|null $value The property value
-     *
      * @return static self reference
      */
     public function location($value)
     {
         $this->location = $value;
-
         return $this;
     }
 
@@ -259,13 +239,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[specificLocation]] property.
      *
      * @param $string|null $value The property value
-     *
      * @return static self reference
      */
     public function specificLocation($value)
     {
         $this->specificLocation = $value;
-
         return $this;
     }
 
@@ -273,13 +251,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[registration]] property.
      *
      * @param $mixed|null $value The property value
-     *
      * @return static self reference
      */
     public function registration($value)
     {
         $this->registration = $value;
-
         return $this;
     }  
 
@@ -287,14 +263,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[between]] property.
      *
      * @param $array|string $value The property value
-     *
      * @return static self reference
      */
     public function between($value)
     {
-        
         $this->between = $value;
-
         return $this;
     }
 
@@ -302,22 +275,19 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[range]] property.
      *
      * @param $array|string $value The property value
-     *
      * @return static self reference
      */
     public function range($value)
     {
         $this->range = $value;
-
         return $this;
     }
 
 
-/**
+    /**
      * Sets the [[cpindex]] property.
      *
      * @param $int|null $value The property value
-     *
      * @return static self reference
      */
     public function cpindex($value) {
@@ -329,13 +299,11 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[event_id]] property.
      *
      * @param $int|null $value The property value
-     *
      * @return static self reference
      */
     public function event_id($value)
     {
         $this->event_id = $value;
-
         return $this;
     }  
 
@@ -343,25 +311,25 @@ class VentiEventQuery extends ElementQuery
      * Sets the [[scheduled_date]] property.
      *
      * @param DateTime|string $value The property value
-     *
      * @return static self reference
      */
     public function scheduled_date($value)
     {
         $this->scheduled_date = $value;
-
         return $this;
     }  
 
+
+
     // Private Methods
     // =========================================================================
+    
     /**
      * @inheritdoc
      */
     protected function beforePrepare(): bool
     {
 
-        //Craft::$app->getDb()->createCommand('CREATE TEMPORARY TABLE temp_venti_events (elementId,startDate,endDate)')->execute();
         // See if 'group' is set to invalid handle
         if ($this->groupId === []) {
             return false;
@@ -411,7 +379,7 @@ class VentiEventQuery extends ElementQuery
             $this->subQuery->andWhere(Db::parseParam('venti_events.groupId', $this->groupId));
         }
 
-        if ($this->startDate) {
+        if ($this->startDate) {   
             if (!$this->cpindex) {
                 $this->subQuery->andWhere(Db::parseDateParam('recur.scheduled_date', $this->startDate));
             }else {
@@ -473,7 +441,7 @@ class VentiEventQuery extends ElementQuery
 
 
         if (!$this->orderBy && !$this->cpindex) {
-            $this->query->orderBy = ['recur.scheduled_date' => SORT_DESC];
+            $this->query->orderBy = ['recur.scheduled_date' => SORT_ASC];
         }
         // if order by is startDate order by recur.scheduled_date
         if($this->orderBy && !$this->cpindex) {
@@ -486,9 +454,17 @@ class VentiEventQuery extends ElementQuery
                 }
             }
         }
-
+        
         return parent::beforePrepare();
     }
+
+    protected function afterPrepare(): bool
+    {
+        //\yii\helpers\VarDumper::dump($this, 8, true);exit;
+        return parent::afterPrepare();
+    }
+
+    
 
     /**
      * @inheritdoc
@@ -520,7 +496,7 @@ class VentiEventQuery extends ElementQuery
         }
     }
 
-/**
+    /**
      * Applies the 'editable' param to the query being prepared.
      *
      * @return void
@@ -545,28 +521,23 @@ class VentiEventQuery extends ElementQuery
 
     }
 
-/**
+    /**
      * Applies the 'groupId' param to the query being prepared.
      */
     private function _applyGroupIdParam() {
         if ($this->groupId) {
-            // $this->subQuery->join('{{%venti_groups}} groups','[[groups.id]] = [[venti_events.groupId]]');
-            // if(is_numeric($this->group)) {
-            //     $this->subQuery->addWhere(Db::parseParam('groups.id', $this->group));
-            // } else {
-            //     $this->subQuery->addWhere(Db::parseParam('groups.handle', $this->group));
-            // }
             $this->subQuery->andWhere(Db::parseParam('venti_events.groupId', $this->groupId));
         }
     }
 
-/**
+    /**
      * Applies the 'ref' param to the query being prepared.
      *
      * @return void
      */
     private function _applyRefParam()
     {
+
         if (!$this->ref) {
             return;
         }
@@ -606,14 +577,16 @@ class VentiEventQuery extends ElementQuery
      */
     private function prepareDateParams($params)
     {
+        $current = new DateTime('now', new DateTimeZone(Craft::$app->getTimeZone()));
+        $format = 'Y-m-d g:i:s';
+        // TODO: If event detail request use startDate in segments to get specific date.
+        //\yii\helpers\VarDumper::dump(Craft::$app->getRequest(), 5, true);exit;
+
         if(is_array($params) && (isset($params[0]) || (isset($params[1])))) {
             $dates = $params;
             $dateParams = [];
-
-            $current = new DateTime('now', new DateTimeZone(Craft::$app->getTimeZone()));
-            $format = 'Y-m-d g:i:s';
             
-            // Is begin span set if not set to current.
+            // Is begining span set, if not set to current.
             if(!isset($dates[0]) || $dates[0] == NULL) {
                 $altStart = $current;
                 $dates[0] = $altStart;
@@ -625,7 +598,7 @@ class VentiEventQuery extends ElementQuery
             $dateParams[0] = $dates[0]->format($format);
 
 
-            // Is end span set if not set to start +1 month.
+            // Is ending span set, if not set to start +1 month.
             if(!isset($dates[1]) || $dates[1] == NULL) {
                 // Use begin date as starting point.
                 $altStart = $dates[0];
@@ -643,7 +616,6 @@ class VentiEventQuery extends ElementQuery
         } else {
             $dateParams = [];
             // Default to current datetime to 1 month in the future
-
             $dateParams[0] = $current->format($format);
             $span = $current;
             date_modify($span, "+1 month");

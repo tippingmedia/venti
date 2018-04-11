@@ -41,7 +41,7 @@ use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
 use craft\web\assets\editentry\EditEntryAsset;
-use craft\web\assets\datepickeri18n\DatepickerI18nAsset;
+//use craft\web\assets\datepickeri18n\DatepickerI18nAsset;
 
 use craft\i18n\Formatter;
 use craft\i18n\Locale;
@@ -71,6 +71,7 @@ class EventController extends BaseEventController
 	 */
 	public function actionIndex(array $variables = []): Response 
 	{
+		
 		$variables['groups'] = Venti::getInstance()->groups->getAllGroups();
 		return $this->renderTemplate('venti/_index', $variables);
 	}
@@ -304,7 +305,6 @@ class EventController extends BaseEventController
 			$return['rRule'] = $event->rRule;
 			$return['summary'] = $event->summary;
 			$return['recurring'] = $event->recurring;
-			$return['isrecurring'] = $event->isrecurring;
 			$return['diff'] = $event->diff;
 			$return['allDay'] = $event->allDay;
 			$return['location'] = $event->location;
@@ -513,7 +513,9 @@ class EventController extends BaseEventController
 		$values = $rule != "" ?  Venti::getInstance()->rrule->modalValuesArray($rule) : $defaultValues;
 
 		$view = $this->getView();
-		$view->registerAssetBundle(DatepickerI18nAsset::class);
+		
+
+		//$view->registerAssetBundle(DatepickerI18nAsset::class);
 
 		$html = $view->renderTemplate('venti/_modal',['values' => $values, 'siteId' => $siteId]);
 		$headHtml = $view->getHeadHtml();
@@ -676,6 +678,7 @@ class EventController extends BaseEventController
     		->one();
 
 		$group = getGroupById($event['groupId']);
+
 		$template = $group['template'];
 
 		$this->renderTemplate($template,['event' => $event],false);
@@ -687,6 +690,7 @@ class EventController extends BaseEventController
 		$segments = Craft::$app->getRequest()->getSegments();
 		$query = VentiEvent::find();
 		$params = [];
+		
 
 		if(DateTime::createFromFormat('Y-m-d', end($segments)) !== FALSE) {
 			$startDate = new DateTime(end($segments));
@@ -822,7 +826,6 @@ class EventController extends BaseEventController
         $event->enabledForSite = (bool)Craft::$app->getRequest()->getBodyParam('enabledForSite', $event->enabledForSite);
         $event->title = Craft::$app->getRequest()->getBodyParam('title', $event->title);
 
-		$event->isrecurring   = null;
 		$event->diff     	  = null;
 		$event->endRepeat     = null;
 
@@ -847,6 +850,36 @@ class EventController extends BaseEventController
 		$fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');
 		$event->setFieldValuesFromRequest($fieldsLocation);
 		
+	}
+
+	public function actionViewEvent(array $variables = []) {
+		//\yii\helpers\VarDumper::dump($variables, 5, true); exit;
+		$segments = Craft::$app->getRequest()->getSegments();
+		$query = VentiEvent::find();
+		$params = [];
+		
+
+		if(DateTime::createFromFormat('Y-m-d', end($segments)) !== FALSE) {
+			$startDate = new DateTime(end($segments));
+			$params['startDate'] = [
+				'and',
+				'>='.$startDate->format('Y-m-d'), 
+				'<='.$startDate->modify('+1 day')->format('Y-m-d')
+			];
+
+		} elseif(is_numeric(end($segments))) {
+			$params['eid'] = end($segments);
+		}
+
+		#-- assuming second item in segments is slug of event.
+		$params['slug'] = $segments[1];
+	    $params['siteEnabled'] = null;
+		$event = Craft::configure($query,$params);
+
+		$group = getGroupById($event['groupId']);
+		$template = $group['template'];
+
+		$this->renderTemplate('events/_entry',['event' => $event,'group'=>$group],false);
 	}
 
 }

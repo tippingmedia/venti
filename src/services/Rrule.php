@@ -844,7 +844,7 @@ class Rrule extends Component
                 case 'UNTIL':
                     #-- remove Z from date for date output to be correct.
                     //$dte = str_replace("Z", "", $value);
-                    $date = DateTime::createFromFormat("Ymd\THis\Z", $value, Craft::$app->getTimeZone());
+                    $date = DateTime::createFromFormat("Ymd\THis\Z", $value, new DateTimeZone(Craft::$app->getTimeZone()));
                     $outputAry['enddate'] = $date;
                     $outputAry['endsOn'] = ['2'];
                     break;
@@ -853,7 +853,7 @@ class Rrule extends Component
                     $datesAry = explode(',',$value);
                     $exdates = [];
                     for ($i=0; $i < count($datesAry); $i++) {
-                        $exdate = DateTime::createFromFormat("Ymd", $datesAry[$i], Craft::$app->getTimeZone());
+                        $exdate = DateTime::createFromFormat("Ymd", $datesAry[$i], new DateTimeZone(Craft::$app->getTimeZone()));
                         $exdates[$i] = $exdate->format($dateFormat);
                     }
                     $outputAry['exclude'] = $exdates;
@@ -863,7 +863,7 @@ class Rrule extends Component
                     $datesAry = explode(',',$value);
                     $indates = [];
                     for ($i=0; $i < count($datesAry); $i++) {
-                        $indate = DateTime::createFromFormat("Ymd\THis\Z", $datesAry[$i], Craft::$app->getTimeZone());
+                        $indate = DateTime::createFromFormat("Ymd\THis\Z", $datesAry[$i], new DateTimeZone(Craft::$app->getTimeZone()));
                         $indates[$i] = $indate->format($dateFormat);
                     }
                     $outputAry['include'] = $indates;

@@ -134,11 +134,11 @@ gulp.task('notify-css', ['styles'], function() {
  */
 gulp.task('sass-app', function() {
     console.log('–:::SASS:::–');
-    return sass('sass/')
+    return sass('./sass/**/*', { noCache: true })
         .on('error', function(err) {
             console.error('Error!', err.message);
         })
-        .pipe(gulp.dest('css/src'));
+        .pipe(gulp.dest('./css/src'));
 });
 
 
@@ -148,13 +148,13 @@ gulp.task('sass-app', function() {
  */
 gulp.task('styles', ['sass-app'], function() {
     console.log('–:::STYLES:::–');
-    return gulp.src('css/src/**/*')
+    return gulp.src('./css/src/**/*')
         .pipe($.concat('venti.css'))
         .pipe(cleanCSS(function(details) {
             console.log(details.name + ': ' + details.stats.originalSize);
             console.log(details.name + ': ' + details.stats.minifiedSize);
         }))
-        .pipe(gulp.dest('css'));
+        .pipe(gulp.dest('./css'));
 });
 
 

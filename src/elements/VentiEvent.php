@@ -13,16 +13,20 @@ use tippingmedia\venti\Venti;
 use tippingmedia\venti\elements\db\VentiEventQuery;
 use tippingmedia\venti\services\Groups;
 use tippingmedia\venti\services\Events;
+use tippingmedia\venti\services\Rrule;
 use tippingmedia\venti\models\Group;
 use tippingmedia\venti\model\Event;
 use tippingmedia\venti\elements\actions\Edit;
 use tippingmedia\venti\elements\actions\Delete;
 use tippingmedia\venti\elements\actions\View;
 use tippingmedia\venti\records\Event as EventRecord;
+use tippingmedia\venti\records\ExcludedDate as ExcludedDateRecord;
+use tippingmedia\venti\records\IncludedDate as IncludedDateRecord;
 
 
 use Craft;
 use craft\base\Element;
+use craft\db\Query;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
 use ns\prefix\elements\db\ProductQuery;
@@ -86,6 +90,7 @@ class VentiEvent extends Element
 {
 
 	const STATUS_LIVE = 'live';
+	const STATUS_PENDING = 'pending';
     const STATUS_EXPIRED = 'expired';
 	
 	/**
@@ -96,7 +101,7 @@ class VentiEvent extends Element
 	public static function find(): ElementQueryInterface
     {
         return new VentiEventQuery(static::class);
-    }
+	}
 
 	/**
 	 * Returns the element type name.
@@ -136,8 +141,6 @@ class VentiEvent extends Element
 		return true;
 	}
 
-
-
 	public static function hasUris(): bool
 	{
 	     return true;
@@ -148,13 +151,10 @@ class VentiEvent extends Element
         return true;
     }
 
-
 	public static function hasStatuses(): bool
 	{
 		return true;
 	}
-
-
 
     public static function statuses(): array
     {
@@ -171,7 +171,7 @@ class VentiEvent extends Element
 
 	protected static function defineSources(string $context = null): array 
 	{
-		
+		// cpindex only fetches original elements not recurrence event elements
 		$sources = [
 			[
 				'key' => '*',
@@ -245,13 +245,68 @@ class VentiEvent extends Element
         $record->allDay = $this->allDay;
 		$record->recurring = $this->recurring;
 		$record->rRule = $this->rRule;
-		//$record->isrecurring = $this->isrecurring;
 		$record->summary = $this->summary;
 		$record->registration = $this->registration;
 		$record->location = $this->location;
 		$record->specificLocation = $this->specificLocation;
 
-        $record->save(false);
+		$record->save(false);
+
+		
+
+		// Remove Excluded Dates & Included Dates regardless if is-recurring because event may have changed.
+		$excludedDates = (new Query())
+			->select([
+				'venti_exdate.id'
+			])
+			->from(['{{%venti_exdate}} venti_exdate'])
+			->where(['venti_exdate.event_id' => $this->id])
+			->one();
+
+		$includedDates = (new Query())
+			->select([
+				'venti_rdate.id'
+			])
+			->from(['{{%venti_rdate}} venti_rdate'])
+			->where(['venti_rdate.event_id' => $this->id])
+			->one();
+		
+		if($excludedDates) {
+			Craft::$app->getDb()->createCommand()
+				->delete('{{%venti_exdate}}', ['event_id' => $this->id])
+				->execute();
+		}
+
+		if($includedDates) {
+			Craft::$app->getDb()->createCommand()
+				->delete('{{%venti_rdate}}', ['event_id' => $this->id])
+				->execute();
+		}
+
+		// Save Excluded & Included Dates
+		if($this->recurring == true) {
+			$incExtDates = Venti::getInstance()->rrule->getIncludedExcludedDates($this->rRule);
+			if($incExtDates) {
+				if(array_key_exists('excludedDates', $incExtDates)) {
+					foreach ($incExtDates['excludedDates'] as $date) {
+						$record = new ExcludedDateRecord();
+						$record->event_id = $this->id;
+						$record->date = $date;
+						$record->save(false);
+					}
+				}
+
+				if(array_key_exists('includedDates',$incExtDates)) {
+					foreach ($incExtDates['includedDates'] as $date) {
+						$record = new IncludedDateRecord();
+						$record->event_id = $this->id;
+						$record->date = $date;
+						$record->save(false);
+					}
+				}
+			}
+		}
+		//Craft::dd($incExtDates);
 
 
         parent::afterSave($isNew);
@@ -401,9 +456,29 @@ class VentiEvent extends Element
 		switch ($attribute)
 		{
 			case 'startDate':
-			case 'endDate':
 			{
 				$date = $this->startDate;
+
+				if ($date)
+				{
+					if ($this->allDay == 1)
+					{
+						return Craft::$app->formatter->asDate($date,'short');
+					}
+					else
+					{
+						return Craft::$app->formatter->asDate($date, 'short') .' '. Craft::$app->formatter->asTime($date, 'short');
+					}
+
+				}
+				else
+				{
+					return '';
+				}
+			}
+			case 'endDate':
+			{
+				$date = $this->endDate;
 
 				if ($date)
 				{
@@ -445,6 +520,10 @@ class VentiEvent extends Element
 				$summary = $this->summary;
 				return $this->summary != "" ? $summary : '';
 			}
+			case 'rRule':
+			{
+				return "<span class='info'>".$this->rRule."</span>";
+			}
 		}
 		return parent::tableAttributeHtml($attribute);
 	}
@@ -483,11 +562,6 @@ class VentiEvent extends Element
 
 	// Properties
     // =========================================================================
-
-	/**
-     * @var mixed|null Group 
-     */
-    public $group;
 	/**
      * @var int|null Group ID
      */
@@ -495,11 +569,11 @@ class VentiEvent extends Element
 	/**
      * @var datetime|null Start Date
      */
-    public $startDate;
+    private $_startDate;
 	/**
      * @var datetime|null End Date
      */
-    public $endDate;
+    private $_endDate;
 	/**
      * @var string|null rRule
      */
@@ -527,7 +601,7 @@ class VentiEvent extends Element
 	/**
      * @var int|null Is Recurring
      */
-    public $isrecurring;
+    private $_isrecurring;
 	/**
      * @var mixed|null Location
      */
@@ -537,10 +611,12 @@ class VentiEvent extends Element
      */
     public $specificLocation;
 	/**
-     * @var string|null Summary
+     * @var mixed|null registration
      */
 	public $registration;
-	
+	/**
+     * @var int|null Author ID
+     */
 	public $authorId;
 	/**
      * @var int|null Event Id
@@ -549,42 +625,100 @@ class VentiEvent extends Element
 	/**
      * @var datetime|null Scheduled Date
      */
-	public $scheduled_date;
+	private $_scheduled_date;
 
 
 	// Public methods
     // =========================================================================
 
 
-	/**
-     * @inheritdoc
+	 /**
+     * Sets the events's scheduled date.
+     *
+     * @param DateTime $scheduled_date
      */
-    // public function __get($name)
-    // {
-			
-    //     switch ($name) {
-	// 		case 'startDate':
-	// 			$this->altStartDate();
-    //             break;
-    //         default:
-    //             parent::__get($name);
-    //     }
-	// }
+	public function setScheduled_date($scheduled_date)
+	{
+		$this->_scheduled_date = $scheduled_date;
+	}
+
+	/**
+     * Returns the event's scheduled date.
+     *
+     * @return DateTime
+     */
+	public function getScheduled_date()
+	{
+		//\yii\helpers\VarDumper::dump($this->_scheduled_date, 5, true);
+		return DateTimeHelper::toDateTime($this->_scheduled_date, true, false);
+	}
+
+	 /**
+     * Sets the events's start date.
+     *
+     * @param DateTime $startDate
+     */
+	public function setStartDate($startDate)
+	{
+		$this->_startDate = $startDate;
+	}
+
+	/**
+     * Returns the event's startDate or scheduledDate if recurring event.
+     *
+     * @return DateTime
+     */
+	public function getStartDate()
+	{
+		if($this->_scheduled_date !== null) {
+			// need to add Start Dates time.
+			$startDateTimeString = DateTimeHelper::toDateTime($this->_startDate, false, false)->format("H:i:s");
+			return DateTimeHelper::toDateTime($this->_scheduled_date .' '. $startDateTimeString);
+		}
+
+		return DateTimeHelper::toDateTime($this->_startDate);
+	}
+
+	/**
+     * Sets the events's end date.
+     *
+     * @param DateTime $endDate
+     */
+	public function setEndDate($endDate)
+	{
+		$this->_endDate = $endDate;
+	}
+
+	/**
+     * Returns the event's endDate or create one by modifying scheduled_date with diff.
+     *
+     * @return DateTime
+     */
+	public function getEndDate()
+	{
+		if($this->_scheduled_date !== null && $this->diff !== null ) {
+			// need to add Start Dates time.
+			$startDateTimeString = DateTimeHelper::toDateTime($this->_startDate, false, false)->format("H:i:s");
+			$scheduled_date = DateTimeHelper::toDateTime($this->_scheduled_date .' '. $startDateTimeString);
+			return $scheduled_date->modify( "+". $this->diff ." seconds" );
+		}
+
+		return DateTimeHelper::toDateTime($this->_endDate);
+	}
+
 	
 
 
 	/**
      * @inheritdoc
      */
-    public function datetimeAttributes(): array
+    /*public function datetimeAttributes(): array
     {
         $names = parent::datetimeAttributes();
-        $names[] = 'startDate';
 		$names[] = 'endDate';
-		$names[] = 'scheduled_date';
 
         return $names;
-    }
+    }*/
 
     /**
      * @inheritdoc
@@ -607,7 +741,7 @@ class VentiEvent extends Element
         $rules = parent::rules();
 
 
-        $rules[] = [['groupId', 'recurring', 'allDay','diff','isrecurring','event_id'], 'number', 'integerOnly' => true];
+        $rules[] = [['groupId', 'recurring', 'allDay','diff','event_id'], 'number', 'integerOnly' => true];
         $rules[] = [['startDate', 'endDate','endRepeat','scheduled_date'], DateTimeValidator::class];
 
         return $rules;
@@ -618,7 +752,7 @@ class VentiEvent extends Element
      */
     public function getFieldLayout()
     {
-        return $this->getGroup()->getFieldLayout();
+        return parent::getFieldLayout() ?? $this->getGroup()->getFieldLayout();
     }
 
 	/**
@@ -638,24 +772,6 @@ class VentiEvent extends Element
         return $sites;
     }
 
-	 /**
-     * @inheritdoc
-     * @throws InvalidConfigException if [[siteId]] is not set to a site ID that the event's group is enabled for
-     */
-	// TODO: finish this out
-    public function getUriFormat()
-    {
-        /*$sectionSiteSettings = $this->getGroup()->getSiteSettings();
-
-        if (!isset($sectionSiteSettings[$this->siteId])) {
-            throw new InvalidConfigException('Entry\'s section ('.$this->sectionId.') is not enabled for site '.$this->siteId);
-        }
-
-        return $sectionSiteSettings[$this->siteId]->uriFormat;*/
-
-		return $this->getGroup()->getUrlFormat();
-    }
-
 	/**
      * Returns the Events's group.
      *
@@ -664,8 +780,9 @@ class VentiEvent extends Element
      */
     public function getGroup(): Group
     {
+
         if ($this->groupId === null) {
-            throw new InvalidConfigException('Event is missing its group ID');
+            throw new InvalidConfigException('Event is missing its Group ID');
         }
 
         if (($group = Venti::getInstance()->groups->getGroupById($this->groupId)) === null) {
@@ -673,8 +790,24 @@ class VentiEvent extends Element
         }
 
         return $group;
-    }
+	}
+	
+	/**
+     * @inheritdoc
+     * @throws InvalidConfigException if [[siteId]] is not set to a site ID that the event's group is enabled for
+     */
+    public function getUriFormat()
+    {
+        $groupSiteSettings = $this->getGroup()->getGroupSiteSettings();
 
+        if (!isset($groupSiteSettings[$this->siteId])) {
+             throw new InvalidConfigException('Event\'s group ('.$this->groupId.') is not enabled for site '.$this->siteId);
+		}
+
+        return $groupSiteSettings[$this->siteId]->uriFormat;
+
+		//return $this->getGroup()->getUrlFormat();
+	}
 
 
 	/**
@@ -682,16 +815,15 @@ class VentiEvent extends Element
      */
     protected function route()
     {
-        // Make sure that the event is actually live
-        if ($this->getStatus() != VentiEvent::STATUS_LIVE) {
+		//\yii\helpers\VarDumper::dump(Craft::$app->getRequest(), 5, true);exit;
+		// Make sure that the event is actually live
+		// TODO: need to fix getStatus method
+        if ($this->getStatus() != self::STATUS_LIVE) {
             return null;
         }
 
-		$group = Venti::getInstance()->groups->getGroupById($this->groupId);
-
 		$siteId = Craft::$app->getSites()->currentSite->id;
 		$groupSiteSettings = $this->getGroup()->getGroupSiteSettings();
-
 
 		if (!isset($groupSiteSettings[$siteId]) || !$groupSiteSettings[$siteId]->hasUrls) {
             return null;
@@ -701,7 +833,7 @@ class VentiEvent extends Element
             'templates/render', [
                 'template' => $groupSiteSettings[$siteId]->template,
                 'variables' => [
-                    'event' => $this,
+					'event' => $this
                 ]
             ]
         ];
@@ -716,8 +848,43 @@ class VentiEvent extends Element
     public function getRef()
     {
         return $this->getGroup()->handle.'/'.$this->slug;
-    }
+	}
+	
+	/**
+     * @inheritdoc
+     */
+    public function getStatus()
+    {
+		$status = parent::getStatus();
+		return self::STATUS_LIVE;
+        // if ($status == self::STATUS_ENABLED && $this->endDate) {
+        //     $currentTime = DateTimeHelper::currentTimeStamp();
+        //     $endDate = $this->endDate->getTimestamp();
+        //     $endRepeatDate = ($this->endRepeat ? DateTimeHelper::toDateTime($this->endRepeat)->getTimestamp() : null);
 
+        //     if ($endDate <= $currentTime && ($endRepeat === null || $endRepeat > $currentTime)) {
+        //         return self::STATUS_LIVE;
+        //     }
+
+        //     if ($endDate > $currentTime) {
+        //         return self::STATUS_PENDING;
+        //     }
+
+        //     return self::STATUS_EXPIRED;
+        // }
+
+        // return $status;
+	}
+
+
+	// public function getUrl()
+	// {
+	// 	//$uriFormat = $this->getUriFormat(); $this->group->handle
+	// 	//$path = "event/".$this->slug."/".$this->startDate->format('Y-m-d');
+	// 	$path = "event/".$this->slug."/".$this->startDate->format('Y-m-d');
+	// 	return UrlHelper::siteUrl($path, null, null, $this->siteId);
+	// }
+	
 
 	/**
      * @inheritdoc
@@ -752,30 +919,88 @@ class VentiEvent extends Element
 
 	public function excludedDates()
 	{
-		$datesDict = [];
-		// if($this->repeat == true)
-		// {
-		// 	$exdates = getIncludedExcludedDates($this->rRule);
-		// 	if ($exdates && array_key_exists('excludedDates',$exdates))
-		// 	{
-		// 		$datesDict = $exdates['excludedDates'];
-		// 	}
-		// }
+		$datesDict = (new Query())
+			->select(['date'])
+			->from(['{{%venti_exdate}}'])
+			->where(['event_id' => $this->id])
+			->column();
+		
 		return $datesDict;
 	}
 
 
 	public function includedDates()
 	{
-		$datesDict = [];
-		// if($this->repeat == true)
-		// {
-		// 	$rdates = getIncludedExcludedDates($this->rRule);
-		// 	if ($rdates && array_key_exists('includedDates',$rdates))
-		// 	{
-		// 		$datesDict = $rdates['includedDates'];
-		// 	}
-		// }
+		$datesDict = (new Query())
+			->select(['date'])
+			->from(['{{%venti_rdate}}'])
+			->where(['event_id' => $this->id])
+			->column();
 		return $datesDict;
+	}
+
+	/**
+     * Returns all recurrences of this element
+     *
+     * @return VentiEvent
+     */
+	public function getRecurrences()
+	{
+		if($this->recurring) {
+			$query = $this::find();
+			$query->id = $this->id;
+			$query->siteId = $this->siteId;
+			$query->status = null;
+			$query->enabledForSite = false;
+
+			return $query->all();
+		}
+
+		return null;
+	}
+
+	/**
+     * Returns the next event in this elements recurring events
+     *
+     * @return VentiEvent
+     */
+	public function getNextRecurrence()
+	{
+		if($this->recurring) {
+			$today = new DateTime();
+			$query = $this::find();
+			$query->id = $this->id;
+			$query->siteId = $this->siteId;
+			$query->status = null;
+			$query->endDate = ">= ". $today->format('Y-m-d g:i:s');
+			$query->cpindex = false;
+			$query->enabledForSite = false;
+
+			return $query->one();
+		}
+		return null;
+	}
+
+	/**
+     * Returns passed date with startDate time
+     *
+     * @return DateTime
+     */
+	public function startDateTime(string $date): DateTime
+	{
+		$start = DateTimeHelper::toDateTime($this->startDate);
+		return DateTimeHelper::toDateTime($date . ' ' . $start->format('g:i a'), true, false);
+	}
+
+	/**
+     * Returns passed date with time different for end date
+     *
+     * @return DateTime
+     */
+	public function endDateTime(string $date): DateTime
+	{
+		$start = DateTimeHelper::toDateTime($this->startDate);
+		$startDateTime = DateTimeHelper::toDateTime($date . ' ' . $start->format('g:i a'), true, false);
+		return $startDateTime->modify( "+". $this->diff ." seconds" );
 	}
 }
