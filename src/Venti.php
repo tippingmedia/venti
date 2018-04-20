@@ -15,6 +15,7 @@ use craft\services\Elements;
 use craft\services\Fields;
 use craft\services\Plugins;
 use craft\services\Resources;
+use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
@@ -24,6 +25,8 @@ use craft\events\SetElementRouteEvent;
 use craft\web\View;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\ResolveResourcePathEvent;
+use craft\events\RegisterUserPermissionsEvent;
+
 use craft\web\twig\variables\CraftVariable;
 
 use yii\base\Event;
@@ -49,6 +52,16 @@ class Venti extends Plugin
 	public static $plugin;
 	public $hasCpSettings = true;
 	public $hasSettings = true;
+
+	const TRANSLATION_HANDLE = 'venti';
+	const PERMISSION_CALENDAR_GROUPS        = 'venti-manageCalendarGroups';
+    const PERMISSION_CREATE_CALENDAR_GROUPS = 'venti-createCalendarGroups';
+    const PERMISSION_EDIT_CALENDAR_GROUPS   = 'venti-editCalendarGroups';
+    const PERMISSION_DELETE_CALENDAR_GROUPS = 'venti-deleteCalendarGroups';
+    const PERMISSION_EVENTS           = 'venti-manageEvents';
+    const PERMISSION_EVENTS_FOR       = 'venti-manageEventsFor';
+    const PERMISSION_EVENTS_FOR_ALL   = 'venti-manageEventsFor:all';
+    const PERMISSION_SETTINGS         = 'venti-settings';
 
 	public function init()
     {
@@ -99,8 +112,8 @@ class Venti extends Plugin
 			$event->rules['venti/location/<locationId:\d+>(?:-{slug})'] = ['template' => 'venti/locations/editLocation'];
 
 			// Calendar
-			$event->rules['venti/calendar'] = ['template' => 'venti/calendar/calendarIndex'];
-			$event->rules['venti/feed/<groupId:\d+>/<siteId:\w+>'] = ['template' => 'venti/calendar/calendarFeed'];
+			$event->rules['venti/calendar'] = 'venti/calendar/calendar-index';
+			$event->rules['venti/feed/<groupId:\d+>/<siteId:\d+>'] = 'venti/calendar/calendar-feed';
 
 			// Settings
 			$event->rules['venti/settings'] = 'venti/settings/index';
@@ -123,16 +136,63 @@ class Venti extends Plugin
 			$event->rules = array_merge($event->rules, $rules);
 		});
 
-		// Event::on(EventElement::class, Element::EVENT_SET_ROUTE, function(SetElementRouteEvent $e) {
-		// 	// @var craft\elements\Entry $entry
-		// 	//\yii\helpers\VarDumper::dump($e, 5, true);exit;
-		// 	$ventiEvent = $e->sender;
-		// 	//if ($ventiEvent->uri === 'pricing') {
-		// 		$e->route = 'venti/event/view-event';
-		// 	//}
-		// 	$event->handled = true;
-		// });
+		if (Craft::$app->getEdition() >= Craft::Pro) {
+            Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, function (RegisterUserPermissionsEvent $event) {
+                    $groups = $this->groups->getAllGroups();
+                    $editEventsPermissions = [
+                        self::PERMISSION_EVENTS_FOR_ALL => [
+                            'label' => self::t('All Calendar Groups'),
+                        ],
+                    ];
+                    foreach ($groups as $group) {
+                        $suffix = ':' . $group->id;
+                        $editEventsPermissions[self::PERMISSION_EVENTS_FOR . $suffix] = [
+                            'label' => self::t('"{name}" group', ['name' => $group->name]),
+                        ];
+                    }
+                    $event->permissions[$this->name] = [
+                        self::PERMISSION_CALENDAR_GROUPS => [
+                            'label'  => self::t('Administrate Calendars'),
+                            'nested' => [
+                                self::PERMISSION_CREATE_CALENDAR_GROUPS => [
+                                    'label' => self::t(
+                                        'Create Calendar Groups'
+                                    ),
+                                ],
+                                self::PERMISSION_EDIT_CALENDAR_GROUPS   => [
+                                    'label' => self::t(
+                                        'Edit Calendar Groups'
+                                    ),
+                                ],
+                                self::PERMISSION_DELETE_CALENDAR_GROUPS => [
+                                    'label' => self::t(
+                                        'Delete Calendar Groups'
+                                    ),
+                                ],
+                            ],
+                        ],
+                        self::PERMISSION_EVENTS    => [
+                            'label'  => self::t('Manage events in'),
+                            'nested' => $editEventsPermissions,
+                        ],
+                        self::PERMISSION_SETTINGS  => ['label' => self::t('Settings')],
+                    ];
+                }
+            );
+        }
 
+	}
+	
+	/**
+     * @param string $message
+     * @param array  $params
+     * @param string $language
+     *
+     * @return string
+     */
+    public static function t(string $message, array $params = [], string $language = null): string
+    {
+        return Craft::t(self::TRANSLATION_HANDLE, $message, $params, $language);
     }
 
 	public function getName()

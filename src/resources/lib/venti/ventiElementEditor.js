@@ -1,8 +1,7 @@
-Venti.ElementEditor = Garnish.Base.extend(
-{
+Venti.ElementEditor = Garnish.Base.extend({
     $element: null,
     elementId: null,
-    locale: null,
+    siteId: null,
 
     $form: null,
     $fieldsContainer: null,
@@ -10,16 +9,14 @@ Venti.ElementEditor = Garnish.Base.extend(
     $saveBtn: null,
     $spinner: null,
 
-    $localeSelect: null,
-    $localeSpinner: null,
+    $siteSelect: null,
+    $siteSpinner: null,
 
     modal: null,
 
-    init: function($element, settings)
-    {
+    init: function($element, settings) {
         // Param mapping
-        if (typeof settings == typeof undefined && $.isPlainObject($element))
-        {
+        if (typeof settings == typeof undefined && $.isPlainObject($element)) {
             // (settings)
             settings = $element;
             $element = null;
@@ -31,97 +28,76 @@ Venti.ElementEditor = Garnish.Base.extend(
         this.loadModal();
     },
 
-    setElementAttribute: function(name, value)
-    {
-        if (!this.settings.attributes)
-        {
+    setElementAttribute: function(name, value) {
+        if (!this.settings.attributes) {
             this.settings.attributes = {};
         }
 
-        if (value === null)
-        {
+        if (value === null) {
             delete this.settings.attributes[name];
-        }
-        else
-        {
+        } else {
             this.settings.attributes[name] = value;
         }
     },
 
-    getBaseData: function()
-    {
+    getBaseData: function() {
         var data = $.extend({}, this.settings.params);
 
-        if (this.settings.locale)
-        {
-            data.locale = this.settings.locale;
-        }
-        else if (this.$element && this.$element.data('locale'))
-        {
-            data.locale = this.$element.data('locale');
+        if (this.settings.siteId) {
+            data.siteId = this.settings.siteId;
+        } else if (this.$element && this.$element.data('site-id')) {
+            data.siteId = this.$element.data('site-id');
         }
 
-        if (this.settings.elementId)
-        {
+        if (this.settings.elementId) {
             data.elementId = this.settings.elementId;
-        }
-        else if (this.$element && this.$element.data('id'))
-        {
+        } else if (this.$element && this.$element.data('id')) {
             data.elementId = this.$element.data('id');
         }
 
-        if (this.settings.elementType)
-        {
+        if (this.settings.elementType) {
             data.elementType = this.settings.elementType;
         }
 
-        if (this.settings.attributes)
-        {
+        if (this.settings.attributes) {
             data.attributes = this.settings.attributes;
         }
 
         return data;
     },
 
-    loadModal: function()
-    {
+    loadModal: function() {
         this.onBeginLoading();
         var data = this.getBaseData();
         //Reset locale to store locale id so modal will show correct event version to edit.
-        data.locale = Craft.getLocalStorage('BaseElementIndex.locale');
-        data.includeLocales = this.settings.showLocaleSwitcher;
-        Craft.postActionRequest('elements/getEditorHtml', data, $.proxy(this, 'showModal'));
+        data.siteId = Craft.siteId;
+        data.includeSites = this.settings.showSiteSwitcher;
+        Craft.postActionRequest('elements/get-editor-html', data, $.proxy(this, 'showModal'));
     },
 
-    showModal: function(response, textStatus)
-    {
+    showModal: function(response, textStatus) {
         this.onEndLoading();
 
-
-
-        if (textStatus == 'success')
-        {
+        if (textStatus == 'success') {
             var $modal = $('<form class="modal venti-elementeditor-modal"></form>').appendTo(Garnish.$bod),
-                $header  = $('<div class="header"></div>'),
+                $header = $('<div class="header"></div>'),
                 $contents = $();
 
 
 
-            if (response.locales)
-            {
+            if (response.sites) {
                 var $colLeft = $('<div class="col"/>').appendTo($header),
-                    $localeSelectContainer = $('<div class="select"/>').appendTo($colLeft);
+                    $siteSelectContainer = $('<div class="select"/>').appendTo($colLeft);
 
-                this.$localeSelect = $('<select/>').appendTo($localeSelectContainer);
-                this.$localeSpinner = $('<div class="spinner hidden"/>').appendTo($colLeft);
+                this.$siteSelect = $('<select/>').appendTo($siteSelectContainer);
+                this.$siteSpinner = $('<div class="spinner hidden"/>').appendTo($colLeft);
 
-                for (var i = 0; i < response.locales.length; i++)
-                {
-                    var locale = response.locales[i];
-                    $('<option value="'+locale.id+'"'+(locale.id == response.locale ? ' selected="selected"' : '')+'>'+locale.name+'</option>').appendTo(this.$localeSelect);
+                for (var i = 0; i < response.sites.length; i++) {
+                    var site = response.sites[i];
+                    $('<option value="' + site.id + '"' + (site.id == response.site ? ' selected="selected"' : '') + '>' + site.name + '</option>').appendTo(this.$siteSelect);
                 }
 
-                this.addListener(this.$localeSelect, 'change', 'switchLocale');
+                this.addListener(this.$siteSelect, 'change', 'switchSite');
 
             }
 
@@ -134,9 +110,9 @@ Venti.ElementEditor = Garnish.Base.extend(
             this.onCreateForm(this.$form);
 
             var $footer = $('<div class="footer"></div>'),
-                $buttonsContainer = response.locales ? $('<div class="col"/>').appendTo($header) : $('<div class="text--right"/>').appendTo($header);
-            this.$cancelBtn = $('<div class="btn">'+Craft.t('Cancel')+'</div>').appendTo($buttonsContainer);
-            this.$saveBtn = $('<input class="btn submit" type="submit" value="'+Craft.t('Save')+'"/>').appendTo($buttonsContainer);
+                $buttonsContainer = response.sites ? $('<div class="col"/>').appendTo($header) : $('<div class="text--right"/>').appendTo($header);
+            this.$cancelBtn = $('<div class="btn">' + Craft.t('venti', 'Cancel') + '</div>').appendTo($buttonsContainer);
+            this.$saveBtn = $('<input class="btn submit" type="submit" value="' + Craft.t('venti', 'Save') + '"/>').appendTo($buttonsContainer);
             this.$spinner = $('<div class="spinner hidden"/>').appendTo($buttonsContainer);
 
             $contents = $contents.add(this.$form);
@@ -144,8 +120,7 @@ Venti.ElementEditor = Garnish.Base.extend(
 
             $contents.appendTo($modal);
 
-            if (!this.modal)
-            {
+            if (!this.modal) {
 
                 this.modal = new Garnish.Modal($modal, {
                     closeOtherModals: true,
@@ -161,9 +136,7 @@ Venti.ElementEditor = Garnish.Base.extend(
                 this.modal.on('hide', $.proxy(function() {
                     delete this.modal;
                 }, this));
-            }
-            else
-            {
+            } else {
                 //this.modal.updateBody($modalContents);
                 this.modal.updateSizeAndPosition();
             }
@@ -179,47 +152,39 @@ Venti.ElementEditor = Garnish.Base.extend(
         }
     },
 
-    switchLocale: function()
-    {
-        var newLocale = this.$localeSelect.val();
+    switchSite: function() {
+        var newSite = this.$siteSelect.val();
 
-        if (newLocale == this.locale)
-        {
+        if (newSite == this.siteId) {
             return;
         }
 
-        this.$localeSpinner.removeClass('hidden');
+        this.$siteSpinner.removeClass('hidden');
 
 
         var data = this.getBaseData();
-        data.locale = newLocale;
+        data.siteId = newSite;
 
-        Craft.postActionRequest('elements/getEditorHtml', data, $.proxy(function(response, textStatus)
-        {
-            this.$localeSpinner.addClass('hidden');
+        Craft.postActionRequest('elements/get-editor-html', data, $.proxy(function(response, textStatus) {
+            this.$siteSpinner.addClass('hidden');
 
-            if (textStatus == 'success')
-            {
+            if (textStatus == 'success') {
                 this.updateForm(response);
-            }
-            else
-            {
-                this.$localeSelect.val(this.locale);
+            } else {
+                this.$siteSelect.val(this.siteId);
             }
         }, this));
     },
 
-    updateForm: function(response)
-    {
-        this.locale = response.locale;
+    updateForm: function(response) {
+        this.siteId = response.siteId;
 
         this.$fieldsContainer.html(response.html);
 
         // Swap any instruction text with info icons
         var $instructions = this.$fieldsContainer.find('> .meta > .field > .heading > .instructions');
 
-        for (var i = 0; i < $instructions.length; i++)
-        {
+        for (var i = 0; i < $instructions.length; i++) {
 
             $instructions.eq(i)
                 .replaceWith($('<span/>', {
@@ -229,25 +194,20 @@ Venti.ElementEditor = Garnish.Base.extend(
                 .infoicon();
         }
 
-        Garnish.requestAnimationFrame($.proxy(function()
-        {
+        Garnish.requestAnimationFrame($.proxy(function() {
             Craft.appendHeadHtml(response.headHtml);
             Craft.appendFootHtml(response.footHtml);
             Craft.initUiElements(this.$fieldsContainer);
         }, this));
     },
 
-    saveElement: function(evt)
-    {
+    saveElement: function(evt) {
         evt.preventDefault();
         var validators = this.settings.validators;
 
-        if ($.isArray(validators))
-        {
-            for (var i = 0; i < validators.length; i++)
-            {
-                if ($.isFunction(validators[i]) && !validators[i].call())
-                {
+        if ($.isArray(validators)) {
+            for (var i = 0; i < validators.length; i++) {
+                if ($.isFunction(validators[i]) && !validators[i].call()) {
                     return false;
                 }
             }
@@ -255,37 +215,28 @@ Venti.ElementEditor = Garnish.Base.extend(
 
         this.$spinner.removeClass('hidden');
 
-        var data = $.param(this.getBaseData())+'&'+this.modal.$container.serialize();
-        Craft.postActionRequest('elements/saveElement', data, $.proxy(function(response, textStatus)
-        {
+        var data = $.param(this.getBaseData()) + '&' + this.modal.$container.serialize();
+        Craft.postActionRequest('elements/save-element', data, $.proxy(function(response, textStatus) {
             this.$spinner.addClass('hidden');
 
-            if (textStatus == 'success')
-            {
-                if (textStatus == 'success' && response.success)
-                {
-                    if (this.$element && this.locale == this.$element.data('locale'))
-                    {
+            if (textStatus == 'success') {
+                if (textStatus == 'success' && response.success) {
+                    if (this.$element && this.siteId == this.$element.data('siteId')) {
                         // Update the label
                         var $title = this.$element.find('.title'),
                             $a = $title.find('a');
 
-                        if ($a.length && response.cpEditUrl)
-                        {
+                        if ($a.length && response.cpEditUrl) {
                             $a.attr('href', response.cpEditUrl);
                             $a.text(response.newTitle);
-                        }
-                        else
-                        {
+                        } else {
                             $title.text(response.newTitle);
                         }
                     }
 
                     this.closeModal();
                     this.onSaveElement(response);
-                }
-                else
-                {
+                } else {
                     this.updateForm(response);
                     Garnish.shake(this.modal.$modal);
                 }
@@ -293,8 +244,7 @@ Venti.ElementEditor = Garnish.Base.extend(
         }, this));
     },
 
-    closeModal: function()
-    {
+    closeModal: function() {
         this.modal.hide();
         delete this.modal;
     },
@@ -302,22 +252,18 @@ Venti.ElementEditor = Garnish.Base.extend(
     // Events
     // -------------------------------------------------------------------------
 
-    onShowModal: function()
-    {
+    onShowModal: function() {
         this.settings.onShowModal();
         this.trigger('showModal');
     },
 
-    onHideModal: function()
-    {
+    onHideModal: function() {
         this.settings.onHideModal();
         this.trigger('hideModal');
     },
 
-    onBeginLoading: function()
-    {
-        if (this.$element)
-        {
+    onBeginLoading: function() {
+        if (this.$element) {
             this.$element.addClass('loading');
         }
 
@@ -325,10 +271,8 @@ Venti.ElementEditor = Garnish.Base.extend(
         this.trigger('beginLoading');
     },
 
-    onEndLoading: function()
-    {
-        if (this.$element)
-        {
+    onEndLoading: function() {
+        if (this.$element) {
             this.$element.removeClass('loading');
         }
 
@@ -336,25 +280,22 @@ Venti.ElementEditor = Garnish.Base.extend(
         this.trigger('endLoading');
     },
 
-    onSaveElement: function(response)
-    {
+    onSaveElement: function(response) {
         this.settings.onSaveElement(response);
         this.trigger('saveElement', {
             response: response
         });
     },
 
-    onCreateForm: function ($form)
-    {
+    onCreateForm: function($form) {
         this.settings.onCreateForm($form);
     }
-},
-{
+}, {
     defaults: {
-        showLocaleSwitcher: true,
+        showSiteSwitcher: true,
         elementId: null,
         elementType: null,
-        locale: null,
+        siteId: null,
         attributes: null,
         params: null,
         onShowModal: $.noop,

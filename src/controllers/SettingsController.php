@@ -149,17 +149,4 @@ class SettingsController extends Controller
         ]);
     }
 
-    public function actionLicense()
-    {
-        $plugin = Craft::$app->getPlugins()->getPlugin('venti');
-        $validLicense = Venti::getInstance()->license->validateGumroadLicense();
-
-        return $this->renderTemplate('venti/settings/_license', [
-            'error' => (isset($error) ? $error : null),
-            'settings' => $plugin->getSettings(),
-            'license' => $validLicense,
-            'countries' => LocationHelper::countryOptions()
-        ]);
-    }
-
 }

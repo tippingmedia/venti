@@ -15,7 +15,7 @@ use tippingmedia\venti\services\groups;
 use tippingmedia\venti\elements\VentiEvent;
 use tippingmedia\venti\calendar\Calendar as CalendarGenerator;
 
-use mexitek\phpcolors\Color;
+use Mexitek\PHPColors\Color;
 
 use Craft;
 use craft\base\Component;
@@ -42,7 +42,7 @@ class Calendar extends Component
     }
 
 
-    public function getCalendarFeed($start, $end, $groupId, $localeId = null)
+    public function getCalendarFeed($start, $end, $groupId, $siteId = null)
     {
 
         //$groups = craft()->vent_groups->getAllGroups();
@@ -54,17 +54,18 @@ class Calendar extends Component
 
         $events = VentiEvent::find()
     		->groupId($groupId)
-    		->between([$start,$end])
+            ->between([$start,$end])
+            ->siteId($siteId)
             ->all();
 
-        $feedData = array();
+        $feedData = [];
 
 
         //$feed = new Venti_CalendarFeedModel();
 
         foreach ($events as $param) {
 
-            $group = $param->getGroup();
+            $group = $param->group;
             #-- Get appropriate color based on brightness and if a multi day event else use default dark color
             $color = new Color($group->color); //\Mexitek\PHPColors\
             $textColor = "#222222";
@@ -75,17 +76,18 @@ class Calendar extends Component
 
             $feedData[] = array(
                 "id"        => $param['id'],
-                "eid"       => $param['eid'],
+                "siteId"    => $param['siteId'],
                 "title"     => $param['title'],
                 "start"     => $param['startDate']->format('c'),
                 "end"       => $param['endDate']->format('c'),
                 "allDay"    => $param['allDay'],
                 "summary"   => $param['summary'],
                 "locale"    => $param['locale'],
-                "repeat"    => $param['repeat'],
+                "recurring" => $param['recurring'],
                 "rRule"     => $param['rRule'],
                 "multiDay"  => $param['startDate']->format('Y-m-d') != $param['endDate']->format('Y-m-d') ? true : false,
                 "group"     => $group->name,
+                "groupId"   => $group->id,
                 "color"     => $group->color,
                 "textColor" => $textColor
             );
@@ -97,7 +99,7 @@ class Calendar extends Component
 
     public function getCalendarSettingSources()
     {
-        $groups = getAllGroups();
+        $groups = Venti::getInstance()->groups->getAllGroups();
         $sources = array();
 
         $currentUser = Craft::$app->getUser()->getIdentity();
@@ -106,13 +108,14 @@ class Calendar extends Component
         {
 
             $sources[] = array(
-                'url'           => "/admin/venti/feed/" . $group['id'] . "/" . craft()->language,
+                'url'           => "/admin/venti/feed/" . $group['id'] . "/" . Craft::$app->sites->getPrimarySite()->id,
                 'id'            => $group['id'],
                 'label'         => $group['name'],
                 'color'         => $group['color'],
                 'overlap'       => true,
                 'canEdit'       => $currentUser->can('publishEvents:'.$group['id']),
-                'canDelete'     => $currentUser->can('deleteEvents:'.$group['id'])
+                'canDelete'     => $currentUser->can('deleteEvents:'.$group['id']),
+                'canCreate'     => $currentUser->can('createEvents:'.$group['id'])
             );
         }
 

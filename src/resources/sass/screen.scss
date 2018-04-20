@@ -566,7 +566,7 @@ span.menu-option-color {
 nav {
     span.menu-label-color {
         right: 5px;
-        bottom: -3px;
+        bottom: -5px;
         border: 1px solid transparent;
     }
     .sel {
@@ -595,6 +595,9 @@ nav {
             font-variant: normal;
             text-transform: none;
             line-height: 1;
+            font-size: .6rem;
+            top: -1px;
+            color: #29323F;
             direction: ltr;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -617,6 +620,15 @@ nav {
 
 #venti_alertmodal {
     width: 500px;
+    .hud-footer {
+        text-align: right;
+        button {
+            margin-right: .7rem;
+        }
+        button:last-child {
+            margin-right: 0px;
+        }
+    }
 }
 
 .text--right {
@@ -651,8 +663,9 @@ nav {
 }
 
 .venti_group_select_item {
-    margin-top: 8px;
-    margin-bottom: 8px;
+    // margin-top: 8px;
+    // margin-bottom: 8px;
+    padding-top: .7rem;
 }
 
 .venti_group_select_item input {
@@ -707,10 +720,15 @@ nav {
     }
 }
 
-.venti_groupsmodal .footer {
+.venti_groupsmodal .footer,
+.venti_groupsmodal .hud-footer {
     text-align: right;
     button {
         display: inline;
+        margin-right: .7rem;
+    }
+    button:last-child {
+        margin-right: 0px;
     }
 }
 
@@ -765,11 +783,11 @@ nav {
 
 .venti-event-tip {
     border: none !important;
-    border-radius: 3px !important;
-    -webkit-border-radius: 3px !important;
+    //border-radius: 3px !important;
+    //-webkit-border-radius: 3px !important;
     background-color: #ffffff !important;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, .4) !important;
-    margin-top: -7px;
+    //box-shadow: 0px 0px 20px rgba(0, 0, 0, .4) !important;
+    //margin-top: -7px;
     padding: 0px !important;
     width: 400px !important;
     max-width: 500px !important;
@@ -788,25 +806,28 @@ nav {
         // border-width: 10px;
         // margin-left: -10px;
     }
-    .qtip-content {
-        padding: 0px;
-        border-radius: 3px !important;
-        -webkit-border-radius: 3px !important;
-        overflow: hidden;
-        position: relative;
-        height: inherit;
-        >div {
-            position: inherit;
-            height: inherit;
-        }
+    // .qtip-content {
+    //     padding: 0px;
+    //     border-radius: 3px !important;
+    //     -webkit-border-radius: 3px !important;
+    //     overflow: hidden;
+    //     position: relative;
+    //     height: inherit;
+    //     >div {
+    //         position: inherit;
+    //         height: inherit;
+    //     }
+    // }
+    .tip {
+        display: none;
     }
     .event-tip--header {
-        padding: 10px 15px;
+        //padding: 5px 10px;
         background: #fefefe;
         position: relative;
         h3 {
             font-family: HelveticaNeue-Light, HelveticaNeue, sans-serif !important;
-            font-size: 2em;
+            font-size: 1.7em;
             line-height: 1.6;
             font-weight: 200;
             padding: 0px;
@@ -818,7 +839,7 @@ nav {
             margin: 0px !important;
             color: #555555;
             font-weight: 100;
-            font-size: 1.4em;
+            font-size: 1.2em;
             line-height: 1;
         }
         .closer {
@@ -826,15 +847,15 @@ nav {
             height: 16px;
             width: 16px;
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 0px;
+            right: 0px;
             cursor: pointer;
         }
     }
     .event-tip--datetime {
         font-family: HelveticaNeue-Light, HelveticaNeue, sans-serif !important;
-        padding: 5px 15px;
-        font-size: 1.4em;
+        padding: 10px 0px;
+        font-size: 1.2em;
         line-height: 1.4;
         //font-kerning: 1.2;
         >div {
@@ -872,6 +893,15 @@ nav {
         background-color: #EAEBED;
         text-align: right;
         box-sizing: border-box;
+    }
+    .hud-footer {
+        text-align: right;
+        button {
+            margin-right: .2rem;
+        }
+        button:last-child {
+            margin-right: 0rem;
+        }
     }
 }
 

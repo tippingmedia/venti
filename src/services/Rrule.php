@@ -712,7 +712,7 @@ class Rrule extends Component
                 case 'UNTIL':
                     #-- remove Z from date for date output to be correct.
                     //$dte = str_replace("Z", "", $value);
-                    $date = DateTime::createFromFormat("Ymd\THis\Z", $value, Craft::$app->getTimeZone());
+                    $date = DateTime::createFromFormat("Ymd\THis\Z", $value, new DateTimeZone(Craft::$app->getTimeZone()));
                     $rrule->until = $date;
                     break;
 
@@ -1087,7 +1087,7 @@ class Rrule extends Component
      * @param $id - event id, $date - date to exclude, $locale - locale of event.
      * @return string
      */
-    public function addExcludedDate($rrule, DateTime $date, $locale)
+    public function addExcludedDate($rrule, DateTime $date, $siteId)
     {
         // $localeData = craft()->i18n->getLocaleData(craft()->language);
         // $dateFormatter = $localeData->getDateFormatter();
@@ -1100,19 +1100,19 @@ class Rrule extends Component
 
         $ruleParts = explode(";", $rrule);
         $hasEXDATE = false;
-        $key = null;
+        $idx = null;
 
         foreach ($ruleParts as $key => $value) {
             if(strpos($value,"EXDATE") !== false)
             {
                 $hasEXDATE = true;
-                $key = $key;
+                $idx = $key;
             }
         }
 
         if($hasEXDATE === true)
         {
-            $ruleParts[$key] .= "," . $exdate;
+            $ruleParts[$idx] .= "," . $exdate;
         }
         else
         {

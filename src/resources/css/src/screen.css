@@ -405,7 +405,7 @@ span.menu-option-color {
 
 nav span.menu-label-color {
   right: 5px;
-  bottom: -3px;
+  bottom: -5px;
   border: 1px solid transparent; }
 nav .sel span.menu-label-color {
   border: 1px solid rgba(255, 255, 255, 0.5); }
@@ -427,6 +427,9 @@ nav .sel span.menu-label-color {
   font-variant: normal;
   text-transform: none;
   line-height: 1;
+  font-size: .6rem;
+  top: -1px;
+  color: #29323F;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -445,6 +448,12 @@ nav .sel span.menu-label-color {
 
 #venti_alertmodal {
   width: 500px; }
+  #venti_alertmodal .hud-footer {
+    text-align: right; }
+    #venti_alertmodal .hud-footer button {
+      margin-right: .7rem; }
+    #venti_alertmodal .hud-footer button:last-child {
+      margin-right: 0px; }
 
 .text--right {
   text-align: right; }
@@ -471,8 +480,7 @@ nav .sel span.menu-label-color {
   max-width: 600px; }
 
 .venti_group_select_item {
-  margin-top: 8px;
-  margin-bottom: 8px; }
+  padding-top: .7rem; }
 
 .venti_group_select_item input {
   display: none; }
@@ -514,10 +522,16 @@ nav .sel span.menu-label-color {
     height: 10px;
     border-radius: 50%; }
 
-.venti_groupsmodal .footer {
+.venti_groupsmodal .footer,
+.venti_groupsmodal .hud-footer {
   text-align: right; }
-  .venti_groupsmodal .footer button {
-    display: inline; }
+  .venti_groupsmodal .footer button,
+  .venti_groupsmodal .hud-footer button {
+    display: inline;
+    margin-right: .7rem; }
+  .venti_groupsmodal .footer button:last-child,
+  .venti_groupsmodal .hud-footer button:last-child {
+    margin-right: 0px; }
 
 @media only screen and (max-width: 39.375em) {
   .venti_group_selects {
@@ -561,32 +575,19 @@ nav .sel span.menu-label-color {
 /* Tooltip */
 .venti-event-tip {
   border: none !important;
-  border-radius: 3px !important;
-  -webkit-border-radius: 3px !important;
   background-color: #ffffff !important;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4) !important;
-  margin-top: -7px;
   padding: 0px !important;
   width: 400px !important;
   max-width: 500px !important;
   height: 225px; }
-  .venti-event-tip .qtip-content {
-    padding: 0px;
-    border-radius: 3px !important;
-    -webkit-border-radius: 3px !important;
-    overflow: hidden;
-    position: relative;
-    height: inherit; }
-    .venti-event-tip .qtip-content > div {
-      position: inherit;
-      height: inherit; }
+  .venti-event-tip .tip {
+    display: none; }
   .venti-event-tip .event-tip--header {
-    padding: 10px 15px;
     background: #fefefe;
     position: relative; }
     .venti-event-tip .event-tip--header h3 {
       font-family: HelveticaNeue-Light, HelveticaNeue, sans-serif !important;
-      font-size: 2em;
+      font-size: 1.7em;
       line-height: 1.6;
       font-weight: 200;
       padding: 0px;
@@ -597,20 +598,20 @@ nav .sel span.menu-label-color {
       margin: 0px !important;
       color: #555555;
       font-weight: 100;
-      font-size: 1.4em;
+      font-size: 1.2em;
       line-height: 1; }
     .venti-event-tip .event-tip--header .closer {
       display: block;
       height: 16px;
       width: 16px;
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 0px;
+      right: 0px;
       cursor: pointer; }
   .venti-event-tip .event-tip--datetime {
     font-family: HelveticaNeue-Light, HelveticaNeue, sans-serif !important;
-    padding: 5px 15px;
-    font-size: 1.4em;
+    padding: 10px 0px;
+    font-size: 1.2em;
     line-height: 1.4; }
     .venti-event-tip .event-tip--datetime > div {
       margin-bottom: 4px; }
@@ -640,6 +641,12 @@ nav .sel span.menu-label-color {
     background-color: #EAEBED;
     text-align: right;
     box-sizing: border-box; }
+  .venti-event-tip .hud-footer {
+    text-align: right; }
+    .venti-event-tip .hud-footer button {
+      margin-right: .2rem; }
+    .venti-event-tip .hud-footer button:last-child {
+      margin-right: 0rem; }
 
 div.license-status {
   margin-top: -10px; }

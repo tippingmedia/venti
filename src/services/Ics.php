@@ -10,6 +10,7 @@
 namespace tippingmedia\venti\services;
 
 use tippingmedia\venti\Venti;
+use tippingmedia\venti\elements\VentiEvent;
 
 use Craft;
 use craft\base\Component;
@@ -29,7 +30,7 @@ class Ics extends Component
 
     public function renderICSFile($groupId = null)
     {
-        $group = craft()->venti_groups->getGroupById($groupId);
+        $group = Venti::getInstance()->groups->getGroupById($groupId);
         $events = $this->renderICSEvents($groupId);
         $ics = "BEGIN:VCALENDAR"."\r\n".
 			    "VERSION:2.0\r\n".
@@ -46,13 +47,16 @@ class Ics extends Component
 
     public function renderICSEvents($groupId = null)
     {
-        $events = array();
-        $eventRecords = Venti_EventRecord::model()->findAllByAttributes(["groupId"=>$groupId]);
-        $eventModels = Venti_EventModel::populateModels($eventRecords, 'id');
+        $events = [];
+        $eventElmements = VentiEvent::find()
+            ->groupId($groupId)
+            ->cpindex(true)
+    		->siteId(null)
+    		->all();
 
-        foreach ($eventModels as $model)
+        foreach ($eventElmements as $event)
         {
-            $event = craft()->elements->getElementById($model->elementId);
+            //$event = craft()->elements->getElementById($model->elementId);
 
             $events[] = "BEGIN:VEVENT\r\n".
             "DTSTAMP:".$this->_dateToCal($event->dateCreated->format('U'))."\r\n".

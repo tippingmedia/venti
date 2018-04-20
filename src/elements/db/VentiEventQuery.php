@@ -41,7 +41,6 @@ class VentiEventQuery extends ElementQuery
     public $rRule;
     public $diff;
     public $recurring;
-    public $isrecurring;
     public $allDay;
     public $summary;
     public $location;
@@ -217,11 +216,11 @@ class VentiEventQuery extends ElementQuery
      * @param $int|null $value The property value
      * @return static self reference
      */
-    public function isrecurring($value)
-    {
-        $this->isrecurring = $value;
-        return $this;
-    }
+    // public function isrecurring($value)
+    // {
+    //     $this->isrecurring = $value;
+    //     return $this;
+    // }
 
     /**
      * Sets the [[location]] property.
@@ -407,9 +406,9 @@ class VentiEventQuery extends ElementQuery
             $this->subQuery->andWhere(Db::parseParam('venti_events.diff', $this->diff));
         }
 
-        if ($this->isrecurring) {
-            $this->subQuery->andWhere(Db::parseParam('venti_events.isrecurring', $this->isrecurring));
-        }
+        // if ($this->isrecurring) {
+        //     $this->subQuery->andWhere(Db::parseParam('venti_events.isrecurring', $this->isrecurring));
+        // }
 
         if ($this->rRule) {
             $this->subQuery->andWhere(Db::parseParam('venti_events.rRule', $this->rRule));

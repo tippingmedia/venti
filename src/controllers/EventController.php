@@ -19,6 +19,7 @@ use tippingmedia\venti\services\Rrule;
 use tippingmedia\venti\services\Ics;
 use tippingmedia\venti\models\Event;
 use tippingmedia\venti\elements\VentiEvent;
+use tippingmedia\venti\bundles\EventListBundle;
 
 use Craft;
 use craft\web\Controller;
@@ -40,7 +41,8 @@ use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\web\ServerErrorHttpException;
 
-use craft\web\assets\editentry\EditEntryAsset;
+//use craft\web\assets\cp\CpAsset;
+//use craft\web\assets\editentry\EditEntryAsset;
 //use craft\web\assets\datepickeri18n\DatepickerI18nAsset;
 
 use craft\i18n\Formatter;
@@ -71,8 +73,9 @@ class EventController extends BaseEventController
 	 */
 	public function actionIndex(array $variables = []): Response 
 	{
-		
 		$variables['groups'] = Venti::getInstance()->groups->getAllGroups();
+
+		$this->getView()->registerAssetBundle(EventListBundle::class);
 		return $this->renderTemplate('venti/_index', $variables);
 	}
 
@@ -175,9 +178,9 @@ class EventController extends BaseEventController
 			[ 'label' => $variables['group']->name, 'url' => UrlHelper::url('venti') ]
 		];
 
-		$variables['canDeleteEvent'] = $variables['event']->id && (
-			($currentUser->can('deleteEvents'.$variables['permissionSuffix']))
-		);
+		// $variables['canDeleteEvent'] = $variables['event']->id && (
+		// 	($currentUser->can('deleteEvents'.$variables['permissionSuffix']))
+		// );
 
 
 
@@ -207,7 +210,7 @@ class EventController extends BaseEventController
             (Craft::$app->getIsMultiSite() && Craft::$app->getSites()->currentSite->id != $site->id ? '/'.$site->handle : '');
 
 		
-		$variables['canDeleteEntry'] = (
+		$variables['canDeleteEvent'] = (
             get_class($event) === VentiEvent::class &&
             $event->id !== null &&
             (
@@ -221,8 +224,7 @@ class EventController extends BaseEventController
 
 
 		// Render the template!
-		//Craft::$app->getView()->includeCssResource('css/entry.css');
-		$this->getView()->registerAssetBundle(EditEntryAsset::class);
+		$this->getView()->registerAssetBundle(EventListBundle::class);
 		return $this->renderTemplate('venti/_edit', $variables);
 	}
 
@@ -327,34 +329,32 @@ class EventController extends BaseEventController
 	public function actionDeleteEvent() 
 	{
 		$this->requirePostRequest();
-        //$this->requireAcceptsJson();
-		$groups = new Groups();
 
 		$eventId = Craft::$app->getRequest()->getRequiredBodyParam('eventId');
+		$groupId = Craft::$app->getRequest()->getRequiredBodyParam('groupId');
 		$siteId = Craft::$app->getRequest()->getBodyParam('siteId');
-		$event = $groups->getEventById($eventId, $siteId);
+		$event = Venti::getInstance()->events->getEventById($eventId, $siteId);
 
-		Craft::$app->getUser()->requirePermission('deleteEvents:'.$event->groupId);
+		$this->requirePermission('deleteEvents:'.$groupId);
 
 		if (Craft::$app->getRequest()->getAcceptsJson()) {
-
             if(Craft::$app->getElements()->deleteElementById($eventId)) {
-				Craft::$app->getSession()->setNotice(Craft::t('Venti','Event deleted'));
+				Craft::$app->getSession()->setNotice(Craft::t('venti','Event deleted'));
                 return $this->asJson([
                     'success' => true
 				]);
             } else {
-				Craft::$app->getSession()->setError(Craft::t('Venti','Couldn’t delete event'));
-                $this->asJson([
+				Craft::$app->getSession()->setError(Craft::t('venti','Couldn’t delete event'));
+                return $this->asJson([
                     'errors' => $event->getErrors(),
 				]);
             }
         } else {
 			if (Craft::$app->getElements()->deleteElementById($eventId)) {
-				Craft::$app->getSession()->setNotice(Craft::t('Venti','Event deleted'));
+				Craft::$app->getSession()->setNotice(Craft::t('venti','Event deleted'));
 				$this->redirectToPostedUrl($event);
 			} else {
-				Craft::$app->getSession()->setError(Craft::t('Venti','Couldn’t delete event'));
+				Craft::$app->getSession()->setError(Craft::t('venti','Couldn’t delete event'));
 			}
 		}
 	}
@@ -514,7 +514,6 @@ class EventController extends BaseEventController
 
 		$view = $this->getView();
 		
-
 		//$view->registerAssetBundle(DatepickerI18nAsset::class);
 
 		$html = $view->renderTemplate('venti/_modal',['values' => $values, 'siteId' => $siteId]);
@@ -571,7 +570,7 @@ class EventController extends BaseEventController
 		}
 
 		if (!$variables['siteIds']) {
-			throw new HttpException(403, Craft::t('Venti','Your account doesn’t have permission to edit any of this groups’ sites.'));
+			throw new HttpException(403, Craft::t('venti','Your account doesn’t have permission to edit any of this groups’ sites.'));
 		}
 
 		if (empty($variables['site'])) {
@@ -630,29 +629,13 @@ class EventController extends BaseEventController
                 }
             }
         }
-
-
-		// Redirect Urls
-		// ---------------------------------------------------------------------
-
-		// if (array_key_exists('event', $variables)) {
-		// 	// Can't just use the entry's getCpEditUrl() because that might include the site ID when we don't want it
-		// 	$variables['baseCpEditUrl'] = 'venti/'.$variables['group']['handle'].'/'.$variables['event']['id'].'-'.$variables['event']['slug'];
-		// 	// on command save go back to event
-		// 	$variables['saveShortcutRedirect'] = $variables['baseCpEditUrl'] .
-		// 		(Craft::$app->getIsMultiSite() != $variables['siteId'] ? '/'.$variables['siteId'] : '');
-		// 	// Set the "Continue Editing" URL
-		// 	$variables['continueEditingUrl'] = $variables['baseCpEditUrl'] .
-		// 		(Craft::$app->getIsMultiSite() != $variables['siteId'] ? '/'.$variables['siteId'] : '');
-		// }
-
 	}
 
 	public function actionViewEventByEid(array $variables = []) 
 	{
 
 		$event = VentiEvent::find()
-    		->iid($variables['eventId'])
+    		->id($variables['eventId'])
     		->siteEndabled(null)
     		->one();
 
@@ -722,45 +705,48 @@ class EventController extends BaseEventController
 
 		$timezone = new DateTimeZone(Craft::$app->getTimeZone());
 		#-- ID of event being updated
-		$id = Craft::$app->getRequest()->getBodyParam('id');
-		#-- Grab original event by id
-		$element = Craft::$app->getElements()->getElementById($id);
+		$eventId = Craft::$app->getRequest()->getBodyParam('eventId');
+		$siteId = Craft::$app->getRequest()->getBodyParam('siteId');
+
+		$event = $this->_getEventModel();
+		$this->enforceEditEventPermissions($event);
+
+		$element = Craft::$app->getElements()->getElementById($event->id);
 
 		#-- Create date times of start & end dates
 		$start = new DateTime(Craft::$app->getRequest()->getBodyParam('start'), $timezone);
 		$end = new DateTime(Craft::$app->getRequest()->getBodyParam('end'), $timezone);
-		$siteId = Craft::$app->getRequest()->getBodyParam('siteId');
 
 
-		$model = new Event();
-		$model->setAttributes($element->getAttributes());
-		$model->startDate = $start;
-		$model->endDate = $end;
+		$event->startDate = $start;
+		$event->endDate = $end;
 
-		if($element->repeat == 1) {
-			$rrule = updateDTStartEnd($element->rRule, $start, $end);
-			$model->rRule = $rrule;
-			$model->repeat = 1;
+		if($element->recurring == 1) {
+			$rrule = Venti::getInstance()->rrule->updateDTStartEnd($element->rRule, $start, $end);
+			$event->rRule = $rrule;
+			$event->recurring = 1;
 		}
 
-		if(!saveEvent($model,$siteId)) {
-			Craft::$app->getSession()->setError(Craft::t('Venti','Event updates could not be completed.'));
+		if(!Venti::getInstance()->events->saveEvent($event, $siteId)) {
+			Craft::$app->getSession()->setError(Craft::t('venti','Event updates could not be completed.'));
 			if (Craft::$app->getRequest()->getAcceptsJson()) {
 				return $this->asJson([
-					'errors' => $model->getErrors(),
+					'errors' => $event->getErrors(),
 				]);
 			}
 		} else {
 			if (Craft::$app->getRequest()->getAcceptsJson()) {
-				$return['success'] = true;
-				return $this->asJson($return);
+				Craft::$app->getSession()->setNotice(Craft::t('venti','Event dates were updated.'));
+                return $this->asJson([
+                    'success' => true
+				]);
 			}
 		}
     }
 
-	public function actionViewICS() {	
+	public function actionViewIcs() {	
 		$segments = Craft::$app->getRequest()->getSegments();
-		return renderICSFile($segments[2]);
+		return Venti::getInstance()->ics->renderICSFile($segments[2]);
 	}
 
 
@@ -768,36 +754,38 @@ class EventController extends BaseEventController
 	{
 		$this->requirePostRequest();
 
-		$timezone = new DateTimeZone(Craft::$app->getTimeZone());
 		#-- ID of event being updated
-		$id = Craft::$app->getRequest()->getBodyParam('id');
-		#-- Grab original event by id
-		$element = Craft::$app->getElements()->getElementById($id);
-
-		$exDate = new DateTime(Craft::$app->getRequest()->getBodyParam('exDate'), $timezone);
+		$eventId = Craft::$app->getRequest()->getBodyParam('eventId');
 		$siteId = Craft::$app->getRequest()->getBodyParam('siteId');
+		#-- Grab original event by id
+		$event = $this->_getEventModel();
+		$this->enforceEditEventPermissions($event);
 
-		$model = new Event();
-		$model->setAttributes($element->getAttributes());
+		$element = Craft::$app->getElements()->getElementById($event->id);
 
-		if($element->repeat == 1) {
-			$rrule = addExcludedDate($element->rRule, $exDate, $siteId );
-			$model->rRule = $rrule;
-			$model->repeat = 1;
+		$exDate = new DateTime(Craft::$app->getRequest()->getBodyParam('exDate'), new DateTimeZone(Craft::$app->getTimeZone()));
+	
+
+		if($element->recurring == 1) {
+			$rrule = Venti::getInstance()->rrule->addExcludedDate( $element->rRule, $exDate, $siteId );
+			$event->rRule = $rrule;
+			$event->recurring = 1;
 		}
 
 
-		if(!saveEvent($model,$siteId)) {
-			Craft::$app->getSession()->setError(Craft::t('Venti','Event updates could not be completed.'));
+		if(!Venti::getInstance()->events->saveEvent($event, $siteId)) {
+			Craft::$app->getSession()->setError(Craft::t('venti','Removing event occurece could not be completed.'));
 			if (Craft::$app->getRequest()->getAcceptsJson()) {
 				return $this->asJson([
-					'errors' => $model->getErrors(),
+					'errors' => $event->getErrors(),
 				]);
 			}
 		} else {
 			if (Craft::$app->getRequest()->getAcceptsJson()) {
-				$return['success'] = true;
-				return $this->asJson($return);
+				Craft::$app->getSession()->setNotice(Craft::t('venti','Event occurence removed.'));
+                return $this->asJson([
+                    'success' => true
+				]);
 			}
 		}
 	}
@@ -829,7 +817,7 @@ class EventController extends BaseEventController
 		$event->diff     	  = null;
 		$event->endRepeat     = null;
 
-		if($event->allDay == "") {
+		if($event->allDay == "" || $event->allDay == null) {
 			$event->allDay = 0;
 		}
 

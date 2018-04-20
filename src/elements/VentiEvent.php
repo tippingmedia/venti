@@ -29,11 +29,13 @@ use craft\base\Element;
 use craft\db\Query;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
+use craft\elements\actions\SetStatus;
 use ns\prefix\elements\db\ProductQuery;
 use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
 use craft\helpers\DateTimeHelper;
 use craft\validators\DateTimeValidator;
+
 use DateTime;
 use DateTimeZone;
 
@@ -178,7 +180,6 @@ class VentiEvent extends Element
 				'label'    => Craft::t('venti','All Events'),
 				'criteria' => [
 					'cpindex' => true
-					//'isrepeat' => 'null'
 				]
 			]
 		];
@@ -196,12 +197,10 @@ class VentiEvent extends Element
 				'criteria' => [
 					'groupId' => $group->id,
 					'cpindex' => true
-					//'isrepeat' => 'is not null'
 				]
 			];
 		}
 
-		//$sources[] = ['heading' => 'Groups'];
 		return $sources;
 	}
 
@@ -214,7 +213,11 @@ class VentiEvent extends Element
 
         if (!isset($groupSiteSettings[$this->siteId])) {
             throw new Exception("The group '{$group->name}' is not enabled for the site '{$this->siteId}'");
-        }
+		}
+		
+		if($this->allDay == '') {
+			$this->allDay = 0;
+		}
 
         return parent::beforeSave($isNew);
     }
@@ -325,18 +328,17 @@ class VentiEvent extends Element
 		if (!empty($groups)) {
 			#-- for now these are always on
 			$userSessionService = Craft::$app->getUser();
-			$canSetStatus = false;
+			$canSetStatus = true;
 			$canEdit = false;
-			$canDelete = false;
 
 			foreach ($groups as $groupId) {
+				
 				$canPublishEvents = $userSessionService->checkPermission('publishEvents:'.$groupId);
-				$canDeleteEvents = $userSessionService->checkPermission('deleteEvents:'.$groupId);
 
 				// Only show the Set Status action if we're sure they can make changes in all the groups
-				if (!(
-					$canPublishEvents && $canDeleteEvents
-				))
+				if (!
+					$canPublishEvents
+				)
 				{
 					$canSetStatus = false;
 				}
@@ -345,10 +347,6 @@ class VentiEvent extends Element
 				// (the trigger will disable itself for events that aren't editable)
 				if ($canPublishEvents) {
 					$canEdit = true;
-				}
-
-				if($canDeleteEvents) {
-					$canDelete = true;
 				}
 			}
 
@@ -371,24 +369,26 @@ class VentiEvent extends Element
                 // They are viewing a specific section. See if it has URLs for the requested site
                 $controller = Craft::$app->controller;
                 if ($controller instanceof ElementIndexesController) {
-                    $siteId = $controller->getElementQuery()->siteId ?: Craft::$app->getSites()->currentSite->id;
-                    if (isset($sections[0]->siteSettings[$siteId]) && $sections[0]->siteSettings[$siteId]->hasUrls) {
+					$siteId = $controller->getElementQuery()->siteId ?: Craft::$app->getSites()->currentSite->id;
+                    if (isset($groups[0]->siteSettings[$siteId]) && $groups[0]->siteSettings[$siteId]->hasUrls) {
                         $showViewAction = true;
                     }
                 }
-            }
-
+			}
+			
+			// View
 			if ($showViewAction) {
-                // View
                 $actions[] = Craft::$app->getElements()->createAction([
                     'type' => View::class,
                     'label' => Craft::t('venti', 'View event'),
                 ]);
-            }
+			}
 
 
 			// Delete?
-			if ($canDelete) {
+			if (
+				$userSessionService->checkPermission('deleteEvents:'.$groupId)
+			) {
 				$actions[] = Craft::$app->getElements()->createAction([
 					'type' => Delete::class,
 					'confirmationMessage' => Craft::t('venti', 'Are you sure you want to delete the selected events?'),
@@ -520,43 +520,8 @@ class VentiEvent extends Element
 				$summary = $this->summary;
 				return $this->summary != "" ? $summary : '';
 			}
-			case 'rRule':
-			{
-				return "<span class='info'>".$this->rRule."</span>";
-			}
 		}
 		return parent::tableAttributeHtml($attribute);
-	}
-
-
-
-    /**
-     * @inheritdoc
-     */
-    public function getEditorHtml(): string
-	{
-
-    	$namespacedId = Craft::$app->getView()->getNamespace();
-
-		// $localeData = Craft::$app->getI18n()->getLocaleData(Craft::$app->language);
-        // $dateFormatter = $localeData->getDateFormatter();
-        $dateFormat = Craft::$app->getLocale()->getDateFormat('short');
-        $timeFormat = Craft::$app->getLocale()->getTimeFormat('short');
-
-		#-- Start/End Dates
-		$html = Craft::$app->getView()->renderTemplate('venti/_editor', [
-			'event' 			=> $this,
-			'dateFormat' 		=> $dateFormat,
-			'timeFormat' 		=> $timeFormat,
-			'group' 			=> getGroupById($this->groupId),
-			'namespacedId' 		=> $namespacedId,
-			'permissionSuffix'  => ':'.getGroupById($this->groupId)
-		]);
-
-		#-- Everything else
-		$html .= parent::getEditorHtml($this);
-
-		return $html;
 	}
 
 
@@ -599,10 +564,6 @@ class VentiEvent extends Element
      */
     public $diff;
 	/**
-     * @var int|null Is Recurring
-     */
-    private $_isrecurring;
-	/**
      * @var mixed|null Location
      */
     public $location;
@@ -629,7 +590,37 @@ class VentiEvent extends Element
 
 
 	// Public methods
-    // =========================================================================
+	// =========================================================================
+	
+
+	 /**
+     * @inheritdoc
+     */
+    public function getEditorHtml(): string
+	{
+
+    	$namespacedId = Craft::$app->getView()->getNamespace();
+
+        $dateFormat = Craft::$app->locale->getDateFormat('short',Locale::FORMAT_PHP);
+        $timeFormat = Craft::$app->locale->getTimeFormat('short',Locale::FORMAT_PHP);
+
+		#-- Start/End Dates
+		$html = Craft::$app->getView()->renderTemplate('venti/_editor', [
+			'event' 			=> $this,
+			'dateFormat' 		=> $dateFormat,
+			'timeFormat' 		=> $timeFormat,
+			'group' 			=> $this->getGroup(),
+			'namespacedId' 		=> $namespacedId,
+			'permissionSuffix'  => ':'.$this->groupId
+		]);
+
+		#-- Everything else
+		$html .= parent::getEditorHtml();
+
+		//\yii\helpers\VarDumper::dump($html, 5, true);exit;
+
+		return $html;
+	}
 
 
 	 /**
@@ -892,9 +883,7 @@ class VentiEvent extends Element
     public function getIsEditable(): bool
     {
         return (
-            Craft::$app->getUser()->checkPermission('ventiEditEvents:'.$this->groupId) && (
-                $this->authorId == Craft::$app->getUser()->getIdentity()->id
-            )
+            Craft::$app->getUser()->checkPermission('publishEvents:'.$this->groupId)
         );
     }
 

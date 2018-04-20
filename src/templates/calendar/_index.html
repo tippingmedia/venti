@@ -1,6 +1,8 @@
 {% extends "_layouts/cp" %}
 {% import "_includes/forms" as forms %}
 
+{# {% do view.registerAssetBundle("tippingmedia\\venti\\bundles\\CalendarBundle") %} #}
+
 {% set title = "Calendar"|t %}
 
 {% set tabs = {
@@ -16,7 +18,7 @@
 
 {% set selectedTab = 'calendar' %}
 
-{% includeCssResource "venti/css/venti.css" %}
+{# {% includeCssResource "venti/css/venti.css" %}
 {% includeCssResource "venti/lib/fullcalendar/fullcalendar.css" %}
 {% includeJsResource "venti/lib/fullcalendar/lib/moment.min.js" %}
 {% includeJsFile "//cdnjs.cloudflare.com/ajax/libs/fullcalendar/2.8.0/fullcalendar.min.js" %}
@@ -24,7 +26,7 @@
 {% includeCssFile "//cdn.jsdelivr.net/qtip2/3.0.3/basic/jquery.qtip.min.css" %}
 {% includeJsResource "venti/lib/fullcalendar/lang-all.js" %}
 {% includeJsResource "venti/lib/fullcalendar/lib/moment-php-map.js" %}
-{% includeJsResource "venti/js/venti.js" %}
+{% includeJsResource "venti/js/venti.js" %} #}
 
 
 {% set extraPageHeaderHtml %}
@@ -53,23 +55,31 @@
 {% endset %}
 
 {# Retrieve list of all current locales used in Craft  #}
-{% set localesCollection = craft.i18n.getSiteLocales() %}
+{% set localesCollection = craft.app.i18n.siteLocales() %}
 {% set locales = [] %}
 {% for item in localesCollection %}
-	{% set lang = {"title":item.getName(),"handle":item.id} %}
+	{% set lang = {"title":item.getDisplayName(),"handle":item.id} %}
 	{% set locales = locales|merge([lang]) %}
+{% endfor %}
+
+{# Retrieve list of all current sites used in Craft  #}
+{% set sites = [] %}
+{% for item in craft.app.sites.getAllSites() %}
+	{% set site = {"title":item.name,"handle":item.id} %}
+	{% set sites = sites|merge([site]) %}
 {% endfor %}
 
 {% js %}
     new VentiCalendar({
         id:"#venti-calendar",
         params: {
-            localized: "{% if craft.isLocalized() %}true{% else %}false{% endif %}",
-			cpLanguage: "{{ craft.locale() }}",
+            multisite: "{% if craft.app.isMultiSite() %}true{% else %}false{% endif %}",
+			cpLanguage: "{{ craft.app.language | raw }}",
             eventSources:{{ groups | json_encode() | raw }},
             timezone:"{{ timezone }}",
             locales: {{ locales | json_encode() | raw }},
-			editLocales: {{ editLocales | json_encode() | raw }}
+			sites: {{ sites | json_encode() | raw }},
+			editSites: {{ editSites | json_encode() | raw }}
         }
     });
 {% endjs %}

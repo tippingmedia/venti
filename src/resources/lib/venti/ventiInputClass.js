@@ -176,7 +176,6 @@ class VentiInput {
             'venti/event/modal', {
                 name: options.id,
                 rrule: options.values !== null ? options.values.rRule : "",
-                locale: options.locale,
                 siteId: options.siteId,
                 inline: false,
             },
@@ -193,17 +192,18 @@ class VentiInput {
 
     loadInline(options) {
         var $this = this;
+
         Craft.postActionRequest(
             'venti/event/modal', {
                 name: options.id,
                 rrule: options.values !== null ? options.values.rRule : "",
-                locale: options.locale,
+                siteId: options.siteId,
                 inline: true,
             },
             function(data) {
                 // Append modal content
                 //[jQ]
-                $("#" + options.id + ' .venti-inline').append(data);
+                $("#" + options.id + ' .venti-inline').append(data.html);
                 $this._modal = new VentiModal(options);
 
                 $this.initEvents();
@@ -401,7 +401,7 @@ class VentiInput {
         groupBtnLabelClr.style.backgroundColor = optionColor;
 
 
-        Craft.postActionRequest('venti/event/switch-group', Craft.cp.$container.serialize(), $.proxy(function(response, textStatus) {
+        Craft.postActionRequest('venti/event/switch-group', Craft.cp.$primaryForm.serialize(), $.proxy(function(response, textStatus) {
             _spinner.addClass('hidden');
 
             if (textStatus == 'success') {

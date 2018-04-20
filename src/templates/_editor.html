@@ -2,7 +2,7 @@
 
 {% set groupHandle = group.handle %}
 {% set canPublish = currentUser.can('publishEvents'~permissionSuffix) %}
-{% set isVersion = event.getClassHandle() == 'EventVersion' %}
+{% set isVersion = className(event) == 'tippingmedia\\venti\\elements\\VentiEvent' %}
 
 {% set ed = now|date_modify('tomorrow -1 min') %}
 {% set sd = now|date_modify('today') %}
@@ -15,7 +15,7 @@
 		{{ forms.date({
 			id:        attribute,
 			name:      attribute,
-			locale:    event.locale,
+			siteId:    event.siteId,
 			class: 	  'venti-' ~ attribute|trim|lower ~ '--input',
 			value:     event[attribute],
 		}) }}
@@ -23,7 +23,7 @@
 		{{ forms.time({
 			id:        attribute,
 			name:      attribute,
-			locale:    event.locale,
+			siteId:    event.siteId,
 			class: 	  'venti-' ~ attribute|trim|lower ~ '--input',
 			value:     event[attribute],
 			minuteIncrement: craft.venti.settings.timeInterval,
@@ -33,7 +33,7 @@
 	{{ forms.field({
 		id:       attribute,
 		label:    label,
-		locale:   craft.venti.settings.translate ? event.locale : null,
+		siteId:    event.siteId,
 		first:    (attribute == 'startDate'),
 		required: true,
 		errors:    event.getErrors(attribute),
@@ -48,7 +48,7 @@
 		{{ forms.lightswitch({
 			id: 		attribute,
 			name: 		attribute,
-			locale:     event.locale,
+			siteId:    event.siteId,
 			class: 	  	'venti-' ~ attribute|trim|lower ~ '--input',
 			on: 		event[attribute]
 		}) }}
@@ -57,7 +57,7 @@
 	{{ forms.field({
 		id:       attribute,
 		label:    label,
-		locale:   craft.venti.settings.translate ? event.locale : null,
+		siteId:    event.siteId,
 		required: false,
 		errors:    event.getErrors(attribute),
 	}, input) }}
@@ -79,7 +79,7 @@
 	{{ forms.field({
 		id:       attribute,
 		label:    label,
-		locale:   craft.venti.settings.translate ? event.locale : null,
+		siteId:    event.siteId,
 		required: false,
 		errors:    event.getErrors(attribute),
 	}, input) }}
@@ -93,7 +93,7 @@
 		{{ forms.checkbox({
 			id: 		attribute,
 			name: 		attribute,
-			locale:     event.locale,
+			siteId:     event.siteId,
 			class: 		'venti-' ~ attribute|trim|lower ~ '--input ' ~ class,
 			checked: 	event[attribute]
 		}) }}
@@ -102,7 +102,7 @@
 	{{ forms.field({
 		id:       	attribute,
 		label:    	label,
-		locale:   	craft.venti.settings.translate ? event.locale : null,
+		siteId:    event.siteId,
 		required: 	false
 	}, input) }}
 
@@ -119,14 +119,14 @@
 			class: 		prefix ~ "-" ~ attribute|trim|lower ~ '--input',
 			name: 		attribute
 		}) #}
-		<input type="hidden" name="{{ attribute }}" id="venti-{{ attribute|lower }}" class="venti-{{ attribute|trim|lower }}--input" value="{{ event[attribute]}}" />
+		<input type="hidden" name="{{ attribute }}" id="venti-{{ attribute|lower }}" class="venti-{{ attribute|trim|lower }}--input" value="{{ event[attribute] }}" />
 	{% endset %}
 
 	{{ forms.field({
 		id:       	"venti-" ~ attribute,
 		required: 	false,
 		class: 		"venti-" ~ attribute|lower,
-		locale:   	craft.venti.settings.translate ? event.locale : null,
+		siteId:    	event.siteId,
 	}, input) }}
 
 {% endmacro %}
@@ -183,13 +183,13 @@
 {% from _self import groupMenu %}
 
 <!-- <input type="hidden" name="action" value="venti/event/saveEvent"> -->
-{% if craft.isLocalized() %}<input type="hidden" name="locale" value="{{ event.locale }}">{% endif %}
+{% if craft.app.isMultiSite() %}<input type="hidden" name="siteId" value="{{ event.siteId }}">{% endif %}
 
-{{ getCsrfInput() }}
+{# {{ getCsrfInput() }} #}
 <div id="venti-fields" class="venti-fields {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{	craft.venti.settings.eventDuration }}" >
 
-	<input type="hidden" id="groupId" class='venti-groupId' name="groupId" value="{{ group.id }}">
-	<input type="hidden" name="eventId" value="{{ event.id }}">
+	{# <input type="hidden" id="groupId" class='venti-groupId' name="groupId" value="{{ group.id }}"> #}
+	{# <input type="hidden" name="eventId" value="{{ event.id }}"> #}
 
 	{{ forms.textField({
 		label: 		"Title"|t,
@@ -197,7 +197,7 @@
 		name: 		'title',
 		value: 		event.title,
 		errors: 	event.getErrors('title'),
-		locale:   	craft.venti.settings.translate ? event.locale : null,
+		siteId:    	event.siteId,
 		first: 		true,
 		autofocus: 	true,
 		required: 	true
@@ -206,7 +206,7 @@
 	{# Group Menu Button #}
 	{# {{ groupMenu(group) }} #}
 
-	{{ checkboxField(event, 'allDay', "All Day"|t, "venti--checkbox checkbox", false ) }}
+	{{ checkboxField(event, 'allDay', "All Day"|t, "venti--checkbox checkbox", false) }}
 	{{ dateTimeField(event, 'startDate', "Start Date"|t, true) }}
 	{{ dateTimeField(event, 'endDate', "End Date"|t, false) }}
 	{{ toggleField(event, 'recurring', "Recurring Schedule"|t, "venti-toggle venti-toggle-round", false) }}
@@ -248,21 +248,22 @@
 	<div class='venti-hidden--wrap'>
 		{{ hiddenField(event, 'summary', 'venti', false) }}
 		{{ hiddenField(event, 'rRule', 'venti', false) }}
-		{{ hiddenField(event, 'isrecurring', 'venti', false) }}
 	</div>
+
 	<div class="venti-inline" id="venti-inline" style="display:none;"></div>
 
 	{# Location Element Select #}
 	{% if craft.venti.settings.hideLocation != 1 %}
 		<div class="field">
-			{% set locElement = craft.elements.getElementType('Venti_Location') %}
+		{% set elementType = 'tippingmedia\\venti\\elements\\VentiLocation' %}
+		{% set locElement = craft.app.elements.createElement(elementType) %}
 			{% set locParams = {
 				label: "Event Location"|t,
-				instructions: "Select the location your event is occuring.",
+				instructions: "Select the location your event is occuring."|t,
 				limit: 1,
-				elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
+				elements: [],
 				elementType: locElement,
-				locale: craft.venti.settings.translate ? event.locale : null,
+				siteId:    event.siteId,
 				selectionLabel: "Choose a location"|t,
 			}
 			%}
@@ -272,12 +273,12 @@
 		{#  Specific Location #}
 		{{ forms.textField({
 			label: 		"Specific Location"|t,
-			instructions: "Room #, building, entrance …",
+			instructions: "Room #, building, entrance …"|t,
 			id: 		'specific-location',
 			name: 		'specificLocation',
 			value: 		event.specificLocation,
 			errors: 	event.getErrors('specificLocation'),
-			locale:   	craft.venti.settings.translate ? event.locale : null,
+			siteId:     event.siteId,
 			size: 50,
 			first: 		false,
 			autofocus: 	false,
@@ -298,30 +299,30 @@
 				{% endif %}
 				<input type="text" class="text" size="50" name="registration[text]" value="{% if reg['text'] is defined and reg['text'] and event.registration['text'] is not empty %}{{event.registration['text']}}{% endif %}" placeholder="{{ "Registration text"|t }}"/>
 				<br><br>
-		        <input
+				<input
 					type="radio"
 					id="venti-registration-toggle-left"
 					class="venti--radio venti-registration-toggle-left"
 					name="registration[type]"
 					value="url" {% if reg['type'] is defined  and reg['type'] == "url" %} checked='checked'{% endif %}/>
-		        <label for="venti-registration-toggle-left"><span class='venti--radio-label'>{{ "URL"|t }}</span></label>
-		        <input
+				<label for="venti-registration-toggle-left"><span class='venti--radio-label'>{{ "URL"|t }}</span></label>
+				<input
 					type="radio"
 					id="venti-registration-toggle-right"
 					class="venti--radio venti-registration-toggle-right"
 					name="registration[type]"
 					value="embed" {% if reg['type'] is defined and reg['type'] == "embed" %} checked='checked'{% endif %}/>
-		        <label for="venti-registration-toggle-right"><span class='venti--radio-label'>{{ 'Form Embed'|t }}</span></label>
-		        <br/>
-		        <br/>
-		        <input
+				<label for="venti-registration-toggle-right"><span class='venti--radio-label'>{{ 'Form Embed'|t }}</span></label>
+				<br/>
+				<br/>
+				<input
 					type="text"
 					class='text venti--registration-url'
 					name="registration[url]"
 					size="50"
 					placeholder="http://…"
 					value="{%- if reg['type'] is defined and reg['type'] == "url" and event.registration['url'] is not empty -%}{{ event.registration['url']|default('') }}{%- endif -%}"/>
-		        <textarea
+				<textarea
 					class='text venti--registration-embed'
 					name="registration[embed]"
 					rows="10"
@@ -333,7 +334,9 @@
 </div>
 
 {% if not event.slug %}
-	{% js "window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');" %}
+    {% js %}
+        window.slugGenerator = new Craft.SlugGenerator('#title', '#slug');
+    {% endjs %}
 {% endif %}
 
 {% set fieldData = {
@@ -342,7 +345,7 @@
 	'allDay'  : event.allDay ? event.allDay : "",
 	'rRule'   : event.rRule ? event.rRule : "",
 	'summary' : event.summary ? event.summary : "",
-	'locale'  : event.locale ? event.locale : craft.locale
+	'siteId'  : event.siteId ? event.siteId : craft.siteId
 } %}
 {% js %}
     new VentiInput({
@@ -350,6 +353,6 @@
 	        values: {{ fieldData|json_encode|raw }},
 			inline: true,
 			namespacedId: "{{ namespacedId|e('js') }}",
-	        locale: "{% if craft.isLocalized() %}{{ event.locale | e('js') }}{% endif %}"
+	        siteId: "{{ craft.app.isMultiSite ? event.siteId : craft.app.sites.currentSite.id | e('js') }}"
 	    });
 {% endjs %}

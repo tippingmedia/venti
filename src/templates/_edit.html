@@ -1,7 +1,7 @@
 {% extends "_layouts/cp" %}
 {% import "_includes/forms" as forms %}
 
-{% do view.registerAssetBundle("tippingmedia\\venti\\bundles\\EventListBundle") %}
+{# {% do view.registerAssetBundle("tippingmedia\\venti\\bundles\\EventListBundle") %} #}
 
 {#{% includeCssResource "venti/css/venti.css" %}
 {% includeJsResource "venti/lib/fullcalendar/lib/moment.min.js" %}
@@ -193,7 +193,6 @@
 	        values: {{ fieldData|json_encode|raw }},
 			inline: false,
 			namespacedId: "",
-	        locale: "{{ craft.app.language }}",
 			siteId: "{{ craft.app.sites.currentSite.id }}"
 	    });
 {% endjs %}

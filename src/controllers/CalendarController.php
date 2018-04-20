@@ -13,6 +13,7 @@
 use tippingmedia\venti\Venti;
 use tippingmedia\venti\services\groups;
 use tippingmedia\venti\services\Calendar;
+use tippingmedia\venti\bundles\CalendarBundle;
 
 use Craft;
 use craft\web\Controller;
@@ -41,21 +42,30 @@ class CalendarController extends Controller
 		$variables['dateFormat'] = $dateFormat;
 		$variables['timeFormat'] = $timeFormat;
 
-		$variables['groups'] = getAllGroups();
+		$variables['groups'] = Venti::getInstance()->groups->getAllGroups();
         $variables['timezone'] = Craft::$app->getTimeZone();
 
         //Which locales can be edited
-        $currentUser = Craft::$app->getUser()->getIdentity();
-        $locales = craft()->getI18n()->getSiteLocales();
-        $editLocales = array();
-        foreach ($locales as $locale)
-        {
-            $editLocales[$locale->id] = $currentUser->can('editLocale:'.$locale->id);
-        }
+        // $currentUser = Craft::$app->getUser()->getIdentity();
+        // $locales = Craft::$app->getI18n()->getSiteLocales();
+        // $editLocales = [];
+        // foreach ($locales as $locale)
+        // {
+        //     $editLocales[$locale->id] = $currentUser->can('editLocale:'.$locale->id);
+        // }
+        // $variables['editLocales'] = $editLocales;
 
-        $variables['editLocales'] = $editLocales;
+        //Which sites can be edited
+        $currentUser = Craft::$app->getUser()->getIdentity();
+        $sites = Craft::$app->getSites()->getAllSites();
+        $editSites = [];
+        foreach ($sites as $site) {
+            $editSites[$site->id] = $currentUser->can('ventiEditEvents:'.$site->id);
+        }
+        $variables['editSites'] = $editSites;
         
         //Render Template
+        $this->getView()->registerAssetBundle(CalendarBundle::class);
 		$this->renderTemplate('venti/calendar/_index', $variables);
 	}
 
@@ -65,11 +75,11 @@ class CalendarController extends Controller
         $start      = Craft::$app->getRequest()->getParam('start');
         $end        = Craft::$app->getRequest()->getParam('end');
         $groupId    = Craft::$app->getRequest()->getSegment(3);
-        $localeId   = Craft::$app->getRequest()->getSegment(4);
+        $siteId   = Craft::$app->getRequest()->getSegment(4);
 
-        $output = getCalendarFeed($start, $end, $groupId, $localeId);
+        $output = Venti::getInstance()->calendar->getCalendarFeed($start, $end, $groupId, $siteId);
 
-        $this->returnJson( $output );
+        $this->asJson($output);
 
     }
 }

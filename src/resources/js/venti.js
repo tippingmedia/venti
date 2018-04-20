@@ -54,7 +54,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     window.Venti = {};
     $.extend(Venti, {});
 })();
-
 /**
  * Venti Calendar Class
  */
@@ -223,7 +222,6 @@ var VentiInput = function () {
             Craft.postActionRequest('venti/event/modal', {
                 name: options.id,
                 rrule: options.values !== null ? options.values.rRule : "",
-                locale: options.locale,
                 siteId: options.siteId,
                 inline: false
             }, function (data) {
@@ -239,15 +237,16 @@ var VentiInput = function () {
         key: 'loadInline',
         value: function loadInline(options) {
             var $this = this;
+
             Craft.postActionRequest('venti/event/modal', {
                 name: options.id,
                 rrule: options.values !== null ? options.values.rRule : "",
-                locale: options.locale,
+                siteId: options.siteId,
                 inline: true
             }, function (data) {
                 // Append modal content
                 //[jQ]
-                $("#" + options.id + ' .venti-inline').append(data);
+                $("#" + options.id + ' .venti-inline').append(data.html);
                 $this._modal = new VentiModal(options);
 
                 $this.initEvents();
@@ -449,7 +448,7 @@ var VentiInput = function () {
             groupBtnLabel.innerHTML = optionLabel;
             groupBtnLabelClr.style.backgroundColor = optionColor;
 
-            Craft.postActionRequest('venti/event/switch-group', Craft.cp.$container.serialize(), $.proxy(function (response, textStatus) {
+            Craft.postActionRequest('venti/event/switch-group', Craft.cp.$primaryForm.serialize(), $.proxy(function (response, textStatus) {
                 _spinner.addClass('hidden');
 
                 if (textStatus == 'success') {
@@ -1037,7 +1036,7 @@ var VentiModal = function () {
 Venti.ElementEditor = Garnish.Base.extend({
     $element: null,
     elementId: null,
-    locale: null,
+    siteId: null,
 
     $form: null,
     $fieldsContainer: null,
@@ -1045,8 +1044,8 @@ Venti.ElementEditor = Garnish.Base.extend({
     $saveBtn: null,
     $spinner: null,
 
-    $localeSelect: null,
-    $localeSpinner: null,
+    $siteSelect: null,
+    $siteSpinner: null,
 
     modal: null,
 
@@ -1079,10 +1078,10 @@ Venti.ElementEditor = Garnish.Base.extend({
     getBaseData: function getBaseData() {
         var data = $.extend({}, this.settings.params);
 
-        if (this.settings.locale) {
-            data.locale = this.settings.locale;
-        } else if (this.$element && this.$element.data('locale')) {
-            data.locale = this.$element.data('locale');
+        if (this.settings.siteId) {
+            data.siteId = this.settings.siteId;
+        } else if (this.$element && this.$element.data('site-id')) {
+            data.siteId = this.$element.data('site-id');
         }
 
         if (this.settings.elementId) {
@@ -1106,9 +1105,9 @@ Venti.ElementEditor = Garnish.Base.extend({
         this.onBeginLoading();
         var data = this.getBaseData();
         //Reset locale to store locale id so modal will show correct event version to edit.
-        data.locale = Craft.getLocalStorage('BaseElementIndex.locale');
-        data.includeLocales = this.settings.showLocaleSwitcher;
-        Craft.postActionRequest('elements/getEditorHtml', data, $.proxy(this, 'showModal'));
+        data.siteId = Craft.siteId;
+        data.includeSites = this.settings.showSiteSwitcher;
+        Craft.postActionRequest('elements/get-editor-html', data, $.proxy(this, 'showModal'));
     },
 
     showModal: function showModal(response, textStatus) {
@@ -1119,19 +1118,19 @@ Venti.ElementEditor = Garnish.Base.extend({
                 $header = $('<div class="header"></div>'),
                 $contents = $();
 
-            if (response.locales) {
+            if (response.sites) {
                 var $colLeft = $('<div class="col"/>').appendTo($header),
-                    $localeSelectContainer = $('<div class="select"/>').appendTo($colLeft);
+                    $siteSelectContainer = $('<div class="select"/>').appendTo($colLeft);
 
-                this.$localeSelect = $('<select/>').appendTo($localeSelectContainer);
-                this.$localeSpinner = $('<div class="spinner hidden"/>').appendTo($colLeft);
+                this.$siteSelect = $('<select/>').appendTo($siteSelectContainer);
+                this.$siteSpinner = $('<div class="spinner hidden"/>').appendTo($colLeft);
 
-                for (var i = 0; i < response.locales.length; i++) {
-                    var locale = response.locales[i];
-                    $('<option value="' + locale.id + '"' + (locale.id == response.locale ? ' selected="selected"' : '') + '>' + locale.name + '</option>').appendTo(this.$localeSelect);
+                for (var i = 0; i < response.sites.length; i++) {
+                    var site = response.sites[i];
+                    $('<option value="' + site.id + '"' + (site.id == response.site ? ' selected="selected"' : '') + '>' + site.name + '</option>').appendTo(this.$siteSelect);
                 }
 
-                this.addListener(this.$localeSelect, 'change', 'switchLocale');
+                this.addListener(this.$siteSelect, 'change', 'switchSite');
             }
 
             $header.appendTo($modal);
@@ -1143,9 +1142,9 @@ Venti.ElementEditor = Garnish.Base.extend({
             this.onCreateForm(this.$form);
 
             var $footer = $('<div class="footer"></div>'),
-                $buttonsContainer = response.locales ? $('<div class="col"/>').appendTo($header) : $('<div class="text--right"/>').appendTo($header);
-            this.$cancelBtn = $('<div class="btn">' + Craft.t('Cancel') + '</div>').appendTo($buttonsContainer);
-            this.$saveBtn = $('<input class="btn submit" type="submit" value="' + Craft.t('Save') + '"/>').appendTo($buttonsContainer);
+                $buttonsContainer = response.sites ? $('<div class="col"/>').appendTo($header) : $('<div class="text--right"/>').appendTo($header);
+            this.$cancelBtn = $('<div class="btn">' + Craft.t('venti', 'Cancel') + '</div>').appendTo($buttonsContainer);
+            this.$saveBtn = $('<input class="btn submit" type="submit" value="' + Craft.t('venti', 'Save') + '"/>').appendTo($buttonsContainer);
             this.$spinner = $('<div class="spinner hidden"/>').appendTo($buttonsContainer);
 
             $contents = $contents.add(this.$form);
@@ -1185,31 +1184,31 @@ Venti.ElementEditor = Garnish.Base.extend({
         }
     },
 
-    switchLocale: function switchLocale() {
-        var newLocale = this.$localeSelect.val();
+    switchSite: function switchSite() {
+        var newSite = this.$siteSelect.val();
 
-        if (newLocale == this.locale) {
+        if (newSite == this.siteId) {
             return;
         }
 
-        this.$localeSpinner.removeClass('hidden');
+        this.$siteSpinner.removeClass('hidden');
 
         var data = this.getBaseData();
-        data.locale = newLocale;
+        data.siteId = newSite;
 
-        Craft.postActionRequest('elements/getEditorHtml', data, $.proxy(function (response, textStatus) {
-            this.$localeSpinner.addClass('hidden');
+        Craft.postActionRequest('elements/get-editor-html', data, $.proxy(function (response, textStatus) {
+            this.$siteSpinner.addClass('hidden');
 
             if (textStatus == 'success') {
                 this.updateForm(response);
             } else {
-                this.$localeSelect.val(this.locale);
+                this.$siteSelect.val(this.siteId);
             }
         }, this));
     },
 
     updateForm: function updateForm(response) {
-        this.locale = response.locale;
+        this.siteId = response.siteId;
 
         this.$fieldsContainer.html(response.html);
 
@@ -1246,12 +1245,12 @@ Venti.ElementEditor = Garnish.Base.extend({
         this.$spinner.removeClass('hidden');
 
         var data = $.param(this.getBaseData()) + '&' + this.modal.$container.serialize();
-        Craft.postActionRequest('elements/saveElement', data, $.proxy(function (response, textStatus) {
+        Craft.postActionRequest('elements/save-element', data, $.proxy(function (response, textStatus) {
             this.$spinner.addClass('hidden');
 
             if (textStatus == 'success') {
                 if (textStatus == 'success' && response.success) {
-                    if (this.$element && this.locale == this.$element.data('locale')) {
+                    if (this.$element && this.siteId == this.$element.data('siteId')) {
                         // Update the label
                         var $title = this.$element.find('.title'),
                             $a = $title.find('a');
@@ -1322,10 +1321,10 @@ Venti.ElementEditor = Garnish.Base.extend({
     }
 }, {
     defaults: {
-        showLocaleSwitcher: true,
+        showSiteSwitcher: true,
         elementId: null,
         elementType: null,
-        locale: null,
+        siteId: null,
         attributes: null,
         params: null,
         onShowModal: $.noop,
@@ -1338,7 +1337,6 @@ Venti.ElementEditor = Garnish.Base.extend({
         validators: []
     }
 });
-
 /**
  * Venti Calendar Class
  */
@@ -1353,44 +1351,48 @@ var VentiCalendar = function () {
         this._input = document.getElementById(options.id);
         this._tooltip = null;
         this._cal = null;
+        this._huds = {};
         this._localebtn = null;
-        this._locale = Craft.getLocalStorage('BaseElementIndex.locale') ? Craft.getLocalStorage('BaseElementIndex.locale') : "en_us";
+        //this._locale = Craft.getLocalStorage('BaseElementIndex.locale') ? Craft.getLocalStorage('BaseElementIndex.locale') : "en_us";
+        this._site = Craft.siteId;
         this._sources = null;
-        this._localized = options.params.localized;
+        //this._localized = options.params.localized;
+        this._multisite = options.params.multisite;
         this._alertModal = null;
         this._editLocales = options.params.editLocales;
+        this._editSites = options.params.editSites;
         this._cpLanguage = options.params.cpLanguage ? this.mapLocales(options.params.cpLanguage) : "en";
         //FullCalendar default settings
         this._defaults = {
             customButtons: {
-                localeSelectButton: {
-                    text: this._params.locales[0].title,
+                siteSelectButton: {
+                    text: this._params.sites[0].title,
                     click: function click(evt) {
-                        if ($this._localebtn.data("menu") != "true") {
+                        if ($this._sitebtn.data("menu") != "true") {
                             var $menu = $('<div class="menu" data-align="right"></div>').insertAfter(evt.currentTarget),
                                 $menuList = $('<ul></ul>').appendTo($menu),
-                                selOps = options.params.locales;
+                                selOps = options.params.sites;
                             for (var i = 0; i < selOps.length; i++) {
-                                if (options.params.editLocales[selOps[i].handle]) {
+                                if (options.params.editSites[selOps[i].handle]) {
                                     $('<li><a data-value="' + selOps[i].handle + '">' + selOps[i].title + '</a></li>').appendTo($menuList);
                                 }
                             }
                             //console.log(options.params.locales);
-                            new Garnish.MenuBtn(evt.currentTarget, { onOptionSelect: $.proxy($this, "onLocaleChange", evt.currentTarget) }).showMenu();
+                            new Garnish.MenuBtn(evt.currentTarget, { onOptionSelect: $.proxy($this, "onSiteChange", evt.currentTarget) }).showMenu();
 
-                            $this._localebtn.data("menu", "true");
+                            $this._sitebtn.data("menu", "true");
                         }
                     }
                 },
                 groupsToggleButton: {
-                    text: Craft.t("Groups"),
+                    text: Craft.t("venti", "Groups"),
                     click: $.proxy(this, "groupToggles")
                 }
             },
             header: {
                 left: 'title',
                 center: '',
-                right: this._localized === "true" ? 'localeSelectButton groupsToggleButton today prev,next ' : 'groupsToggleButton today prev,next'
+                right: this._multisite === "true" ? 'siteSelectButton groupsToggleButton today prev,next ' : 'groupsToggleButton today prev,next'
             },
             viewRender: $.proxy(this, "viewRender"),
             editable: true,
@@ -1430,39 +1432,29 @@ var VentiCalendar = function () {
             //init full calendar
             this._cal = $(this._id).fullCalendar(settings);
 
-            this._localebtn = $(".fc-localeSelectButton-button");
-            this.updateLocaleBtnText(this._locale);
+            this._sitebtn = $(".fc-siteSelectButton-button");
+            this.updateSiteBtnText(this._site);
         }
     }, {
         key: 'viewRender',
         value: function viewRender(view, element) {
             $('.fc-day-number.fc-today').wrapInner('<span class="day-number-today"></span>');
-            $('.fc-localeSelectButton-button').addClass("btn menubtn");
+            $('.fc-siteSelectButton-button').addClass("btn menubtn");
             $('.fc-groupsToggleButton-button').addClass('btn');
         }
     }, {
         key: 'renderEvent',
         value: function renderEvent(event, element) {
             var $this = this;
-            element.data({ "id": event.id, "locale": event.locale });
+            element.data({ "id": event.id, "site": event.siteId });
             if (event.multiDay || event.allDay) {
                 element.addClass('fc-event-multiday');
             } else {
                 element.addClass('fc-event-singleday');
                 element.find('.fc-content').prepend('<span class="event_group_color" style="background-color:' + event.color + '"/>');
             }
-            var content = $('<div data-eid=" ' + event.id + ' "/>'),
-                title = $('<div class="event-tip--header"><h3>' + event.title + '</h3><h6><span class="event_group_color" style="background-color:' + event.color + ';"></span>' + event.group + '</h6></div>').appendTo(content),
-                close = $('<span class="closer"><svg height=16px version=1.1 viewBox="0 0 16 16"width=16px xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink><defs></defs><g id=Page-1 fill=none fill-rule=evenodd stroke=none stroke-width=1><g id=close.3.3.1><g id=Group><g id=Filled_Icons_1_ fill=#CBCBCC><g id=Filled_Icons><path d="M15.81248,14.90752 L9.22496,8.32 L15.81184,1.73248 C16.06208,1.48288 16.06208,1.07776 15.81184,0.82752 C15.5616,0.57728 15.15712,0.57728 14.90688,0.82752 L8.32,7.41504 L1.73184,0.82688 C1.4816,0.57728 1.07712,0.57728 0.82688,0.82688 C0.57664,1.07712 0.57664,1.4816 0.82688,1.73184 L7.41504,8.32 L0.82688,14.90816 C0.57728,15.15776 0.57664,15.56352 0.82688,15.81312 C1.07712,16.06336 1.48224,16.06272 1.73184,15.81312 L8.32,9.22496 L14.90752,15.81184 C15.15712,16.06208 15.56224,16.06208 15.81248,15.81184 C16.06272,15.56224 16.06208,15.15712 15.81248,14.90752 L15.81248,14.90752 Z"id=Shape></path></g></g><g id=Invisible_Shape transform="translate(0.640000, 0.640000)"><rect height=15.36 id=Rectangle-path width=15.36 x=0 y=0></rect></g></g></g></g></svg></span>').appendTo(title),
-                dateWrap = $('<div class="event-tip--datetime"/>').appendTo(content),
-                date = $(this.tipDateFormat(event)).appendTo(dateWrap),
-                repeats = parseInt(event.repeat) === 1 ? $('<div class="repeats"><strong>' + Craft.t("Repeats") + ':</strong> ' + event.summary + '</div>').appendTo(dateWrap) : '',
-                buttons = event.source.canEdit === true || event.source.canDelete ? $('<div class="event-tip--actions"/>').appendTo(content) : '',
-                occur = parseInt(event.repeat) === 1 && event.source.canEdit === true && $this._editLocales[event.locale] ? $('<button class="btn">' + Craft.t("Remove Occurence") + '</button>').appendTo(buttons) : '',
-                del = event.source.canDelete === true && $this._editLocales[event.locale] ? $('<button class="btn">' + Craft.t("Delete") + '</button>').appendTo(buttons) : '',
-                edit = event.source.canEdit === true && $this._editLocales[event.locale] ? $('<button class="btn submit">' + Craft.t("Edit") + '</button>').appendTo(buttons) : '';
 
-            event.tooltip = $('<div/>').qtip({
+            /*element.qtip({
                 position: {
                     my: "bottom center",
                     at: "top center",
@@ -1470,43 +1462,24 @@ var VentiCalendar = function () {
                     viewport: $("#venti-calendar"),
                     adjust: {
                         method: "shift flip"
-                    }
-
+                    },
                 },
                 content: {
-                    text: content
+                    text: $(content)
                 },
                 show: {
-                    solo: !0,
+                    solo: true,
                     delay: 200
                 },
                 hide: {
-                    fixed: !0,
+                    fixed: true,
                     delay: 400
                 },
                 style: {
                     classes: "venti-event-tip"
-                }
-            }).qtip('api');
-
-            Craft.cp.addListener(edit, 'click', $.proxy(function () {
-                $this.editEvent(event, element);
-                event.tooltip.hide();
-            }));
-
-            Craft.cp.addListener(del, 'click', $.proxy(function () {
-                $this.deleteEvent(event, element);
-                event.tooltip.hide();
-            }));
-
-            Craft.cp.addListener(occur, 'click', $.proxy(function () {
-                $this.removeOccurence(event, element);
-                event.tooltip.hide();
-            }));
-
-            Craft.cp.addListener(close, 'click', $.proxy(function () {
-                event.tooltip.hide();
-            }));
+                },
+                events: qtipEvents
+            }).qtip('api');*/
         }
     }, {
         key: 'eventClick',
@@ -1514,29 +1487,29 @@ var VentiCalendar = function () {
             this.editEvent(calEvent, $(jsEvent.currentTarget));
         }
     }, {
-        key: 'onLocaleChange',
-        value: function onLocaleChange(btn, selection) {
+        key: 'onSiteChange',
+        value: function onSiteChange(btn, selection) {
             var $this = this,
                 value = $(selection).data('value');
 
-            $this.updateLocaleBtnText(value);
+            //$this.updateLocaleBtnText(value);
             // sets Crafts local storage local variable to persist local in CP
-            Craft.setLocalStorage("BaseElementIndex.locale", value);
+            //Craft.setLocalStorage("BaseElementIndex.locale", value);
 
-            $this.updateEventSourceLocale($this._sources, value);
+            $this.updateEventSourceSite($this._sources, value);
             // saves event sources in local storage
             Craft.setLocalStorage("Venti.eventSources", $this._sources);
 
             $this.resetEventSources();
         }
     }, {
-        key: 'updateEventSourceLocale',
-        value: function updateEventSourceLocale(sources, locale) {
+        key: 'updateEventSourceSite',
+        value: function updateEventSourceSite(sources, site) {
             var srcs = sources;
             for (var i = 0; i < srcs.length; i++) {
                 var urlParts = srcs[i].url.split("/"),
                     urlPartsLength = urlParts.length;
-                urlParts[urlPartsLength - 1] = locale;
+                urlParts[urlPartsLength - 1] = site;
                 srcs[i].url = urlParts.join('/');
             }
 
@@ -1544,15 +1517,15 @@ var VentiCalendar = function () {
             this._sources = srcs;
         }
     }, {
-        key: 'updateLocaleBtnText',
-        value: function updateLocaleBtnText(handle) {
+        key: 'updateSiteBtnText',
+        value: function updateSiteBtnText(handle) {
             var btn = $(this._localebtn);
-            var locales = this._params.locales;
+            var sites = this._params.sites;
             var label = "";
 
-            for (var i = 0; i < locales.length; i++) {
-                if (locales[i].handle === handle) {
-                    label = locales[i].title;
+            for (var i = 0; i < sites.length; i++) {
+                if (sites[i].handle === handle) {
+                    label = sites[i].title;
                     break;
                 }
             }
@@ -1574,8 +1547,53 @@ var VentiCalendar = function () {
     }, {
         key: 'onEventAction',
         value: function onEventAction(event, element, view) {
+            //$(element).qtip('show', true);
             var $this = this;
-            event.tooltip.reposition(element.currentTarget, false).toggle(true).focus(element.currentTarget);
+            var id = event._id;
+
+            if (undefined === $this._huds[id]) {
+                var repeats = '<div class="repeats"><strong>' + Craft.t("venti", "Repeats") + ':</strong>' + event.summary + '</div>';
+                var occur = '<button class="btn" data-occur>' + Craft.t("venti", "Remove Occurence") + '</button>';
+                var del = '<button class="btn" data-del>' + Craft.t("venti", "Delete") + '</button>';
+                var edit = '<button class="btn submit" data-edit>' + Craft.t("venti", "Edit") + '</button>';
+
+                var buttons = '\n                <div class="hud-footer">\n                    ' + (parseInt(event.recurring) === 1 && event.source.ajaxSettings.canEdit === true && $this._editSites[event.siteId] ? occur : '') + '\n                    ' + (event.source.ajaxSettings.canDelete === true && $this._editSites[event.siteId] ? del : '') + '\n                    ' + (event.source.ajaxSettings.canEdit === true && $this._editSites[event.siteId] ? edit : '') + '\n                </div>';
+                var content = '\n                <div data-eid=\'' + event.id + '\'>\n                    <div class="event-tip--header">\n                        <h3>' + event.title + '</h3>\n                        <h6>\n                            <span class="event_group_color" style="background-color:' + event.color + ';"></span>\n                            ' + event.group + '\n                        </h6>\n                        <span class="closer">\n                            <svg height=16px version=1.1 viewBox="0 0 16 16"width=16px xmlns=http://www.w3.org/2000/svg xmlns:xlink=http://www.w3.org/1999/xlink><defs></defs><g id=Page-1 fill=none fill-rule=evenodd stroke=none stroke-width=1><g id=close.3.3.1><g id=Group><g id=Filled_Icons_1_ fill=#CBCBCC><g id=Filled_Icons><path d="M15.81248,14.90752 L9.22496,8.32 L15.81184,1.73248 C16.06208,1.48288 16.06208,1.07776 15.81184,0.82752 C15.5616,0.57728 15.15712,0.57728 14.90688,0.82752 L8.32,7.41504 L1.73184,0.82688 C1.4816,0.57728 1.07712,0.57728 0.82688,0.82688 C0.57664,1.07712 0.57664,1.4816 0.82688,1.73184 L7.41504,8.32 L0.82688,14.90816 C0.57728,15.15776 0.57664,15.56352 0.82688,15.81312 C1.07712,16.06336 1.48224,16.06272 1.73184,15.81312 L8.32,9.22496 L14.90752,15.81184 C15.15712,16.06208 15.56224,16.06208 15.81248,15.81184 C16.06272,15.56224 16.06208,15.15712 15.81248,14.90752 L15.81248,14.90752 Z"id=Shape></path></g></g><g id=Invisible_Shape transform="translate(0.640000, 0.640000)"><rect height=15.36 id=Rectangle-path width=15.36 x=0 y=0></rect></g></g></g></g></svg>\n                        </span>\n                    </div>\n                    <div class="event-tip--datetime">\n                        ' + $this.tipDateFormat(event) + '\n                        ' + (parseInt(event.repeat) === 1 ? repeats : '') + '\n                    </div>        \n                </div>\n                ' + (event.source.ajaxSettings.canEdit === true || event.source.ajaxSettings.canDelete ? buttons : '') + '\n            ';
+
+                $this._huds[id] = new Garnish.HUD($(element.currentTarget), $(content), {
+                    hudClass: 'hud venti-event-tip',
+                    tipWidth: 500,
+                    closeBtn: '.closer',
+                    onShow: $.proxy(function (evt) {
+
+                        var tip = $(evt.target.$footer);
+
+                        var btnEdit = tip.find('button[data-edit]');
+                        var btnDelete = tip.find('button[data-del]');
+                        var btnOccur = tip.find('button[data-occur]');
+
+                        btnEdit.on('click', $.proxy(function (evt) {
+                            evt.preventDefault();
+                            $this.editEvent(event, element);
+                            $this._huds[id].hide();
+                        }));
+
+                        btnDelete.on('click', $.proxy(function (evt) {
+                            evt.preventDefault();
+                            $this.deleteEvent(event, element);
+                            $this._huds[id].hide();
+                        }));
+
+                        btnOccur.on('click', $.proxy(function (evt) {
+                            evt.preventDefault();
+                            $this.removeOccurence(event, element);
+                            $this._huds[id].hide();
+                        }));
+                    }, this)
+                });
+            } else {
+                $this._huds[id].show();
+            }
         }
     }, {
         key: 'editEvent',
@@ -1584,12 +1602,12 @@ var VentiCalendar = function () {
                 id = event.id;
 
             var settings = {
-                showLocaleSwitcher: true,
+                showSiteSwitcher: true,
                 elementId: id,
-                elementType: 'Venti_Event',
+                elementType: 'tippingmedia\\venti\\elements\\VentiEvent',
                 saveButton: true,
                 cancelButton: true,
-                locale: this._locale,
+                siteId: this._site,
                 onHideModal: function onHideModal() {
                     $this._cal.fullCalendar('refetchEvents');
                 }
@@ -1601,10 +1619,10 @@ var VentiCalendar = function () {
         value: function deleteEvent(event, target) {
             var $this = this,
                 id = event.id,
-                data = { "eventId": id };
+                data = { "eventId": id, "groupId": event.groupId };
 
-            if (window.confirm(Craft.t("Are you sure you want to delete this event?")) === true) {
-                Craft.postActionRequest('venti/event/deleteEvent', data, $.proxy(function (response, textStatus) {
+            if (window.confirm(Craft.t("venti", "Are you sure you want to delete this event?")) === true) {
+                Craft.postActionRequest('venti/event/delete-event', data, $.proxy(function (response, textStatus) {
                     if (textStatus == 'success') {
                         $this._cal.fullCalendar('refetchEvents');
                     } else {}
@@ -1617,11 +1635,10 @@ var VentiCalendar = function () {
             var $this = this,
                 id = event.id,
                 exDate = event.start.format(),
-                locale = event.locale,
-                data = { "id": id, "exDate": exDate, "locale": locale };
+                data = { "eventId": id, "exDate": exDate, "siteId": event.siteId };
 
-            if (window.confirm(Craft.t("Are you sure you want to remove this occurence?")) === true) {
-                Craft.postActionRequest('venti/event/removeOccurence', data, $.proxy(function (response, textStatus) {
+            if (window.confirm(Craft.t("venti", "Are you sure you want to remove this occurence?")) === true) {
+                Craft.postActionRequest('venti/event/remove-occurence', data, $.proxy(function (response, textStatus) {
                     if (textStatus == 'success') {
                         $this._cal.fullCalendar('refetchEvents');
                     } else {}
@@ -1634,7 +1651,7 @@ var VentiCalendar = function () {
             //console.log(jsEvent);
 
             var $this = this;
-            if (event.repeat == 1) {
+            if (event.recurring == 1) {
                 var ruleCollection = this.ruleParams(event.rRule);
                 if (ruleCollection['FREQ'] === 'WEEKLY' || ruleCollection['FREQ'] === 'MONTHLY') {
                     this.repeatAlertWindow(event, jsEvent.target);
@@ -1642,9 +1659,10 @@ var VentiCalendar = function () {
                     return false;
                 }
             }
-            Craft.postActionRequest('venti/event/updateEventDates', {
-                id: event.id,
+            Craft.postActionRequest('venti/event/update-event-dates', {
+                eventId: event.id,
                 locale: event.locale,
+                site: event.siteId,
                 start: event.start.toISOString(),
                 end: event.end.toISOString()
             }, function (data) {
@@ -1676,10 +1694,11 @@ var VentiCalendar = function () {
             if (!this.alertModal) {
 
                 var $content = $('<div id="venti_alertmodal" class="modal alert fitted"/>'),
-                    $body = $('<div class="body"><h2>' + Craft.t('You\'re changing a repeating event.') + '</h2><p>' + Craft.t('You\’re changing the date of a repeating event with specific day(s) of the week or month. Edit the event to update the repeat schedule.') + '</p></div>').appendTo($content),
+                    $body = $('<div class="body"><h2>' + Craft.t("venti", 'You\'re changing a repeating event.') + '</h2><p>' + Craft.t('venti', 'You\’re changing the date of a repeating event with specific day(s) of the week or month. Edit the event to update the repeat schedule.') + '</p></div>').appendTo($content),
                     $container = $('<div class="inputcontainer text--right"/>').appendTo($body),
-                    $cancel = $('<button class="btn cancel">' + Craft.t("Cancel") + '</button>').appendTo($container),
-                    $edit = $('<button class="btn submit">' + Craft.t("Edit") + '</button>').appendTo($container);
+                    $footer = $('<div class="hud-footer"/>').appendTo($content),
+                    $cancel = $('<button class="btn cancel">' + Craft.t("venti", "Cancel") + '</button>').appendTo($footer),
+                    $edit = $('<button class="btn submit">' + Craft.t("venti", "Edit") + '</button>').appendTo($footer);
 
                 this.alertModal = new Garnish.Modal($content, {
                     autoShow: false,
@@ -1718,11 +1737,11 @@ var VentiCalendar = function () {
             if (!this.sourcesModal) {
 
                 var $content = $('<form id="venti_groupsmodal" class="modal fitted venti_groupsmodal"/>'),
-                    $body = $('<div class="body"><h1 class="text--center">' + Craft.t('Groups') + '</h1></div>').appendTo($content),
+                    $body = $('<div class="body"><h1 class="text--center">' + Craft.t("venti", 'Groups') + '</h1></div>').appendTo($content),
                     $list = $('<ul class="venti_group_selects" />').appendTo($body),
-                    $footer = $('<div class="footer"/>').appendTo($content),
-                    $cancel = $('<button class="btn cancel">' + Craft.t("Cancel") + '</button>').appendTo($footer),
-                    $done = $('<button class="btn submit slim" value="submit">' + Craft.t("Update") + '</button>').appendTo($footer);
+                    $footer = $('<div class="hud-footer"/>').appendTo($content),
+                    $cancel = $('<button class="btn cancel">' + Craft.t("venti", "Cancel") + '</button>').appendTo($footer),
+                    $done = $('<button class="btn submit slim" value="submit">' + Craft.t("venti", "Update") + '</button>').appendTo($footer);
 
                 // create checkbox fields and toggle
                 var _iteratorNormalCompletion = true;
@@ -1896,39 +1915,45 @@ var VentiCalendar = function () {
         value: function tipDateFormat(event) {
             var dateFormat = $('[data-date-format]').data('date-format'),
                 timeFormat = $('[data-time-format]').data('time-format'),
-                format = dateFormat + " " + timeFormat,
-                startDate = moment(event.start),
+
+            //format = dateFormat + " " + timeFormat,
+            startDate = moment(event.start),
                 endDate = moment(event.end),
                 output = "";
+            // Moment JS format Crafts Locale formats don't match up to PHP's date formst.
+            var format = "MMM D, YYYY h:m a";
+
+            //console.log(format);
+
 
             if (event.allDay) {
                 if (event.multiDay) {
                     //output += Craft.t("All Day from");
-                    //output += " " + startDate.formatPHP(format) + " " + Craft.t("to") + " " + endDate.formatPHP(format);
-                    output += "<div><strong>" + Craft.t("Begins") + ":</strong> " + startDate.formatPHP(format);
+                    //output += " " + startDate.format(format) + " " + Craft.t("to") + " " + endDate.format(format);
+                    output += "<div><strong>" + Craft.t("venti", "Begins") + ":</strong> " + startDate.format(format);
                     output += "</div><div>";
-                    output += "<strong>" + Craft.t("Ends") + ":</strong> " + endDate.formatPHP(format);
+                    output += "<strong>" + Craft.t("venti", "Ends") + ":</strong> " + endDate.format(format);
                     output += "</div>";
                 } else {
                     //output += Craft.t("All Day from");
-                    //output += " " + startDate.formatPHP(format) + " " + Craft.t("to") + " " + endDate.formatPHP(timeFormat);
-                    output += "<strong>" + Craft.t("Begins") + ":</strong> " + startDate.formatPHP(format);
+                    //output += " " + startDate.format(format) + " " + Craft.t("to") + " " + endDate.format(timeFormat);
+                    output += "<strong>" + Craft.t("venti", "Begins") + ":</strong> " + startDate.format(format);
                     output += "</div><div>";
-                    output += "<strong>" + Craft.t("Ends") + ":</strong> " + endDate.formatPHP(timeFormat);
+                    output += "<strong>" + Craft.t("venti", "Ends") + ":</strong> " + endDate.format(timeFormat);
                     output += "</div>";
                 }
             } else {
                 if (event.multiDay) {
-                    //output += " " + startDate.formatPHP(format) + " " + Craft.t("to") + " " + endDate.formatPHP(format);
-                    output += "<div><strong>" + Craft.t("Begins") + ":</strong> " + startDate.formatPHP(format);
+                    //output += " " + startDate.format(format) + " " + Craft.t("to") + " " + endDate.format(format);
+                    output += "<div><strong>" + Craft.t("venti", "Begins") + ":</strong> " + startDate.format(format);
                     output += "</div><div>";
-                    output += "<strong>" + Craft.t("Ends") + ":</strong> " + endDate.formatPHP(format);
+                    output += "<strong>" + Craft.t("venti", "Ends") + ":</strong> " + endDate.format(format);
                     output += "</div>";
                 } else {
-                    //output += " " + startDate.formatPHP(format) + " " + Craft.t("to") + " " + endDate.formatPHP(timeFormat);
-                    output += "<div><strong>" + Craft.t("Begins") + ":</strong> " + startDate.formatPHP(format);
+                    //output += " " + startDate.format(format) + " " + Craft.t("to") + " " + endDate.format(timeFormat);
+                    output += "<div><strong>" + Craft.t("venti", "Begins") + ":</strong> " + startDate.format(format);
                     output += "</div><div>";
-                    output += "<strong>" + Craft.t("Ends") + ":</strong> " + endDate.formatPHP(timeFormat);
+                    output += "<strong>" + Craft.t("venti", "Ends") + ":</strong> " + endDate.format(timeFormat);
                     output += "</div>";
                 }
             }
@@ -2044,28 +2069,28 @@ var VentiCalendar = function () {
             this._sources = sources;
         }
     }, {
-        key: 'localebtn',
+        key: 'sitebtn',
         get: function get() {
-            return this._localebtn;
+            return this._sitebtn;
         },
         set: function set(btn) {
-            this._localebtn = btn;
+            this._sitebtn = btn;
         }
     }, {
-        key: 'locale',
-        set: function set(locale) {
-            this._locale = locale;
+        key: 'site',
+        set: function set(site) {
+            this._site = site;
         },
         get: function get() {
-            return this._locale;
+            return this._site;
         }
     }, {
-        key: 'localized',
+        key: 'multisite',
         set: function set(loc) {
-            this._localized = loc;
+            this._multisite = loc;
         },
         get: function get() {
-            return this._localized;
+            return this._multisite;
         }
     }, {
         key: 'alertModal',
@@ -2089,18 +2114,17 @@ var VentiCalendar = function () {
             return this._cpLanguage;
         }
     }, {
-        key: 'editLocales',
+        key: 'editSites',
         set: function set(loc) {
-            this._editLocales = loc;
+            this._editSites = loc;
         },
         get: function get() {
-            return this._editLocales;
+            return this._editSites;
         }
     }]);
 
     return VentiCalendar;
 }();
-
 /**
  * Locations Class
  */
