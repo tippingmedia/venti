@@ -293,13 +293,12 @@ class VentiCalendar {
             let occur = `<button class="btn" data-occur>${Craft.t("venti", "Remove Occurence")}</button>`;
             let del = `<button class="btn" data-del>${Craft.t("venti", "Delete")}</button>`;
             let edit = `<button class="btn submit" data-edit>${Craft.t("venti", "Edit")}</button>`;
-
-            let buttons = `
+            let buttons = !$this._multisite || ($this._multisite && $this._editSites[event.siteId]) ? `
                 <div class="hud-footer">
-                    ${(parseInt(event.recurring) === 1 && event.source.ajaxSettings.canEdit === true && $this._editSites[event.siteId]) ? occur : '' }
-                    ${(event.source.ajaxSettings.canDelete === true && $this._editSites[event.siteId]) ? del : ''}
-                    ${(event.source.ajaxSettings.canEdit === true && $this._editSites[event.siteId]) ? edit : ''}
-                </div>`;
+                    ${ (parseInt(event.recurring) === 1 && event.source.ajaxSettings.canManageEvents === true ) ? occur : '' }
+                    ${ (event.source.ajaxSettings.canManageEvents === true) ? del : ''}
+                    ${ (event.source.ajaxSettings.canManageEvents === true) ? edit : ''}
+                </div>` : '';
             let content = `
                 <div data-eid='${event.id}'>
                     <div class="event-tip--header">
@@ -317,7 +316,7 @@ class VentiCalendar {
                         ${ parseInt(event.repeat) === 1 ? repeats : ''}
                     </div>        
                 </div>
-                ${ (event.source.ajaxSettings.canEdit === true || event.source.ajaxSettings.canDelete) ? buttons : '' }
+                ${ event.source.ajaxSettings.canManageEvents === true ? buttons : '' }
             `;
 
 
@@ -376,6 +375,11 @@ class VentiCalendar {
         new Venti.ElementEditor($(target), settings);
     }
 
+    /**
+     * Delete Event
+     * @param {VentiEvent} event 
+     * @param {*} target 
+     */
     deleteEvent(event, target) {
         var $this = this,
             id = event.id,

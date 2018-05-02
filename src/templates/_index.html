@@ -27,7 +27,10 @@
 					<div class="menu">
 						<ul>
 							{% for group in groups %}
-								<li><a href="{{ url('venti/'~group.handle~'/new') }}"><span>{{ group.name|t }}</span><span class="menu-label-color" style='background-color:{{group.color}};'></span></a></li>
+								{% set canManageGroupEvents = currentUser.can('venti-manageEventsFor:' ~ group.id) %}
+								{% if canManageGroupEvents %}
+									<li><a href="{{ url('venti/'~group.handle~'/new') }}"><span>{{ group.name|t }}</span><span class="menu-label-color" style='background-color:{{group.color}};'></span></a></li>
+								{% endif %}
 							{% endfor %}
 						</ul>
 					</div>

@@ -49,13 +49,13 @@ abstract class BaseEventController extends Controller
 
 
 		// Make sure the user is allowed to edit events in this group
-		$this->requirePermission('publishEvents'.$permissionSuffix);
+		$this->requirePermission('venti-manageEventsFor'.$permissionSuffix);
 
 		// Is it a new event?
 		if (!$event->id)
 		{
 			// Make sure they have permission to create new entries in this group
-			$this->requirePermission('createEvents'.$permissionSuffix);
+			$this->requirePermission('venti-manageEvents'.$permissionSuffix);
 		}
 	}
 }

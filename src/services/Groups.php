@@ -623,7 +623,8 @@ class Groups extends Component
                 'venti_groups.name',
                 'venti_groups.handle',
 				'venti_groups.description',
-                'venti_groups.color',
+				'venti_groups.color',
+				'venti_groups.fieldLayoutId'
             ])
             ->from(['{{%venti_groups}} venti_groups'])
             ->orderBy(['name' => SORT_ASC]);

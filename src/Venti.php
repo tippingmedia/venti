@@ -180,7 +180,6 @@ class Venti extends Plugin
                 }
             );
         }
-
 	}
 	
 	/**
@@ -234,7 +233,7 @@ class Venti extends Plugin
 	/**
 	 * @return array
 	 */
-	public function registerUserPermissions()
+	/*public function registerUserPermissions()
 	{
 		$groups = getAllGroups();
 		$groupEditPermissions = array();
@@ -259,7 +258,7 @@ class Venti extends Plugin
 
 		return $permissions;
 
-	}
+	}*/
 
 
 	/**

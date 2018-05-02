@@ -114,14 +114,6 @@ class EventController extends BaseEventController
         /** @var Group $group */
         $group = $variables['group'];
 
-		// Make sure they have permission to edit this entry
-		// $eventMOD = new Event();
-		// if (array_key_exists('eventId',$variables)) {
-		// 	$eventMOD->setAttribute('id',$variables['eventId']);
-		// }
-		// $eventMOD->setAttribute('locale',$variables['localeId']);
-		// $eventMOD->setAttribute('groupId',$variables['group']['id']);
-
 
 		$this->enforceEditEventPermissions($event);
 
@@ -260,8 +252,8 @@ class EventController extends BaseEventController
 		//permission enforcement
 		if ($event->enabled) {
 			if ($event->id) {
-				$this->requirePermission('publishEvents:'.$event->groupId);
-			} else if (!$currentUser->can('publishEvents:'.$event->groupId)) {
+				$this->requirePermission('venti-manageEventsFor:'.$event->groupId);
+			} else if (!$currentUser->can('venti-manageEventsFor:'.$event->groupId)) {
 				$event->enabled = false;
 			}
 		}
@@ -279,8 +271,8 @@ class EventController extends BaseEventController
 
 			Craft::$app->getSession()->setError(Craft::t('venti', 'Couldn’t save event.'));
 			/* Send the event back to the template
-				* newGroup is applied if event group was changed by select so tabs and fields pull from correct group.
-				*/
+			 * newGroup is applied if event group was changed by select so tabs and fields pull from correct group.
+			 */
 			Craft::$app->getUrlManager()->setRouteParams([
 				'event' => $event,
 				'newGroup' => $event->getGroup()
@@ -335,7 +327,7 @@ class EventController extends BaseEventController
 		$siteId = Craft::$app->getRequest()->getBodyParam('siteId');
 		$event = Venti::getInstance()->events->getEventById($eventId, $siteId);
 
-		$this->requirePermission('deleteEvents:'.$groupId);
+		$this->requirePermission('venti-manageEventsFor:'.$groupId);
 
 		if (Craft::$app->getRequest()->getAcceptsJson()) {
             if(Craft::$app->getElements()->deleteElementById($eventId)) {
@@ -774,7 +766,7 @@ class EventController extends BaseEventController
 
 
 		if(!Venti::getInstance()->events->saveEvent($event, $siteId)) {
-			Craft::$app->getSession()->setError(Craft::t('venti','Removing event occurece could not be completed.'));
+			Craft::$app->getSession()->setError(Craft::t('venti','Removing event occurence could not be completed.'));
 			if (Craft::$app->getRequest()->getAcceptsJson()) {
 				return $this->asJson([
 					'errors' => $event->getErrors(),

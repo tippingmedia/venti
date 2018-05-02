@@ -78,7 +78,6 @@ class Group extends Model
      */
     private $_groupSiteSettings;
 
-
 	/**
 	 * @var
 	 */
@@ -214,7 +213,21 @@ class Group extends Model
 
 			return $sites[$siteId]->uriFormat;
 		}
-	}
+    }
+    
+    /**
+     * Returns the group's field layout
+     * @return fieldLayoutModel|null
+     */
+    public function getFieldLayout()
+    {
+       // \yii\helpers\VarDumper::dump($this->fieldLayoutId, 5, true); exit;
+        if (!$this->fieldLayoutId) {
+            return null;
+        }
+        
+        return Craft::$app->getFields()->getLayoutById($this->fieldLayoutId);
+    }
 
 
 	public function getICSUrl()

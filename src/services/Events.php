@@ -112,51 +112,6 @@ class Events extends Component
 		// Venti Settings
 		$settings = Craft::$app->getPlugins()->getPlugin('venti')->getSettings();
 
-		
-		// Event data
-		/*if (!$isNewEvent) {
-			 
-			$eventRecord = EventRecord::find()
-				->where(['id' => $event->id])
-				->one();
-
-			if (!$eventRecord) {
-				throw new Exception(Craft::t('No event exists with the ID “{id}”', array('id' => $event->id)));
-			}
-
-			$oldEvent = new Event($eventRecord->toArray([
-				'id',
-				'groupId',
-				'startDate',
-				'endDate',
-				'recurring',
-				'allDay',
-				'summary',
-				'rRule',
-				'siteId',
-				'diff',
-				'endRepeat',
-				'location',
-				'specificLocation',
-				'registration'
-			]));
-		} else {
-			$eventRecord = new EventRecord();
-		}
-
-		$eventRecord->groupId 	= $event->groupId;
-		$eventRecord->startDate = $event->startDate;
-		$eventRecord->endDate   = $event->endDate;
-		$eventRecord->recurring = $event->recurring;
-		$eventRecord->allDay    = $event->allDay;
-		$eventRecord->summary   = $event->summary;
-		$eventRecord->rRule     = $event->rRule;
-		$eventRecord->siteId    = $event->siteId;
-		$eventRecord->location  = $event->location;
-		$eventRecord->specificLocation = $event->specificLocation;
-		$eventRecord->registration = $event->registration;*/
-
-
 		if ($this->hasEventHandlers(self::EVENT_BEFORE_SAVE_EVENT)) {
 			$this->trigger(self::EVENT_BEFORE_SAVE_EVENT, new EventEvent([
 				'event' => $event,
@@ -170,184 +125,19 @@ class Events extends Component
 		try {
 
 			if (Craft::$app->getElements()->saveElement($event)) {
-				//\yii\helpers\VarDumper::dump($event->recurring, 5, true); exit;
-
-				//$eventRecord->save(false);
 
 				$this->_eventsById[$event->id] = $event;
-
-				// Now that we have an element ID, save it on the model
-				// if ($isNewEvent) {
-				// 	$eventRecord->id = $event->id;
-				// }
-			
-				// TODO: save rrule record
 
 				if($event->recurring == true) {
 					if(!Venti::getInstance()->rrule->saveRrule($event)){
 						throw new Exception(Craft::t('RRule was not saved for event “{id}”', array('id' => $event->id)));	
 					}
-					//\yii\helpers\VarDumper::dump($event->rRule, 5, true);exit;
 				}
 	
-
 				// Update search index with event
 				Craft::$app->getSearch()->indexElementAttributes($event);
-
-
-				// Update the locale records and content
-
-				// We're saving all of the element's locales here to ensure that they all exist and to update the URI in
-				// the event that the URL format includes some value that just changed
-
-				// $eventRecords = [];
-
-				// if (!$isNewEvent)
-				// {
-
-				// 	$existingEventRecords = EventRecord::find()
-				// 		->id($event->id)
-				// 		->all();
-
-				// 	foreach ($existingEventRecords as $record)
-				// 	{
-				// 		$eventRecords[$record->siteId] = $record;
-				// 	}
-				// }
-
-				/* 
-					$mainEventSiteId = $event->siteId;
-
-					$sites = $event->getSites();
-					$siteIds = [];
-
-					if (!$sites) {
-						throw new Exception('All elements must have at least one site associated with them');
-					}
-
-					foreach ($sites as $siteId => $siteInfo) {
-						if (is_numeric($siteId) && is_string($siteInfo)) {
-							$siteId = $siteInfo;
-							$siteInfo = [];
-						}
-
-						$siteIds[] = $siteId;
-
-						if (!isset($siteInfo['enabledByDefault'])) {
-							$siteInfo['enabledByDefault'] = true;
-						}
-
-						if (isset($eventRecords[$siteId])) {
-
-							$plugin = Craft::$app->getPlugins()->getPlugin('venti');
-							// TODO: Update settings from Translateable -to- Multisite
-							$multiSite = $plugin->getSettings()->getAttribute('multisite');
-
-							if ($multiSite) {
-								continue;
-							}
-							else
-							{
-								$localeEventRecord = $eventRecords[$localeId];
-
-								
-								$localeEventRecord->groupId		= $event->groupId;
-								$localeEventRecord->siteId 		= $siteId;
-								$localeEventRecord->startDate  	= $event->startDate;
-								$localeEventRecord->endDate  	= $event->endDate;
-								$localeEventRecord->rRule  		= $event->rRule;
-								$localeEventRecord->summary  	= $event->summary;
-								$localeEventRecord->allDay  	= $event->allDay;
-								$localeEventRecord->repeat  	= $event->repeat;
-								$localeEventRecord->location    = $event->location;
-								$localeEventRecord->specificLocation    = $event->specificLocation;
-								$localeEventRecord->registration    = $event->registration;
-							}
-
-						}
-						else
-						{
-							$localeEventRecord = new EventRecord();
-
-							
-							$localeEventRecord->groupId		= $event->groupId;
-							$localeEventRecord->siteId 		= $siteId;
-							$localeEventRecord->startDate  	= $event->startDate;
-							$localeEventRecord->endDate  	= $event->endDate;
-							$localeEventRecord->rRule  		= $event->rRule;
-							$localeEventRecord->summary  	= $event->summary;
-							$localeEventRecord->allDay  	= $event->allDay;
-							$localeEventRecord->repeat  	= $event->repeat;
-							$localeEventRecord->location    = $event->location;
-							$localeEventRecord->specificLocation    = $event->specificLocation;
-							$localeEventRecord->registration    = $event->registration;
-
-						}
-
-						// Is this the main site?
-						$isMainEvent = ($siteId == $mainEventSiteId);
-
-						$siteEventRecord->validate();
-						$event->addErrors($siteEventRecord->getErrors());
-
-						if ($event->hasErrors())
-						{
-							return false;
-						}
-
-
-						$success = $siteEventRecord->save(false);
-
-						if ($success)
-						{
-							// Save Repeat Events
-							if ($event->repeat == 1 && $event->rRule != null)
-							{
-								if(craft()->venti_recurr->saveRecurrData($event, $localeEventRecord))
-								{
-									craft()->userSession->setNotice(Craft::t('Recurring events saved'));
-								}
-
-							}
-							else
-							{
-								// If recurr data already present delete to make way for he new
-								if (($recurrRecord = Venti_RecurrRecord::model()->findByAttributes(array("cid" => $localeEventRecord->getAttribute('id'))))) {
-									$recurrRecord->deleteAllByAttributes(array("cid" => $localeEventRecord->getAttribute('id')));
-								}
-
-								// Saving Single Event
-								$recurrModel = new Venti_RecurrModel();
-								$recurrModel->setAttribute('cid', $localeEventRecord->getAttribute('id'));
-								$recurrModel->setAttribute('startDate', $localeEventRecord->getAttribute('startDate'));
-								$recurrModel->setAttribute('endDate', $localeEventRecord->getAttribute('endDate'));
-								$recurrModel->setAttribute('isrepeat', 0);
-
-
-								if(!craft()->venti_recurr->saveRecurrEvent($recurrModel))
-								{
-									craft()->userSession->setNotice(Craft::t('Single event not saved'));
-								}
-
-							}
-						}
-						else
-						{
-							// Pass any validation errors on to the element
-							$event->addErrors($localeEventRecord->getErrors());
-							if ($event->hasErrors())
-							{
-								return false;
-							}
-
-							// Don't bother with any of the other locales
-							break;
-						}
-					}
-				*/
 				
 			}
-		
 			
 			$transaction->commit();
 
@@ -356,7 +146,6 @@ class Events extends Component
 
 			throw $e;
 		}
-
 
 		// Fire an 'afterSaveEvent' event
 		if ($this->hasEventHandlers(self::EVENT_AFTER_SAVE_EVENT)) {

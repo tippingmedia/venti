@@ -44,9 +44,7 @@ class GroupsController extends Controller
 	 */
 	public function actionGroupIndex() 
 	{
-		$groups = new Groups();
-		$variables['groups'] = $groups->getAllGroups();
-
+		$variables['groups'] = Venti::getInstance()->groups->getAllGroups();
 		$this->renderTemplate('venti/groups/index', $variables);
 	}
 
@@ -64,11 +62,10 @@ class GroupsController extends Controller
 			'brandNewGroup' => false
 		];
 
-		$groups = new Groups();
 		
 		if ($groupId !== null) {
 			if ($group === null) {
-				$group = $groups->getGroupById($groupId);
+				$group = Venti::getInstance()->groups->getGroupById($groupId);
 				if (!$group) {
 					throw new NotFoundHttpException('Group not found');
 				}
@@ -101,7 +98,6 @@ class GroupsController extends Controller
 	{
 		$this->requirePostRequest();
 		$request = Craft::$app->getRequest();
-		$groups = new Groups();
 		$group = new Group();
 
 		// Shared attributes
@@ -183,7 +179,7 @@ class GroupsController extends Controller
 		$group->setGroupSiteSettings($allSitesSettings);
 
 		// Save it
-		if (!$groups->saveGroup($group)) {
+		if (!Venti::getInstance()->groups->saveGroup($group)) {
 			Craft::$app->getSession()->setError(Craft::t('venti','Couldn’t save group'));
 			// Send the group back to the template
 			Craft::$app->getUrlManager()->setRouteParams([
@@ -207,11 +203,9 @@ class GroupsController extends Controller
 		$this->requirePostRequest();
         $this->requireAcceptsJson();
 
-		$groups = new Groups();
-
 		$groupId = Craft::$app->getRequest()->getRequiredBodyParam('id');
 
-		$groups->deleteGroupById($groupId);
+		Venti::getInstance()->groups->deleteGroupById($groupId);
 
 		return $this->asJson(['success' => true]);
 	}

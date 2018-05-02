@@ -44,25 +44,18 @@ class CalendarController extends Controller
 
 		$variables['groups'] = Venti::getInstance()->groups->getAllGroups();
         $variables['timezone'] = Craft::$app->getTimeZone();
-
-        //Which locales can be edited
-        // $currentUser = Craft::$app->getUser()->getIdentity();
-        // $locales = Craft::$app->getI18n()->getSiteLocales();
-        // $editLocales = [];
-        // foreach ($locales as $locale)
-        // {
-        //     $editLocales[$locale->id] = $currentUser->can('editLocale:'.$locale->id);
-        // }
-        // $variables['editLocales'] = $editLocales;
+        $variables['editSites'] = [];
 
         //Which sites can be edited
-        $currentUser = Craft::$app->getUser()->getIdentity();
-        $sites = Craft::$app->getSites()->getAllSites();
-        $editSites = [];
-        foreach ($sites as $site) {
-            $editSites[$site->id] = $currentUser->can('ventiEditEvents:'.$site->id);
+        if (Craft::$app->getIsMultiSite()) {
+            $currentUser = Craft::$app->getUser()->getIdentity();
+            $sites = Craft::$app->getSites()->getAllSites();
+            $editSites = [];
+            foreach ($sites as $site) {
+                $editSites[$site->id] = $currentUser->can('editSite:'.$site->id);
+            }
+            $variables['editSites'] = $editSites;
         }
-        $variables['editSites'] = $editSites;
         
         //Render Template
         $this->getView()->registerAssetBundle(CalendarBundle::class);

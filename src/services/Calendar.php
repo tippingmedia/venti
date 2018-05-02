@@ -100,22 +100,25 @@ class Calendar extends Component
     public function getCalendarSettingSources()
     {
         $groups = Venti::getInstance()->groups->getAllGroups();
-        $sources = array();
+        $sources = [];
 
         $currentUser = Craft::$app->getUser()->getIdentity();
 
         foreach ($groups as $group)
         {
-
+            // If current user can't edit events in group don't add as a source
+            $currentUser = Craft::$app->getUser()->getIdentity();
+			if(!$currentUser->can('venti-manageEventsFor:'.$group['id'])) {
+				continue;
+            }
+            
             $sources[] = array(
                 'url'           => "/admin/venti/feed/" . $group['id'] . "/" . Craft::$app->sites->getPrimarySite()->id,
                 'id'            => $group['id'],
                 'label'         => $group['name'],
                 'color'         => $group['color'],
                 'overlap'       => true,
-                'canEdit'       => $currentUser->can('publishEvents:'.$group['id']),
-                'canDelete'     => $currentUser->can('deleteEvents:'.$group['id']),
-                'canCreate'     => $currentUser->can('createEvents:'.$group['id'])
+                'canManageEvents'  => $currentUser->can('venti-manageEventsFor:'.$group['id'])
             );
         }
 

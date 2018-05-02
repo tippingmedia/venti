@@ -11,7 +11,7 @@
 {% set eventGroup = newGroup is defined ? newGroup : group %}
 {% set isVersion = className(event) == 'tippingmedia\\venti\\elements\\VentiEvent' %}
 
-{% set canPublish = currentUser.can('publishEvents'~permissionSuffix) %}
+{% set canPublish = currentUser.can('venti-manageEventsFor'~permissionSuffix) %}
 {# or currentUser.can('createEvents'~permissionSuffix) #}
 {% set canSave = (
 	(event.id) or
@@ -37,8 +37,11 @@
 		<div class="menu">
 			<ul class="venti-group-menu-select">
 				{% set groups = craft.venti.groups() %}
-				{% for item in groups %}
-					<li><a data-value="{{item.id}}" data-label="{{item.name}}" data-color="{{item.color}}"><span class="menu-option-color" style="background-color:{{item.color}}"></span><span>{{item.name}}</span></a></li>
+				{% for group in groups %}
+					{% set canManageGroupEvents = currentUser.can('venti-manageEventsFor:' ~ group.id) %}
+					{% if canManageGroupEvents %}
+						<li><a data-value="{{group.id}}" data-label="{{group.name}}" data-color="{{group.color}}"><span class="menu-option-color" style="background-color:{{group.color}}"></span><span>{{group.name}}</span></a></li>
+					{% endif %}
 				{% endfor %}
 			</ul>
 		</div>
@@ -84,7 +87,7 @@
 	{% endif %}
 
 	<div id="venti-fields" class="fields {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{ craft.venti.settings.eventDuration }}">
-		{% include 'venti/events/_tabs' with { group: eventGroup } only  %}
+		{# {% include 'venti/events/_tabs' with { group: eventGroup } only  %} #}
 
 		{% include 'venti/events/_fields' with {
 			event: event,

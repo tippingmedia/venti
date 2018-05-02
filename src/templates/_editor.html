@@ -1,7 +1,7 @@
 {% import "_includes/forms" as forms %}
 
 {% set groupHandle = group.handle %}
-{% set canPublish = currentUser.can('publishEvents'~permissionSuffix) %}
+{% set canPublish = currentUser.can('venti-manageEventsFor:' ~ group.id) %}
 {% set isVersion = className(event) == 'tippingmedia\\venti\\elements\\VentiEvent' %}
 
 {% set ed = now|date_modify('tomorrow -1 min') %}

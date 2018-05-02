@@ -174,19 +174,19 @@ class VentiEvent extends Element
 	protected static function defineSources(string $context = null): array 
 	{
 		// cpindex only fetches original elements not recurrence event elements
-		$sources = [
-			[
-				'key' => '*',
-				'label'    => Craft::t('venti','All Events'),
-				'criteria' => [
-					'cpindex' => true
-				]
-			]
-		];
+		$sources = [];
+		$allowAllEvents = true;
 
 		$groups = new Groups();
 
 		foreach ($groups->getAllGroups() as $group) {
+
+			// Don't add group to sources if user can't edit events in the group
+			$currentUser = Craft::$app->getUser()->getIdentity();
+			if(!$currentUser->can('venti-manageEventsFor:'.$group->id)) {
+				$allowAllEvents = false;
+				continue;
+			}
 
 			$sources[] = [
 				'key'      => 'group:'.$group->id,
@@ -199,6 +199,19 @@ class VentiEvent extends Element
 					'cpindex' => true
 				]
 			];
+		}
+
+		$allEvents = [
+			'key' => '*',
+			'label'    => Craft::t('venti','All Events'),
+			'criteria' => [
+				'cpindex' => true
+			]
+		];
+		
+		// Only allow to see all events if allowed to edit all groups
+		if($allowAllEvents) {
+			array_unshift($sources, $allEvents);
 		}
 
 		return $sources;
@@ -610,8 +623,7 @@ class VentiEvent extends Element
 			'dateFormat' 		=> $dateFormat,
 			'timeFormat' 		=> $timeFormat,
 			'group' 			=> $this->getGroup(),
-			'namespacedId' 		=> $namespacedId,
-			'permissionSuffix'  => ':'.$this->groupId
+			'namespacedId' 		=> $namespacedId
 		]);
 
 		#-- Everything else
@@ -883,7 +895,7 @@ class VentiEvent extends Element
     public function getIsEditable(): bool
     {
         return (
-            Craft::$app->getUser()->checkPermission('publishEvents:'.$this->groupId)
+            Craft::$app->getUser()->checkPermission('venti-manageEventsFor:'.$this->groupId)
         );
     }
 
@@ -904,7 +916,16 @@ class VentiEvent extends Element
         }
 
         return $url;
+	}
+	
+	/**
+     * @inheritdoc
+     */
+    public function setEagerLoadedElements(string $handle, array $elements)
+    {
+        parent::setEagerLoadedElements($handle, $elements);
     }
+
 
 	public function excludedDates()
 	{
