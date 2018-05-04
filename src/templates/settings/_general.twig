@@ -25,21 +25,24 @@
 
 {% endmacro %}
 
-{% macro selectField(settings, attribute, inputSettings, fieldSettings) %}
+{% macro selectField(settings, attribute, field, options) %}
 
-    {% import "_includes/forms" as forms %}
-    {% set input %}
-        {{ forms.selectField({
-            id: attribute,
-            name: 'settings['~ attribute ~']',
-            value: settings[attribute],
-            options: inputSettings['options'],
-        }) }}
-    {% endset %}
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.selectField({
+			id: 		attribute,
+			name: 		'settings['~ attribute ~']',
+			options: 	settings[attribute ~"s"],
+			value: 		settings[attribute]
+		}) }}
+	{% endset %}
 
-    {{ forms.field({
-        id: attribute,
-    }|merge(fieldSettings), input) }}
+	{{ forms.field({
+		id: 			attribute,
+		label:  		field['label'],
+		instructions: 	field['instructions'],
+		errors: 		settings.getErrors(attribute)
+	}, input) }}
 
 {% endmacro %}
 
@@ -108,9 +111,9 @@
         <hr>
         <div>
             <h3>{{ "Event Recurrence Defaultst"|t }}</h3>
-            {{ selectField(settings, 'eventDuration', settings.getEventDurations(), durationField) }}
+            {{ selectField(settings, 'eventDuration', durationField, settings.getEventDurations()) }}
 
-            {{ selectField(settings, 'timeInterval', settings.getTimeIntervals(), timeIntField) }}
+            {{ selectField(settings, 'timeInterval', timeIntField, settings.getTimeIntervals()) }}
 
             {% if craft.app.isMultiSite() %}
                 <hr/>
