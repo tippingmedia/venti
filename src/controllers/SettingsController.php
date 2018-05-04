@@ -50,32 +50,22 @@ class SettingsController extends Controller
         $postSettings = Craft::$app->getRequest()->getBodyParams('settings', []);
         $updateLayout = Craft::$app->getRequest()->getBodyParams('update_layout', false);
         $settings = $plugin->getSettings();
-        $groups = new Groups();
 
-        if($postSettings){
-            foreach ($postSettings['settings'] as $key => $value) {
-                $settings[$key] = $value;
-            }
-        }
-
+        \yii\helpers\VarDumper::dump($postSettings, 5, true);exit;
         
-        // $settings['eventDuration'] = array_key_exists('eventDuration',$postSettings) ? $postSettings['eventDuration'] : $settings['eventDuration'];
-        // $settings['timeInterval'] = array_key_exists('timeInterval',$postSettings) ? $postSettings['timeInterval'] : $settings['timeInterval'];
-        // $settings['pluginName'] = array_key_exists('pluginName',$postSettings) ? $postSettings['pluginName'] : $settings['pluginName'];
-        // $settings['license'] = array_key_exists('license',$postSettings) ? $postSettings['license'] : $settings['license'];
-        // $settings['googleMapsApiKey'] = array_key_exists('googleMapsApiKey',$postSettings) ? $postSettings['googleMapsApiKey'] : $settings['googleMapsApiKey'];
-        // $settings['country'] = array_key_exists('country',$postSettings) ? $postSettings['country'] : $settings['country'];
-        // $settings['hideRegistration'] = array_key_exists('hideRegistration',$postSettings) ? $postSettings['hideRegistration'] : $settings['hideRegistration'];
-        // $settings['hideLocation'] = array_key_exists('hideLocation',$postSettings) ? $postSettings['hideLocation'] : $settings['hideLocation'];
-        // $settings['multisite'] = array_key_exists('multisite',$postSettings) ? $postSettings['multisite'] : $settings['multisite'];
+        foreach ($postSettings['settings'] as $key => $value) {
+            $settings[$key] = $value;
+        }
+        
+
 
         if ($updateLayout) {
             $oldLayout = Craft::$app->getFields()->getLayoutByType('Venti_Event_Default');
-            $groupsWithOldLayoutId = $groups->getGroupsByLayoutId($oldLayout->id);
+            $groupsWithOldLayoutId = Venti::getInstance()->groups->getGroupsByLayoutId($oldLayout->id);
 
             $fieldLayout = $this->saveGroupLayout();
 
-            if ( !$groups->updateGroupLayoutIds($groupsWithOldLayoutId, $fieldLayout['id']) )
+            if ( !Venti::getInstance()->groups->updateGroupLayoutIds($groupsWithOldLayoutId, $fieldLayout['id']) )
             {
                 Craft::$app->getSession()->setNotice(Craft::t('venti','Group default layouts not updated.'));
             }

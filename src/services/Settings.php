@@ -68,7 +68,7 @@ class Settings extends Component
     public function getSettingsModel()
     {
         if (is_null(self::$settingsModel)) {
-            $plugin              = Craft::$app->getPlugins()->getPlugin('venti');
+            $plugin = Craft::$app->getPlugins()->getPlugin('venti');
             self::$settingsModel = $plugin->getSettings();
         }
 

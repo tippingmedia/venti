@@ -110,10 +110,10 @@ class Venti extends Plugin
 
 			// Settings
 			$event->rules['venti/settings'] = 'venti/settings/index';
-			$event->rules['venti/settings/license'] = 'venti/settings/license';
+			//$event->rules['venti/settings/license'] = 'venti/settings/license';
     		$event->rules['venti/settings/general'] = 'venti/settings/general';
-			$event->rules['venti/settings/events'] = 'venti/settings/events';
-			$event->rules['venti/settings/groups'] = 'venti/settings/groups';
+			//$event->rules['venti/settings/events'] = 'venti/settings/events';
+			//$event->rules['venti/settings/groups'] = 'venti/settings/groups';
 		});
 
 		Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) {
@@ -248,12 +248,10 @@ class Venti extends Plugin
      */
     public function getSettingsResponse()
     {
-		 $url = UrlHelper::cpUrl('venti/settings');
+		 $url = UrlHelper::cpUrl('venti/settings/_general');
         return Craft::$app->controller->redirect($url);
-        //return '';
-		// if (Craft::$app->getRequest()->isCpRequest() && Craft::$app->getUser()->isLoggedIn() && Craft::$app->getUser()->isAdmin()) {
-		// 	return Craft::$app->getView()->render('venti/settings/_index');
-		// }
     }
+
+    
 
 }
