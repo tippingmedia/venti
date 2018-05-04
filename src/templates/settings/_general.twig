@@ -53,20 +53,6 @@
     "autofocus"  :  true,
 } %}
 
-{% set apiKeyInst = "Locations uses geocoding to get latitude and longitude."|t %}
-{% set getAPIKey = "Get API Key"|t %}
-{%- set keyMarkup -%}
-	[{{ getAPIKey }}](https://developers.google.com/maps/documentation/javascript/)
-{%- endset -%}
-{% set mapkeyField = {
-    "label":        "Google Maps API Key"|t,
-    "instructions": apiKeyInst ~ keyMarkup|md,
-    "placeholder":  "",
-    "first"      :  false,
-    "autofocus"  :  false,
-} %}
-
-
 {% block content %}
 
 	<h2>{{ 'General Settings'|t }}</h2>
@@ -80,10 +66,6 @@
 		{{ csrfInput() }}
 
 		{{ textInputField(settings, 'pluginName', pnField) }}
-
-		{{ textInputField(settings, 'googleMapsApiKey', mapkeyField) }}
-
-		{{ selectField(settings,'country',{options:countries},{label:"Default Country"|t}) }}
 
 		<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
 	</form>

@@ -132,10 +132,7 @@ class Event extends Model
             'recurring'     	=> AttributeType::Number,
 			'diff'     			=> AttributeType::Number,
             'rRule'      		=> AttributeType::String,
-            'summary'    		=> AttributeType::String,
-			'location'   		=> Attributetype::Mixed,
-			'specificLocation' 	=> AttributeType::String,
-			'registration' 		=> AttributeType::Mixed,
+            'summary'    		=> AttributeType::String
 		));
 	}
 

@@ -61,28 +61,6 @@ class Settings extends Component
     }
 
 
-    public function getGoogleMapsApiKey()
-    {
-        return $this->getSettingsModel()->googleMapsApiKey;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getHideLocation()
-    {
-        return $this->getSettingsModel()->hideLocation;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getHideRegistration()
-    {
-        return $this->getSettingsModel()->hideRegistration;
-    }
-
-
 
     /**
      * @return Venti_SettingsModel

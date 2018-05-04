@@ -77,29 +77,10 @@ class Install extends Migration
             'recurring' => $this->boolean()->defaultValue(false)->notNull(),
             'rRule' => $this->string(),
             'summary' => $this->text(),
-            'location' => $this->text(),
-            'registration' => $this->text(),
-            'specificLocation' => $this->text(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),
             'PRIMARY KEY(id)',
-        ]);
-
-        $this->createTable('{{%venti_locations}}', [
-            'id' => $this->primaryKey(),
-            'address' => $this->text(),
-            'addressTwo' => $this->text(),
-            'city' => $this->string(),
-            'state' => $this->string(50),
-            'zipCode' => $this->string(25),
-            'country' => $this->string(),
-            'longitude' => $this->string(),
-            'latitude' => $this->string(),
-            'website' => $this->text(),
-            'dateCreated' => $this->dateTime()->notNull(),
-            'dateUpdated' => $this->dateTime()->notNull(),
-            'uid' => $this->uid(),
         ]);
 
         $this->createTable('{{%venti_rrule}}', [
@@ -171,7 +152,6 @@ class Install extends Migration
         $this->addForeignKey($this->db->getForeignKeyName('{{%venti_events}}', 'groupId'), '{{%venti_events}}', ['groupId'], '{{%venti_groups}}', ['id'], 'CASCADE', null);
         $this->addForeignKey($this->db->getForeignKeyName('{{%venti_groups_sites}}', 'siteId'), '{{%venti_groups_sites}}', ['siteId'], '{{%sites}}', ['id'], 'CASCADE', 'CASCADE');
         $this->addForeignKey($this->db->getForeignKeyName('{{%venti_groups_sites}}', 'groupId'), '{{%venti_groups_sites}}', ['groupId'], '{{%venti_groups}}', ['id'], 'CASCADE', null);
-        $this->addForeignKey($this->db->getForeignKeyName('{{%venti_locations}}', 'id'), '{{%venti_locations}}', ['id'], '{{%elements}}', ['id'], 'CASCADE', null);
         $this->addForeignKey($this->db->getForeignKeyName('{{%venti_rrule}}', 'event_id'), '{{%venti_rrule}}', ['event_id'], '{{%venti_events}}', ['id'], 'CASCADE', null);
         $this->addForeignKey($this->db->getForeignKeyName('{{%venti_rdate}}', 'event_id'), '{{%venti_rdate}}', ['event_id'], '{{%venti_events}}', ['id'], 'CASCADE', null);
         $this->addForeignKey($this->db->getForeignKeyName('{{%venti_exdate}}', 'event_id'), '{{%venti_exdate}}', ['event_id'], '{{%venti_events}}', ['id'], 'CASCADE', null);
@@ -187,7 +167,6 @@ class Install extends Migration
         $this->dropTable('{{%venti_groups_sites}}');
         $this->dropTable('{{%venti_groups}}');
         $this->dropTable('{{%venti_events}}');
-        $this->dropTable('{{%venti_locations}}');
         $this->dropTable('{{%venti_rrule}}');
         $this->dropTable('{{%venti_rdate}}');
         $this->dropTable('{{%venti_exdate}}');
@@ -219,7 +198,6 @@ class Install extends Migration
         $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_events}}', 'groupId'), '{{%venti_events}}');
         $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_groups_sites}}', 'siteId'), '{{%venti_groups_sites}}');
         $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_groups_sites}}', 'groupId'), '{{%venti_groups_sites}}');
-        $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_locations}}', 'id'), '{{%venti_locations}}');
         $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_rrule}}', 'event_id'), '{{%venti_rrule}}');
         $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_rdate}}', 'event_id'), '{{%venti_rdate}}');
         $this->dropForeignKey($this->db->getForeignKeyName('{{%venti_exdate}}', 'event_id'), '{{%venti_exdate}}');

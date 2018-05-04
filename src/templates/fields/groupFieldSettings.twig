@@ -1,0 +1,40 @@
+{% import "_includes/forms" as forms %}
+
+{% macro checkboxField(name, label, options, values) %}
+
+    {% import "_includes/forms" as forms %}
+    {% set input %}
+        {{ forms.checkboxSelectField({
+            label: label,
+            instructions: "Select the groups of events the user can choose from."|t,
+            id: name,
+            name: name,
+            options: options,
+            values: values
+        }) }}
+    {% endset %}
+
+    {{ forms.field({
+        id: name,
+        required: false,
+    }, input) }}
+
+{% endmacro %}
+
+{% macro errorOnly(label, fill) %}
+    {% import "_includes/forms" as forms %}
+
+    {{ forms.field({
+        label: label,
+    }, '<p class="error">' ~ fill ~ '</p>') }}
+
+{% endmacro %}
+
+{% from _self import checkboxField, errorOnly %}
+
+{% if options|length %}
+    {% set fieldValues = field['calendarGroups']|length > 0 or field['calendarGroups'] == '*' ? field['calendarGroups'] : [false] %}
+    {{ checkboxField("calendarGroups", "Event Groups"|t, options, fieldValues, true) }}
+{% else %}
+    {{ errorOnly("Event Groups"|t, "No event groups currently exist."|t, true) }}
+{% endif %}

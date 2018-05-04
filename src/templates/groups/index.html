@@ -4,8 +4,7 @@
 {% set tabs = {
 	venti:    	{ label: "Events"|t, url: url('venti') },
 	calendar:   { label: "Calendar"|t, url: url('venti/calendar') },
-	groups: 	{ label: "Groups"|t, url: url('venti/groups') },
-	locations: { label: "Locations"|t, url: url('venti/locations') },
+	groups: 	{ label: "Groups"|t, url: url('venti/groups') }
 } %}
 
 {% if currentUser.can('ventiSettings') %}

@@ -16,6 +16,7 @@ use tippingmedia\venti\elements\VentiEvent;
 use Craft;
 use craft\base\ElementInterface;
 use craft\base\Field;
+use craft\fields\BaseRelationField;
 use craft\helpers\Db;
 use yii\db\Schema;
 use craft\helpers\Json;
@@ -31,19 +32,15 @@ use craft\helpers\Json;
  *
  * @author    tippingmedia
  * @package   Venti
- * @since     2.0.0
+ * @since     3.0.0
  */
 
- //??? NEEDS TO BE AN ELEMENT FIELD TYPE ???
 class Event extends BaseRelationField
 {
-	/**
-	 * @access protected
-	 * @var string $elementType The element type this field deals with.
-	 */
-	protected $elementType = 'Event';
 
-     /**
+    //protected $inputTemplate = 'venti/fields/eventInput';
+
+    /**
      * @inheritdoc
      */
     public static function displayName(): string
@@ -51,12 +48,7 @@ class Event extends BaseRelationField
         return Craft::t('app', 'Events');
     }
 
-    protected static function elementType(): string
-    {
-        return VentiEvent::class;
-    }
-
-     /**
+    /**
      * @inheritdoc
      */
     public static function defaultSelectionLabel(): string
@@ -64,12 +56,36 @@ class Event extends BaseRelationField
         return Craft::t('app', 'Add an event');
     }
 
+     /**
+     * @inheritdoc
+     */
+    protected static function elementType(): string
+    {
+        return VentiEvent::class;
+    }
 
 
-	// public function getSearchKeywords($value)
-	// {
+    protected function inputSelectionCriteria(): array
+    {
+        return ['cpindex' => true];
+    }
 
-	// 	return "startDate endDate summary";
-	// }
+    /**
+     * @inheritdoc
+     */
+    public function getInputHtml($value, ElementInterface $element = null): string
+    {
+        /** @var Element|null $element */
+        if ($element !== null && $element->hasEagerLoadedElements($this->handle)) {
+            $value = $element->getEagerLoadedElements($this->handle);
+        }
+
+        /** @var ElementQuery|array $value */
+        // Don't show event recurrences of elements
+        $value->cpindex(true);
+        $variables = $this->inputTemplateVariables($value, $element);
+
+        return Craft::$app->getView()->renderTemplate($this->inputTemplate, $variables);
+    }
 
 }

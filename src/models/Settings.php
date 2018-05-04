@@ -35,8 +35,6 @@ class Settings extends Model
     const DEFAULT_TIME_INTERVAL     = 30;
     const DEFAULT_DURATION          = 60;
     const DEFAULT_MULTISITE         = false;
-    const HIDE_LOCATION             = 0;
-    const HIDE_REGISTRATION         = 0;
 
     const TIMEINTERVALS = [
         15 => 15,
@@ -80,26 +78,6 @@ class Settings extends Model
     */
     public $license;
     
-    /**
-       * @var string|null googleMapsApiKey
-    */
-    public $googleMapsApiKey;
-    
-    /**
-       * @var string|null country
-    */
-    public $country;
-    
-    /**
-       * @var bool|null hideRegistration
-    */
-    public $hideRegistration = self::HIDE_REGISTRATION;
-    
-    /**
-       * @var bool|null hideLocation
-    */
-    public $hideLocation = self::HIDE_LOCATION;
-    
     
 
   /**
@@ -110,13 +88,7 @@ class Settings extends Model
         return [
             ['pluginName', 'string'],
             ['pluginName', 'default', 'value' => 'Venti'],
-            ['multisite', 'integer'],
-            ['license', 'string'],
-            ['googleMapsApiKey', 'string'],
-            ['country', 'string'],
-            ['hideRegistration', 'integer'],
-            ['hideLocation', 'integer'],
-
+            ['multisite', 'integer']
         ];
     }
 

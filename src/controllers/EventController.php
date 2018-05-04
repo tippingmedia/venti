@@ -135,26 +135,28 @@ class EventController extends BaseEventController
 
 		// Tabs
 		$variables['tabs'] = [];
+		if ($variables['group']->getFieldLayout() != null) {
+			foreach ($variables['group']->getFieldLayout()->getTabs() as $index => $tab) {
+				// Do any of the fields on this tab have errors?
+				$hasErrors = false;
 
-		foreach ($variables['group']->getFieldLayout()->getTabs() as $index => $tab) {
-			// Do any of the fields on this tab have errors?
-			$hasErrors = false;
-
-			if ($variables['event']->hasErrors()) {
-				foreach ($tab->getFields() as $field) {
-					if ($variables['event']->getErrors($field->getField()->handle)) {
-						$hasErrors = true;
-						break;
+				if ($variables['event']->hasErrors()) {
+					foreach ($tab->getFields() as $field) {
+						if ($variables['event']->getErrors($field->getField()->handle)) {
+							$hasErrors = true;
+							break;
+						}
 					}
 				}
-			}
 
-			$variables['tabs'][] = [
-				'label' => $tab->name,
-				'url'   => '#tab'.($index+1),
-				'class' => ($hasErrors ? 'error' : null)
-			];
+				$variables['tabs'][] = [
+					'label' => $tab->name,
+					'url'   => '#tab'.($index+1),
+					'class' => ($hasErrors ? 'error' : null)
+				];
+			}
 		}
+		
 
 		if ($event->id === null) {
 			$variables['title'] = Craft::t('venti','Create a new event');
@@ -238,15 +240,6 @@ class EventController extends BaseEventController
 
 		$continueEditingUrl = $request->getBodyParam('continueEditingUrl');
 
-		if ($request->getBodyParam('registration') && array_key_exists('type',$request->getBodyParam('registration'))) {
-			$event->registration = $request->getBodyParam('registration');
-		} else {
-			$event->registration = null;
-		}
-
-		// $event->getContent()->title = $request->getBodyParam('title', $event->title);
-		// $event->setContentFromPost('fields');
-
 		$this->_populateEventModel($event);
 
 		//permission enforcement
@@ -301,9 +294,6 @@ class EventController extends BaseEventController
 			$return['recurring'] = $event->recurring;
 			$return['diff'] = $event->diff;
 			$return['allDay'] = $event->allDay;
-			$return['location'] = $event->location;
-			$return['specificLocation'] = $event->location;
-			$return['registration'] = $event->registration;
 			$return['dateCreated'] = DateTimeHelper::toIso8601($event->dateCreated);
             $return['dateUpdated'] = DateTimeHelper::toIso8601($event->dateUpdated);
 
@@ -800,8 +790,6 @@ class EventController extends BaseEventController
 		$event->recurring 	  = (bool) Craft::$app->getRequest()->getBodyParam('recurring', $event->recurring);
 		$event->summary 	  = Craft::$app->getRequest()->getBodyParam('summary', $event->summary);
 		$event->allDay 		  = (bool) Craft::$app->getRequest()->getBodyParam('allDay', $event->allDay);
-		$event->location 	  = Craft::$app->getRequest()->getBodyParam('location', $event->location);
-		$event->registration  = Craft::$app->getRequest()->getBodyParam('registration', $event->registration);
 		$event->enabled = (bool)Craft::$app->getRequest()->getBodyParam('enabled', $event->enabled);
         $event->enabledForSite = (bool)Craft::$app->getRequest()->getBodyParam('enabledForSite', $event->enabledForSite);
         $event->title = Craft::$app->getRequest()->getBodyParam('title', $event->title);

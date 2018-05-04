@@ -4,7 +4,6 @@ namespace tippingmedia\venti\elements\db;
 use tippingmedia\venti\Venti;
 use tippingmedia\venti\models\Group;
 use tippingmedia\venti\models\Event;
-use tippingmedia\venti\models\Location;
 use tippingmedia\venti\services\Groups;
 use tippingmedia\venti\elements\VentiEvent;
 
@@ -43,9 +42,6 @@ class VentiEventQuery extends ElementQuery
     public $recurring;
     public $allDay;
     public $summary;
-    public $location;
-    public $specificLocation;
-    public $registration;
     public $between;
     public $range;
     public $cpindex;
@@ -222,41 +218,6 @@ class VentiEventQuery extends ElementQuery
     //     return $this;
     // }
 
-    /**
-     * Sets the [[location]] property.
-     *
-     * @param int|int[]|null $value The property value
-     * @return static self reference
-     */
-    public function location($value)
-    {
-        $this->location = $value;
-        return $this;
-    }
-
-    /**
-     * Sets the [[specificLocation]] property.
-     *
-     * @param $string|null $value The property value
-     * @return static self reference
-     */
-    public function specificLocation($value)
-    {
-        $this->specificLocation = $value;
-        return $this;
-    }
-
-    /**
-     * Sets the [[registration]] property.
-     *
-     * @param $mixed|null $value The property value
-     * @return static self reference
-     */
-    public function registration($value)
-    {
-        $this->registration = $value;
-        return $this;
-    }  
 
     /**
      * Sets the [[between]] property.
@@ -344,9 +305,6 @@ class VentiEventQuery extends ElementQuery
             'venti_events.recurring',
             'venti_events.summary',
             'venti_events.siteId',
-            'venti_events.location',
-            'venti_events.specificLocation',
-            'venti_events.registration',
             'venti_events.startDate',
             'venti_events.endDate',
             'venti_events.endRepeat',
@@ -420,18 +378,6 @@ class VentiEventQuery extends ElementQuery
 
         if ($this->allDay) {
             $this->subQuery->andWhere(Db::parseParam('venti_events.allDay', $this->allDay));
-        }
-
-        if ($this->location) {
-            $this->subQuery->andWhere(Db::parseParam('venti_events.location', $this->location));
-        }
-
-        if ($this->specificLocation) {
-            $this->subQuery->andWhere(Db::parseParam('venti_events.specificLocation', $this->specificLocation));
-        }
-
-        if ($this->registration) {
-            $this->subQuery->andWhere(Db::parseParam('venti_events.registration', $this->registration));
         }
 
         $this->_applyEditableParam();

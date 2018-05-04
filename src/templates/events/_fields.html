@@ -4,7 +4,7 @@
 <input type="hidden" name="eventId" value="{{ event.id }}">
 
 {#  Field Layout Fields #}
-{% if group.getFieldLayout().getTabs()|length %}
+{% if group.getFieldLayout() != null and group.getFieldLayout().getTabs()|length %}
     <div>
         {% for tab in group.getFieldLayout().getTabs() %}
             <div id="tab{{ loop.index }}"{% if not loop.first %} class="hidden"{% endif %}>

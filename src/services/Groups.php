@@ -108,7 +108,9 @@ class Groups extends Component
         }
 
         return $this->_editableGroupIds;
-    }
+	}
+	
+
 
 	/**
 	 * Returns all groups.
@@ -136,6 +138,28 @@ class Groups extends Component
 
         return array_values($this->_groupsById);
 
+	}
+
+	public function getGroupsByIds(Array $groupIds): array
+	{
+		if ($this->_fetchedAllGroups) {
+			return array_values($this->_groupsById);
+		}
+
+		$results = $this->_createGroupQuery()
+			->where(['venti_groups.id' => $groupIds])
+			->all();
+		
+		$this->_groupsById = [];
+
+		foreach ($results as $result) {
+            $group = new Group($result);
+            $this->_groupsById[$group->id] = $group;
+        }
+
+        $this->_fetchedAllGroups = true;
+
+        return array_values($this->_groupsById);
 	}
 
 

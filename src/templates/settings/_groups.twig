@@ -24,7 +24,7 @@
 
 {% from _self import  checkboxField %}
 
-{% set hideRegistrationField = {
+{# {% set hideRegistrationField = {
     "label":        "Hide Registration Fields"|t,
     "instructions": "When checked the default Registration fields will be hidden. *This will effect every group.*"|t,
 } %}
@@ -32,7 +32,7 @@
 {% set hideLocationField = {
     "label":        "Hide Location Fields"|t,
     "instructions": "When checked the default Location fields will be hidden. *This will effect every group.*"|t,
-} %}
+} %} #}
 
 {% block content %}
 
@@ -47,10 +47,10 @@
 
         {{ csrfInput() }}
 
-		<div>
+		{# <div>
 			{{ checkboxField(settings, 'hideRegistration', hideRegistrationField) }}
 			{{ checkboxField(settings, 'hideLocation', hideLocationField) }}
-		</div>
+		</div> #}
 		<br>
 		<div>
 			<h2>{{ "Default Field Layout"|t }}</h2>

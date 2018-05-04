@@ -22,6 +22,7 @@ use tippingmedia\venti\elements\actions\View;
 use tippingmedia\venti\records\Event as EventRecord;
 use tippingmedia\venti\records\ExcludedDate as ExcludedDateRecord;
 use tippingmedia\venti\records\IncludedDate as IncludedDateRecord;
+use tippingmedia\venti\Bundles\EventListBundle;
 
 
 use Craft;
@@ -262,9 +263,6 @@ class VentiEvent extends Element
 		$record->recurring = $this->recurring;
 		$record->rRule = $this->rRule;
 		$record->summary = $this->summary;
-		$record->registration = $this->registration;
-		$record->location = $this->location;
-		$record->specificLocation = $this->specificLocation;
 
 		$record->save(false);
 
@@ -577,18 +575,6 @@ class VentiEvent extends Element
      */
     public $diff;
 	/**
-     * @var mixed|null Location
-     */
-    public $location;
-	/**
-     * @var string|null Specific Location
-     */
-    public $specificLocation;
-	/**
-     * @var mixed|null registration
-     */
-	public $registration;
-	/**
      * @var int|null Author ID
      */
 	public $authorId;
@@ -611,12 +597,13 @@ class VentiEvent extends Element
      */
     public function getEditorHtml(): string
 	{
-
+		
     	$namespacedId = Craft::$app->getView()->getNamespace();
 
         $dateFormat = Craft::$app->locale->getDateFormat('short',Locale::FORMAT_PHP);
         $timeFormat = Craft::$app->locale->getTimeFormat('short',Locale::FORMAT_PHP);
 
+		Craft::$app->getView()->registerAssetBundle(EventListBundle::class);
 		#-- Start/End Dates
 		$html = Craft::$app->getView()->renderTemplate('venti/_editor', [
 			'event' 			=> $this,

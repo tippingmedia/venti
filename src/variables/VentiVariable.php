@@ -71,11 +71,6 @@ class VentiVariable
 		return Venti::$plugin->groups->getGroupByHandle($groupHandle);
 	}
 
-	public function locations()
-	{
-		return craft()->elements->getCriteria('Venti_Location');
-	}
-
 	public function settings()
     {
     	return Venti::getInstance()->settings;

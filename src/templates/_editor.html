@@ -252,40 +252,6 @@
 
 	<div class="venti-inline" id="venti-inline" style="display:none;"></div>
 
-	{# Location Element Select #}
-	{% if craft.venti.settings.hideLocation != 1 %}
-		<div class="field">
-		{% set elementType = 'tippingmedia\\venti\\elements\\VentiLocation' %}
-		{% set locElement = craft.app.elements.createElement(elementType) %}
-			{% set locParams = {
-				label: "Event Location"|t,
-				instructions: "Select the location your event is occuring."|t,
-				limit: 1,
-				elements: [],
-				elementType: locElement,
-				siteId:    event.siteId,
-				selectionLabel: "Choose a location"|t,
-			}
-			%}
-			{{ elementSelectField('location', locParams , false) }}
-		</div>
-
-		{#  Specific Location #}
-		{{ forms.textField({
-			label: 		"Specific Location"|t,
-			instructions: "Room #, building, entrance …"|t,
-			id: 		'specific-location',
-			name: 		'specificLocation',
-			value: 		event.specificLocation,
-			errors: 	event.getErrors('specificLocation'),
-			siteId:     event.siteId,
-			size: 50,
-			first: 		false,
-			autofocus: 	false,
-			required: 	false
-		}) }}
-	{% endif %}
-
 
 	{% if craft.venti.settings.hideRegistration != 1 %}
 		<div class="field registration-field">

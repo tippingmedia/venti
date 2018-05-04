@@ -35,9 +35,8 @@ use craft\helpers\UrlHelper;
 use tippingmedia\venti\variables\VentiVariable;
 use tippingmedia\venti\models\Settings;
 use tippingmedia\venti\elements\Event as EventElement;
-use tippingmedia\venti\elements\Location as LocationElement;
 use tippingmedia\venti\fields\Event as EventField;
-use tippingmedia\venti\fields\Location as LocationField;
+use tippingmedia\venti\fields\Group as GroupField;
 use tippingmedia\venti\services\groups;
 
 use tippingmedia\venti\twigextensions\VentiTwigExtension;
@@ -86,7 +85,6 @@ class Venti extends Plugin
             'groups' => \tippingmedia\venti\services\Groups::class,
             'events' => \tippingmedia\venti\services\Events::class,
 			'calendar' => \tippingmedia\venti\services\Calendar::class,
-            'locations' => \tippingmedia\venti\services\Locations::class,
             'ics' => \tippingmedia\venti\services\Ics::class,
 			'settings' => \tippingmedia\venti\services\Settings::class,
 			'rrule' => \tippingmedia\venti\services\Rrule::class,
@@ -105,11 +103,6 @@ class Venti extends Plugin
 			$event->rules['venti/<groupHandle:{handle}>/new?/<siteHandle:\w+>'] = 'venti/event/edit-event';
 			$event->rules['venti/<groupHandle:{handle}>/<eventId:\d+><slug:(?:-[^\/]*)?>'] = 'venti/event/edit-event';
 			$event->rules['venti/<groupHandle:{handle}>/<eventId:\d+><slug:(?:-[^\/]*)?>/<siteHandle:{handle}>'] = 'venti/event/edit-event';
-
-			// Locations
-			$event->rules['venti/locations'] = ['template' => 'venti/location/locationIndex'];
-			$event->rules['venti/locations/new'] = ['template' => 'venti/locations/editLocation'];
-			$event->rules['venti/location/<locationId:\d+>(?:-{slug})'] = ['template' => 'venti/locations/editLocation'];
 
 			// Calendar
 			$event->rules['venti/calendar'] = 'venti/calendar/calendar-index';
@@ -134,7 +127,17 @@ class Venti extends Plugin
 			//\yii\helpers\VarDumper::dump($event->rules, 5, true);exit;
 
 			$event->rules = array_merge($event->rules, $rules);
-		});
+        });
+        
+        // Register our fields
+        Event::on(
+            Fields::class,
+            Fields::EVENT_REGISTER_FIELD_TYPES,
+            function (RegisterComponentTypesEvent $event) {
+                $event->types[] = EventField::class;
+                $event->types[] = GroupField::class;
+            }
+        );
 
 		if (Craft::$app->getEdition() >= Craft::Pro) {
             Event::on(UserPermissions::class, UserPermissions::EVENT_REGISTER_PERMISSIONS, function (RegisterUserPermissionsEvent $event) {
@@ -228,37 +231,6 @@ class Venti extends Plugin
 	    );
 	}
 
-
-
-	/**
-	 * @return array
-	 */
-	/*public function registerUserPermissions()
-	{
-		$groups = getAllGroups();
-		$groupEditPermissions = array();
-		foreach ($groups as $group) {
-			$groupEditPermissions['editGroupEvents:'.$group['id']] = array('label' => Craft::t('venti','Edit') . " ". $group['name'] . " ". Craft::t('venti','events'));
-			$groupEditPermissions['editGroupEvents:'.$group['id']]['nested']['createEvents:'.$group['id']] = array('label'=> Craft::t('venti','Create events in') ." ". $group['name']);
-			$groupEditPermissions['editGroupEvents:'.$group['id']]['nested']['publishEvents:'.$group['id']] = array('label'=> Craft::t('venti','Publish events in') ." ". $group['name']);
-			$groupEditPermissions['editGroupEvents:'.$group['id']]['nested']['deleteEvents:'.$group['id']] = array('label'=> Craft::t('venti','Delete events in') ." ". $group['name']);
-		}
-
-		$permissions =  array(
-			'ventiEditSettings' 		=> array('label' => Craft::t('venti','Venti: Settings')),
-			'ventiEditLocations' 		=> array('label' => Craft::t('venti','Venti: Locations'),
-				'nested' 	=> array(
-					'createLocations' 	=> array('label' => Craft::t('venti','Create')),
-					'publishLocations' 	=> array('label' => Craft::t('venti','Publish')),
-					'deleteLocations'   => array('label' => Craft::t('venti','Delete'))
-				)
-			),
-			'ventiEditEvents' 			=> array('label' => Craft::t('venti','Venti: Edit Events'), 'nested' => $groupEditPermissions),
-		);
-
-		return $permissions;
-
-	}*/
 
 
 	/**

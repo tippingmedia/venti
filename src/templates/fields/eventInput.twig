@@ -12,12 +12,14 @@
     {% endset %}
 
     {{ forms.field({
-        id: name~'event-select',
+        id: name,
     }, input) }}
 
 {% endmacro %}
 
-
 {% from _self import elementSelectField %}
 
-{{ elementSelectField(name, elementSelectSettings, false) }}
+<pre>
+    {{ dump(sourceElementId) }}
+</pre>
+{# {{ elementSelectField(name, elementSelectSettings, false) }} #}

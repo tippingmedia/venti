@@ -15,7 +15,6 @@ use tippingmedia\venti\services\Groups;
 use tippingmedia\venti\services\Settings as SettingsService;
 use tippingmedia\venti\models\Settings;
 use tippingmedia\venti\models\Group;
-use tippingmedia\venti\helpers\LocationHelper;
 
 use Craft;
 use craft\web\Controller;
@@ -112,8 +111,7 @@ class SettingsController extends Controller
 
         return $this->renderTemplate('venti/settings/index', [
             'error' => (isset($error) ? $error : null),
-            'settings' => $plugin->getSettings(),
-            'countries' => LocationHelper::countryOptions()
+            'settings' => $plugin->getSettings()
         ]);
     }
 
@@ -122,8 +120,7 @@ class SettingsController extends Controller
         $plugin = Craft::$app->getPlugins()->getPlugin('venti');
         return $this->renderTemplate('venti/settings/_general', [
             'error' => (isset($error) ? $error : null),
-            'settings' => $plugin->getSettings(),
-            'countries' => LocationHelper::countryOptions()
+            'settings' => $plugin->getSettings()
         ]);
     }
 
@@ -133,8 +130,7 @@ class SettingsController extends Controller
 
         return $this->renderTemplate('venti/settings/_groups', [
             'error' => (isset($error) ? $error : null),
-            'settings' => $plugin->getSettings(),
-            'countries' => LocationHelper::countryOptions()
+            'settings' => $plugin->getSettings()
         ]);
     }
 
@@ -144,8 +140,7 @@ class SettingsController extends Controller
 
         return $this->renderTemplate('venti/settings/_events', [
             'error' => (isset($error) ? $error : null),
-            'settings' => $plugin->getSettings(),
-            'countries' => LocationHelper::countryOptions()
+            'settings' => $plugin->getSettings()
         ]);
     }
 

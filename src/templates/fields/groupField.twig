@@ -1,0 +1,27 @@
+{% import "_includes/forms" as forms %}
+
+{% macro checkboxField(field, options, value) %}
+
+    {% import "_includes/forms" as forms %}
+    {% set input %}
+        {% if options|length > 0 %}
+            {{ forms.checkboxSelectField({
+                name: field.handle,
+                options: options,
+                values: value|length ? value : [false]
+            }) }}
+        {% else %}
+            <p style="color: #8f98a3;">{{ "No calendar groups are enabled in this field's settings."|t }}</p>
+        {% endif %}
+    {% endset %}
+
+    {{ forms.field({
+        id: field.id,
+        required: false,
+    }, input) }}
+
+{% endmacro %}
+
+{% from _self import checkboxField %}
+
+{{ checkboxField(field, options, value, true) }} 

@@ -164,7 +164,7 @@
 {# Location Element Select 
 elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
 #}
-{% if craft.venti.settings.hideLocation != 1 %}
+{# {% if craft.venti.settings.hideLocation != 1 %}
 	<div class="field">
 	{% set elementType = 'tippingmedia\\venti\\elements\\VentiLocation' %}
 	{% set locElement = craft.app.elements.createElement(elementType) %}
@@ -181,7 +181,6 @@ elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
 	    {{ elementSelectField('location', locParams , false) }}
 	</div>
 
-	{#  Specific Location #}
 	{{ forms.textField({
 	    label: 		"Specific Location"|t,
 	    instructions: "Room #, building, entrance …"|t,
@@ -196,9 +195,9 @@ elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
 	    required: 	false
 	}) }}
 
-{% endif %}
+{% endif %} #}
 
-{% if craft.venti.settings.hideRegistration != 1 %}
+{# {% if craft.venti.settings.hideRegistration != 1 %}
 	<div class="field registration-field">
 	    <div class="heading">
 	        <label for="venti-registration-input">{{ "Registration"|t }}</label>
@@ -241,4 +240,4 @@ elements: event.location ? craft.venti.locations().id(event.location[0]) : [],
 				placeholder="<iframe src=…">{% if reg['type'] is defined and reg['type'] == "embed" and reg['embed'] is not empty %}{{ reg['embed']|default('')}}{% endif %}</textarea>
 	    </div>
 	</div>
-{% endif %}
+{% endif %} #}
