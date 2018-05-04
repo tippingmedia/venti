@@ -64,8 +64,6 @@
 
 {% endmacro %}
 
-{% from _self import  checkboxField, selectField, textInputField %}
-
 {% set tField = {
     "label":        "Multisite"|t,
     "instructions": "Venti inputs are multisite."|t,
@@ -90,6 +88,8 @@
     "autofocus"  :  true,
 } %}
 
+{% from _self import  checkboxField, selectField, textInputField %}
+
 {% block content %}
 
 	<h2>{{ 'Venti Settings'|t }}</h2>
@@ -104,20 +104,22 @@
 		{{ csrfInput() }}
 
 		{{ textInputField(settings, 'pluginName', pnField) }}
+        
         <hr>
-        <h2>{{ "Event Recurrence Defaults"|t }}</h2>
-        {{ selectField(settings, 'eventDuration', durationField, settings.getEventDurations()) }}
+        <div>
+            <h3>{{ "Event Recurrence Defaultst"|t }}</h3>
+            {{ selectField(settings, 'eventDuration', settings.getEventDurations(), durationField) }}
 
-		{{ selectField(settings, 'timeInterval', timeIntField, settings.getTimeIntervals()) }}
+            {{ selectField(settings, 'timeInterval', settings.getTimeIntervals(), timeIntField) }}
 
-		{% if craft.app.isMultiSite() %}
-			<hr/>
-			{{ checkboxField(settings, 'multisite', tField) }}
-		{% endif %}
-
+            {% if craft.app.isMultiSite() %}
+                <hr/>
+                {{ checkboxField(settings, 'multisite', tField) }}
+            {% endif %}
+        </div>
 		<hr>
 		<div>
-			<h2>{{ "Default Field Layout"|t }}</h2>
+			<h3>{{ "Default Field Layout"|t }}</h3>
 	        {% include "_includes/fieldlayoutdesigner" with {
 	            fieldLayout: settings.getFieldLayout()
 	        } only %}
