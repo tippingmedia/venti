@@ -43,7 +43,44 @@
 
 {% endmacro %}
 
-{% from _self import textInputField, selectField %}
+{% macro checkboxField(settings, attribute, field) %}
+
+	{% import "_includes/forms" as forms %}
+	{% set input %}
+		{{ forms.checkbox({
+			id: 		attribute,
+			name: 		'settings['~ attribute ~']',
+			checked: 	settings[attribute]
+		}) }}
+	{% endset %}
+
+	{{ forms.field({
+		id:       		  	attribute,
+		label:            	field['label'],
+        instructions:     	field['instructions'],
+		required: 			false,
+		errors: 			settings.getErrors(attribute)
+	}, input) }}
+
+{% endmacro %}
+
+{% from _self import  checkboxField, selectField, textInputField %}
+
+{% set tField = {
+    "label":        "Multisite"|t,
+    "instructions": "Venti inputs are multisite."|t,
+} %}
+
+{% set durationField = {
+    "label":        "Default Event Duration"|t,
+    "instructions": "Duration of event when start date is set."|t,
+} %}
+
+{% set timeIntField = {
+    "label":        "Time Select Interval"|t,
+    "instructions": "Event date time interval amounts."|t,
+} %}
+
 
 {% set pnField = {
     "label":        "Plugin Name"|t,
@@ -55,17 +92,36 @@
 
 {% block content %}
 
-	<h2>{{ 'General Settings'|t }}</h2>
+	<h2>{{ 'Venti Settings'|t }}</h2>
 
 	<form action="" method="post">
 
 		<input type="hidden" name="action" value="venti/settings/save-settings">
         <input type="hidden" name="pluginHandle" value="venti">
 		<input type="hidden" name="redirect" value="{{ 'venti/settings/general'|hash }}">
+        <input type="hidden" name="update_layout" value="1">
 
 		{{ csrfInput() }}
 
 		{{ textInputField(settings, 'pluginName', pnField) }}
+        <hr>
+        <h2>{{ "Event Recurrence Defaults"|t }}</h2>
+        {{ selectField(settings, 'eventDuration', durationField, settings.getEventDurations()) }}
+
+		{{ selectField(settings, 'timeInterval', timeIntField, settings.getTimeIntervals()) }}
+
+		{% if craft.app.isMultiSite() %}
+			<hr/>
+			{{ checkboxField(settings, 'multisite', tField) }}
+		{% endif %}
+
+		<hr>
+		<div>
+			<h2>{{ "Default Field Layout"|t }}</h2>
+	        {% include "_includes/fieldlayoutdesigner" with {
+	            fieldLayout: settings.getFieldLayout()
+	        } only %}
+		</div>
 
 		<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
 	</form>

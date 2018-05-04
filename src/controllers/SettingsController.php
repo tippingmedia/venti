@@ -52,9 +52,12 @@ class SettingsController extends Controller
         $settings = $plugin->getSettings();
         $groups = new Groups();
 
-        foreach ($postSettings['settings'] as $key => $value) {
-            $settings[$key] = $value;
+        if($postSettings){
+            foreach ($postSettings['settings'] as $key => $value) {
+                $settings[$key] = $value;
+            }
         }
+
         
         // $settings['eventDuration'] = array_key_exists('eventDuration',$postSettings) ? $postSettings['eventDuration'] : $settings['eventDuration'];
         // $settings['timeInterval'] = array_key_exists('timeInterval',$postSettings) ? $postSettings['timeInterval'] : $settings['timeInterval'];

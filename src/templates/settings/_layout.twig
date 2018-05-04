@@ -13,15 +13,15 @@
 
 {% set selectedTab = 'settings' %}
 
-{%- set navItems = {
+{# {%- set navItems = {
     'hd':           { heading: "Settings"|t },
     'general':      { title: "General Settings"|t },
     'events':       { title: "Event Settings"|t },
 	'groups':       { title: "Group Settings"|t },
-} -%}
+} -%} #}
 
 {% set selectedItem = craft.app.request.getSegment(3)|default %}
-{% set docTitle = navItems[selectedItem].title~' - '~title %}
+{# {% set docTitle = navItems[selectedItem].title~' - '~title %}
 
 {% block sidebar %}
     <nav>
@@ -35,4 +35,4 @@
             {% endfor %}
         </ul>
     </nav>
-{% endblock %}
+{% endblock %} #}
