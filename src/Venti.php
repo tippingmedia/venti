@@ -246,10 +246,23 @@ class Venti extends Plugin
     /**
      * Get Settings URL
      */
-    public function getSettingsResponse()
+    // public function getSettingsResponse()
+    // {
+	// 	$url = UrlHelper::cpUrl('venti/settings/_general');
+    //     return Craft::$app->controller->redirect($url);
+    // }
+
+    /**
+     * @return string
+     */
+    protected function settingsHtml(): string
     {
-		 $url = UrlHelper::cpUrl('venti/settings/_general');
-        return Craft::$app->controller->redirect($url);
+        return \Craft::$app->getView()->renderTemplate(
+            'venti/settings/_general',
+            [
+                'settings' => $this->getSettings(),
+            ]
+        );
     }
 
     

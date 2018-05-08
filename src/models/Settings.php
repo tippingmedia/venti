@@ -55,42 +55,34 @@ class Settings extends Model
     /**
        * @var Enum|null timeInterval = self::$timeIntervals
     */
-    public $timeInterval = self::DEFAULT_TIME_INTERVAL;
+    public $timeInterval;
 
     /**
        * @var Enum|null eventDuration
     */
-    public $eventDuration = self::DEFAULT_DURATION;
+    public $eventDuration;
 
     
     /**
        * @var string|null pluginName
     */
-    public $pluginName = "Venti";
+    public $pluginName;
 
     /**
        * @var bool|null multisite
     */
-    public $multisite = self::DEFAULT_MULTISITE;
-    
-    /**
-       * @var string|null license
-    */
-    public $license;
-    
-    
+    public $multisite;
 
-  /**
-    * @inheritdoc
-    */
-    public function rules()
+
+    public function __construct($attributes = null)
     {
-        return [
-            ['pluginName', 'string'],
-            ['pluginName', 'default', 'value' => 'Venti'],
-            ['multisite', 'integer']
-        ];
+        parent::__construct($attributes);
+        $this->timeInterval          = self::DEFAULT_TIME_INTERVAL;
+        $this->eventDuration         = self::DEFAULT_DURATION;
+        $this->pluginName            = "Venti";
+        $this->multisite             = self::DEFAULT_MULTISITE;
     }
+    
 
     // Methods
     // =========================================================================
@@ -104,12 +96,12 @@ class Settings extends Model
         return Craft::$app->fields->getLayoutByType('Venti_Event_Default');
     }
 
-    public function getTimeIntervals()
+    public static function getTimeIntervals(): array
     {
         return self::TIMEINTERVALS;
     }
 
-    public function getEventDurations()
+    public static function getEventDurations(): array
     {
         return self::EVENTDURATIONS;
     }

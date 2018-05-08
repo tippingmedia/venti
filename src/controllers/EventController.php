@@ -578,6 +578,7 @@ class EventController extends BaseEventController
 				$variables['event'] = VentiEvent::find()
 					->id($variables['eventId'])
 					->siteId($site->id)
+					->status(null)
 					->cpindex(true)
 					->one();
 					//Venti::getInstance()->events->getEventById($variables['eventId'], $site->id);

@@ -186,10 +186,10 @@
 } %}
 {% js %}
     new VentiInput({
-	        id: "venti-fields",
-	        values: {{ fieldData|json_encode|raw }},
-			inline: false,
-			namespacedId: "",
-			siteId: "{{ craft.app.sites.currentSite.id }}"
-	    });
+		id: "venti-fields",
+		values: {{ fieldData|json_encode|raw }},
+		inline: false,
+		namespacedId: "",
+		siteId: "{{ craft.app.sites.currentSite.id }}"
+	});
 {% endjs %}

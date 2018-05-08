@@ -94,7 +94,9 @@ class VentiEvent extends Element
 
 	const STATUS_LIVE = 'live';
 	const STATUS_PENDING = 'pending';
-    const STATUS_EXPIRED = 'expired';
+	const STATUS_EXPIRED = 'expired';
+	const STATUS_ENABLED = 'enabled';
+	const STATUS_DISABLED = 'disabled';
 	
 	/**
      * @inheritdoc
@@ -162,8 +164,8 @@ class VentiEvent extends Element
     public static function statuses(): array
     {
         return [
-			self::STATUS_LIVE => Craft::t('app', 'Live'),
-            self::STATUS_DISABLED => Craft::t('app', 'Disabled')
+			self::STATUS_ENABLED => Craft::t('app', 'Enabled'),
+			self::STATUS_DISABLED => Craft::t('app', 'Disabled')
 		];
     }
 	
@@ -846,24 +848,21 @@ class VentiEvent extends Element
     public function getStatus()
     {
 		$status = parent::getStatus();
-		return self::STATUS_LIVE;
-        // if ($status == self::STATUS_ENABLED && $this->endDate) {
-        //     $currentTime = DateTimeHelper::currentTimeStamp();
-        //     $endDate = $this->endDate->getTimestamp();
-        //     $endRepeatDate = ($this->endRepeat ? DateTimeHelper::toDateTime($this->endRepeat)->getTimestamp() : null);
 
-        //     if ($endDate <= $currentTime && ($endRepeat === null || $endRepeat > $currentTime)) {
-        //         return self::STATUS_LIVE;
-        //     }
+        if ($status == self::STATUS_ENABLED && $this->endDate) {
+            $currentTime = DateTimeHelper::currentTimeStamp();
+            $endDate = $this->endDate->getTimestamp();
+			$endRepeatDate = ($this->endRepeat ? DateTimeHelper::toDateTime($this->endRepeat)->getTimestamp() : null);
+			
+			if($currentTime > $endDate && ($endRepeatDate === null || $currentTime > $endRepeatDate)) {
+				return self::STATUS_EXPIRED;
+			}
 
-        //     if ($endDate > $currentTime) {
-        //         return self::STATUS_PENDING;
-        //     }
+			return self::STATUS_LIVE;
+            
+        }
 
-        //     return self::STATUS_EXPIRED;
-        // }
-
-        // return $status;
+        return $status;
 	}
 
 

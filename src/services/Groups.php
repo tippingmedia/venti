@@ -537,16 +537,21 @@ class Groups extends Component
 	 * @return GroupModel[].
 	 */
 
-	public function getGroupsByLayoutId($layoutId) 
+	public function getGroupsByLayoutId($layoutId) :array
 	{
 		
 		$query = (new Query())
-			->select('*')
-			->from('{{%venti_groups}} venti_groups')
-			->where('venti_groups.fieldLayoutId = :fieldLayoutId', [':fieldLayoutId' => $layoutId])
+			->select('id')
+			->from('{{%venti_groups}}')
+			->where('fieldLayoutId = :fieldLayoutId', [':fieldLayoutId' => $layoutId])
 			->all();
 
-		return $query;
+		$groupIds = [];
+		foreach ($query as $item) {
+			$groupIds[] = $item['id'];
+		}
+
+		return $this->getGroupsByIds($groupIds);
 	}
 
 
@@ -558,15 +563,17 @@ class Groups extends Component
 	 *
 	 * @return bool
 	 */
-	public function updateGroupLayoutIds($groups, $newLayoutId) 
+	public function updateGroupLayoutIds($groups, $newLayoutId) :bool
 	{
 		$success = true;
 
 		if ($groups) {
 			foreach ($groups as $group) {
-				$group->fieldLayoutId = $newLayoutId;
-				if ($this->saveGroup($group)) {
-					$success = true;
+				if($group->fieldLayoutId != $newLayoutId){
+					$group->fieldLayoutId = $newLayoutId;
+					if ($this->saveGroup($group)) {
+						$success = true;
+					}
 				}
 			}
 		}

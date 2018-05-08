@@ -97,11 +97,11 @@
 
 	<h2>{{ 'Venti Settings'|t }}</h2>
 
-	<form action="" method="post">
+	<form action="" method="post" accept-charset="UTF-8">
 
 		<input type="hidden" name="action" value="venti/settings/save-settings">
         <input type="hidden" name="pluginHandle" value="venti">
-		<input type="hidden" name="redirect" value="{{ 'venti/settings/general'|hash }}">
+		{# <input type="hidden" name="redirect" value="{{ 'venti/settings/general'|hash }}"> #}
         <input type="hidden" name="update_layout" value="1">
 
 		{{ csrfInput() }}

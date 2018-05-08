@@ -253,7 +253,7 @@
 	<div class="venti-inline" id="venti-inline" style="display:none;"></div>
 
 
-	{% if craft.venti.settings.hideRegistration != 1 %}
+	{# {% if craft.venti.settings.hideRegistration != 1 %}
 		<div class="field registration-field">
 			<div class="heading">
 				<label for="venti-registration-input">{{ "Registration"|t }}</label>
@@ -296,7 +296,7 @@
 					placeholder="<iframe src=…">{% if reg['type'] is defined and reg['type'] == "embed" and reg['embed'] is not empty %}{{ reg['embed']|default('')}}{% endif %}</textarea>
 			</div>
 		</div>
-	{% endif %}
+	{% endif %} #}
 </div>
 
 {% if not event.slug %}

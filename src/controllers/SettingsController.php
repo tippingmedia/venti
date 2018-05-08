@@ -43,23 +43,14 @@ class SettingsController extends Controller
 
     public function actionSaveSettings()
     {
+        
         $this->requirePostRequest();
 
-        $plugin = Craft::$app->getPlugins()->getPlugin('venti');
-       
-        $postSettings = Craft::$app->getRequest()->getBodyParams('settings', []);
-        $updateLayout = Craft::$app->getRequest()->getBodyParams('update_layout', false);
-        $settings = $plugin->getSettings();
+        $settings = Craft::$app->request->post('settings', []);
+        $fieldLayout = Craft::$app->getRequest()->getBodyParam('fieldLayout');
+        //$updateLayout = Craft::$app->request->post('update_layout', false);
 
-        \yii\helpers\VarDumper::dump($postSettings, 5, true);exit;
-        
-        foreach ($postSettings['settings'] as $key => $value) {
-            $settings[$key] = $value;
-        }
-        
-
-
-        if ($updateLayout) {
+        if ($fieldLayout !== null) {
             $oldLayout = Craft::$app->getFields()->getLayoutByType('Venti_Event_Default');
             $groupsWithOldLayoutId = Venti::getInstance()->groups->getGroupsByLayoutId($oldLayout->id);
 
@@ -69,15 +60,25 @@ class SettingsController extends Controller
             {
                 Craft::$app->getSession()->setNotice(Craft::t('venti','Group default layouts not updated.'));
             }
+
+        } else {
+            $oldLayout = Craft::$app->getFields()->getLayoutByType('Venti_Event_Default');
+            
+            if($oldLayout != null) {
+                $groupsWithOldLayoutId = Venti::getInstance()->groups->getGroupsByLayoutId($oldLayout->id);
+                if ( !Venti::getInstance()->groups->updateGroupLayoutIds($groupsWithOldLayoutId, null) ) {
+                    Craft::$app->getSession()->setNotice(Craft::t('venti','Group default layouts not updated.'));
+                }
+                Craft::$app->getFields()->deleteLayoutsByType('Venti_Event_Default');
+            }
         }
 
-        if(!Craft::$app->getPlugins()->savePluginSettings($plugin, $settings->getAttributes())) {
-            Craft::$app->getSession()->setNotice(Craft::t('venti','Settings Not Saved'));
-        }
-
+        $plugin = Venti::getInstance();
+        $plugin->setSettings($settings);
+        Craft::$app->getPlugins()->savePluginSettings($plugin, $settings);
         Craft::$app->getSession()->setNotice(Craft::t('venti','Settings Saved'));
 
-        $this->redirectToPostedUrl();
+        return $this->redirectToPostedUrl();
     }
 
 
@@ -87,10 +88,9 @@ class SettingsController extends Controller
     private function saveGroupLayout()
     {
         $fieldLayout = Craft::$app->getRequest()->getBodyParam('fieldLayout');
+        //Craft::$app->getFields()->deleteLayoutsByType('Venti_Event_Default');
 
-        Craft::$app->getFields()->deleteLayoutsByType('Venti_Event_Default');
-
-        if ($fieldLayout) {
+        if ($fieldLayout !== null) {
             $fieldLayout = Craft::$app->getFields()->assembleLayoutFromPost();
             $fieldLayout->type = 'Venti_Event_Default';
             Craft::$app->getFields()->saveLayout($fieldLayout);
