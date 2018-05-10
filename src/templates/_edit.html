@@ -52,6 +52,13 @@
 
 {% from _self import groupMenu %}
 
+
+{% block contextMenu %}
+    {% if event.id or showSites %}
+        {% include "venti/events/_context" %}
+    {% endif %}
+{% endblock %}
+
 {% block actionButton %}
 	{% if canSave %}
 		<input type="hidden" name="action" value="venti/event/save-event">
@@ -95,7 +102,7 @@
 
 
 {% block details %}
-	{% if craft.app.isMultiSite() and group.getGroupSiteSettings() | length > 1 %}
+	{# {% if craft.app.isMultiSite() and group.getGroupSiteSettings() | length > 1 %}
 		<ul id="sites" class="pane">
 			{% for siteId in siteIds %}
 				{% set site = craft.app.sites.getSiteById(siteId) %}
@@ -118,7 +125,7 @@
 				</li>
 			{% endfor %}
 		</ul>
-	{% endif %}
+	{% endif %} #}
 	{% if canPublish %}
 		<div id="settings" class="meta">
 			{{ forms.textField({
@@ -136,35 +143,36 @@
 
 				{# Group Menu Button #}
 				{{ groupMenu(eventGroup) }}
+				
+				{% if canPublish %}
+					{{ forms.lightswitchField({
+						label: "Enabled"|t('venti'),
+						id: 'enabled',
+						name: 'enabled',
+						on: event.enabled,
+						disabled:false
+					}) }}
+				{% endif %}
 
-				{#{% set eventGroup = eventGroup %}
-				{% set sites = group.getGroupSiteSettings() %}#}
-				{% set statusInput %}
-					{% if canPublish %}
-						<div class="left">
-							{{ forms.lightswitch({
-								id: 'enabled',
-								name: 'enabled',
-								on: event.enabled,
-								disabled:false
-							}) }}
-						</div>
-					{% endif %}
+				{% if showSites %}
+					{{ forms.lightswitchField({
+						label: "Enabled for site"|t('venti'),
+						id: 'enabledForSite',
+						name: 'enabledForSite',
+						on: event.enabledForSite
+					}) }}
+				{% endif %}
 
-					{% if canDeleteEvent %}
-						<div class="right">
+				{% if canDeleteEvent %}
+					<div class="field">
+						<div class="input">
 							<input type="button" class="btn formsubmit" value="{{ 'Delete'|t }}" data-action="venti/event/delete-event"
 								data-confirm="{{ 'Are you sure you want to delete this event?'|t }}"
 								data-redirect="venti">
 						</div>
-					{% endif %}
-				{% endset %}
-
-				{{ forms.field({
-					label: "Enabled"|t,
-					id: 'enabled'
-				}, statusInput) }}
-
+					</div>
+				{% endif %}
+			
 			{% endif %}
 		</div>
 	{% endif %}

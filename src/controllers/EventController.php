@@ -133,6 +133,19 @@ class EventController extends BaseEventController
 		}
 
 
+		$variables['showSites'] = (
+            Craft::$app->getIsMultiSite() &&
+            count($group->getGroupSiteSettings()) > 1 &&
+            ($group->propagateEvents || $event->id === null)
+		);
+		
+		if ($variables['showSites']) {
+            $variables['revisionLabel'] = Craft::t('site', $event->getSite()->name);
+        } else {
+            $variables['revisionLabel'] = '';
+        }
+
+
 		// Tabs
 		$variables['tabs'] = [];
 		if ($variables['group']->getFieldLayout() != null) {
@@ -279,7 +292,9 @@ class EventController extends BaseEventController
 
 			$return = [];
 			$return['success'] = true;
+			$return['siteId'] = $event->siteId;
 			$return['id'] = $event->id;
+			//$return['elementId'] = $event->elementId;
 			$return['title'] = $event->title;
 
 			if (!$request->getIsConsoleRequest() && $request->isCpRequest()) {
@@ -516,6 +531,7 @@ class EventController extends BaseEventController
 	private function _prepEditEntryVariables(&$variables) 
 	{
 		$groups = new Groups();
+
 		// Get the group
 		// ---------------------------------------------------------------------
 
@@ -783,6 +799,7 @@ class EventController extends BaseEventController
 	public function _populateEventModel(VentiEvent $event) 
 	{
 		//\yii\helpers\VarDumper::dump($event->id, 5, true); exit;
+		
 		$event->slug          = Craft::$app->getRequest()->getBodyParam('slug', $event->slug);
 		$event->groupId       = Craft::$app->getRequest()->getBodyParam('groupId', $event->groupId);
 		$event->startDate     = (($startDate = Craft::$app->getRequest()->getBodyParam('startDate')) ? DateTimeHelper::toDateTime($startDate) : null);
@@ -791,9 +808,10 @@ class EventController extends BaseEventController
 		$event->recurring 	  = (bool) Craft::$app->getRequest()->getBodyParam('recurring', $event->recurring);
 		$event->summary 	  = Craft::$app->getRequest()->getBodyParam('summary', $event->summary);
 		$event->allDay 		  = (bool) Craft::$app->getRequest()->getBodyParam('allDay', $event->allDay);
-		$event->enabled = (bool)Craft::$app->getRequest()->getBodyParam('enabled', $event->enabled);
-        $event->enabledForSite = (bool)Craft::$app->getRequest()->getBodyParam('enabledForSite', $event->enabledForSite);
-        $event->title = Craft::$app->getRequest()->getBodyParam('title', $event->title);
+		$event->enabled 	  = (bool)Craft::$app->getRequest()->getBodyParam('enabled', $event->enabled);
+		$event->enabledForSite = (bool)Craft::$app->getRequest()->getBodyParam('enabledForSite', $event->enabledForSite);
+		$event->siteId 		  = Craft::$app->getRequest()->getBodyParam('siteId', $event->siteId);
+        $event->title 		  = Craft::$app->getRequest()->getBodyParam('title', $event->title);
 
 		$event->diff     	  = null;
 		$event->endRepeat     = null;

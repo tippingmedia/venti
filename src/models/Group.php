@@ -78,6 +78,11 @@ class Group extends Model
      */
     private $_groupSiteSettings;
 
+     /**
+     * @var bool Propagate entries
+     */
+    public $propagateEvents = true;
+
 	/**
 	 * @var
 	 */

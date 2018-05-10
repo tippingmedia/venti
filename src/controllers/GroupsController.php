@@ -106,6 +106,7 @@ class GroupsController extends Controller
 		$group->handle     		= $request->getBodyParam('handle');
 		$group->color      		= $request->getBodyParam('color');
 		$group->description		= $request->getBodyParam('description');
+		$group->propagateEvents = $request->getBodyParam('propagateEvents', true);
 
 	
 

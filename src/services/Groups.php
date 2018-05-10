@@ -292,6 +292,7 @@ class Groups extends Component
 				'handle',
 				'color',
 				'description',
+				'propagateEvents'
 			]));
 		
 		} else {
@@ -304,6 +305,7 @@ class Groups extends Component
 		$groupRecord->handle = $group->handle;
 		$groupRecord->color = $group->color;
 		$groupRecord->description = $group->description;
+		$groupRecord->propagateEvents = (bool)$group->propagateEvents;
 
 
 		// Make sure that all of the URL formats are set properly
@@ -405,21 +407,46 @@ class Groups extends Component
 			// Finally, deal with the existing events...
 
 			if (!$isNewGroup) {
-				
-				// Get the most-primary site that this group was already enabled in
-				$siteIds = array_values(array_intersect(Craft::$app->getSites()->getAllSiteIds(), array_keys($allOldGroupSiteSettingsRecords)));
+				if ($group->propagateEvents) {
+					// Get the most-primary site that this group was already enabled in
+					//$siteIds = array_values(array_intersect(Craft::$app->getSites()->getAllSiteIds(), array_keys($allOldGroupSiteSettingsRecords)));
 
-				if (!empty($siteIds)) {
-					Craft::$app->getQueue()->push(new ResaveElements([
-						'description' => Craft::t('venti','Resaving {group} events', ['group' => $group->name]),
-						'elementType' => VentiEvent::class,
-						'criteria' => [
-							'siteId' => $siteIds[0],
-							'groupId' => $group->id,
-							'status' => null,
-							'enabledForSite' => false,
-						]
-					]));
+					$oldSiteIds = array_keys($allOldGroupSiteSettingsRecords);
+					$newSiteIds = array_keys($allGroupSiteSettings);
+					$persistentSiteIds = array_values(array_intersect($newSiteIds, $oldSiteIds));
+
+					// Try to make that the primary site, if it's in the list
+					$siteId = Craft::$app->getSites()->getPrimarySite()->id;
+					if (!in_array($siteId, $persistentSiteIds, false)) {
+						$siteId = $persistentSiteIds[0];
+					}
+
+					if (!empty($siteIds)) {
+						Craft::$app->getQueue()->push(new ResaveElements([
+							'description' => Craft::t('venti','Resaving {group} events', ['group' => $group->name]),
+							'elementType' => VentiEvent::class,
+							'criteria' => [
+								'siteId' => $siteId,
+								'groupId' => $group->id,
+								'status' => null,
+								'enabledForSite' => false,
+							]
+						]));
+					}
+				} else {
+					 // Resave entries for each site
+                    foreach ($allGroupSiteSettings as $siteId => $siteSettings) {
+						Craft::$app->getQueue()->push(new ResaveElements([
+							'description' => Craft::t('venti','Resaving {group} events ({site})', ['group' => $group->name, 'site' => $siteSettings->getSite()->name]),
+							'elementType' => VentiEvent::class,
+							'criteria' => [
+								'siteId' => $siteId,
+								'groupId' => $group->id,
+								'status' => null,
+								'enabledForSite' => false,
+							]
+						]));
+					}
 				}
 			}
 
@@ -655,6 +682,7 @@ class Groups extends Component
                 'venti_groups.handle',
 				'venti_groups.description',
 				'venti_groups.color',
+				'venti_groups.propagateEvents',
 				'venti_groups.fieldLayoutId'
             ])
             ->from(['{{%venti_groups}} venti_groups'])

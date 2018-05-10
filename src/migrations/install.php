@@ -47,6 +47,7 @@ class Install extends Migration
             'color' => $this->string(),
             'description' => $this->string(),
             'fieldLayoutId' => $this->integer(),
+            'propagateEvents' => $this->boolean()->defaultValue(true)->notNull(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),

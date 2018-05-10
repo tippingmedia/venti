@@ -136,7 +136,6 @@ class Events extends Component
 	
 				// Update search index with event
 				Craft::$app->getSearch()->indexElementAttributes($event);
-				
 			}
 			
 			$transaction->commit();

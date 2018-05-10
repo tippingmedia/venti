@@ -253,6 +253,19 @@
 			errors: siteErrors|unique
 		}) }}
 
+		{% if craft.app.getIsMultiSite() %}
+			<div class="type-channel">
+				{{ forms.checkboxField({
+					label: 'Propagate events across all enabled sites?'|t('venti'),
+					instructions: 'Whether events should be propagated across all the sites the section is enabled in. If this is disabled, each event will only belong to the site it was created in.'|t('venti'),
+					id: 'propagateEvents',
+					name: 'propagateEvents',
+					checked: group.propagateEvents,
+					warning: group.id and group.propagateEvents ? 'Changing this may result in data loss.'|t('venti')
+				}) }}
+			</div>
+		{% endif %}
+
 		<hr>
 
 		<h2>{{ "Event Field Layout"|t }}</h2>

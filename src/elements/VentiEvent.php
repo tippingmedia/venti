@@ -752,13 +752,16 @@ class VentiEvent extends Element
      */
     public function getSupportedSites(): array
     {
+		$group = $this->getGroup();
         $sites = [];
 
-        foreach ($this->getGroup()->getGroupSiteSettings() as $siteSettings) {
-            $sites[] = [
-                'siteId' => $siteSettings->siteId,
-                'enabledByDefault' => $siteSettings->enabledByDefault
-            ];
+        foreach ($group->getGroupSiteSettings() as $siteSettings) {
+			if ($group->propagateEvents || $siteSettings->siteId == $this->siteId) {
+				$sites[] = [
+					'siteId' => $siteSettings->siteId,
+					'enabledByDefault' => $siteSettings->enabledByDefault
+				];
+			}
         }
 
         return $sites;
