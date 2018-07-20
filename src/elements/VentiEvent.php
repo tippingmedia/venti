@@ -246,6 +246,9 @@ class VentiEvent extends Element
         // Get the event record
         if (!$isNew) {
 			$record = EventRecord::findOne($this->id);
+			// $record = EventRecord::find()
+			// 	->where(['elementId' => $this->id, 'siteId' => $this->siteId])
+			// 	->one();
 
             if (!$record) {
                 throw new Exception('Invalid event ID: '.$this->id);
@@ -700,18 +703,6 @@ class VentiEvent extends Element
 
 	
 
-
-	/**
-     * @inheritdoc
-     */
-    /*public function datetimeAttributes(): array
-    {
-        $names = parent::datetimeAttributes();
-		$names[] = 'endDate';
-
-        return $names;
-    }*/
-
     /**
      * @inheritdoc
      */
@@ -810,9 +801,7 @@ class VentiEvent extends Element
      */
     protected function route()
     {
-		//\yii\helpers\VarDumper::dump(Craft::$app->getRequest(), 5, true);exit;
 		// Make sure that the event is actually live
-		// TODO: need to fix getStatus method
         if ($this->getStatus() != self::STATUS_LIVE) {
             return null;
         }
