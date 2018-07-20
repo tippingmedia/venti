@@ -79,7 +79,7 @@ class Venti extends Plugin
         );
 		
         // Add in our Twig extensions
-        Craft::$app->view->twig->addExtension(new VentiTwigExtension());
+        Craft::$app->view->registerTwigExtension(new VentiTwigExtension());
 
 		$this->setComponents([
             'groups' => \tippingmedia\venti\services\Groups::class,
