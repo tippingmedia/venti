@@ -102,7 +102,7 @@ class Events extends Component
 	{
 		$isNewEvent = !$event->id;
 
-		//\yii\helpers\VarDumper::dump($event->validate(), 5, true); exit;
+		//\yii\helpers\VarDumper::dump($event, 5, true); exit;
 		if ($runValidation && !$event->validate()) {
             Craft::info('Event not saved due to validation error.'.print_r($event->errors, true), __METHOD__);
 			
@@ -127,7 +127,7 @@ class Events extends Component
 			if (Craft::$app->getElements()->saveElement($event)) {
 
 				$this->_eventsById[$event->id] = $event;
-
+				//\yii\helpers\VarDumper::dump($event, 5, true);exit;
 				if($event->recurring == true) {
 					if(!Venti::getInstance()->rrule->saveRrule($event)){
 						throw new Exception(Craft::t('RRule was not saved for event “{id}”', array('id' => $event->id)));	

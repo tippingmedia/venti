@@ -115,14 +115,14 @@
 
             {{ selectField(settings, 'timeInterval', timeIntField, settings.getTimeIntervals()) }}
 
-            {% if craft.app.isMultiSite() %}
+            {# {% if craft.app.isMultiSite() %}
                 <hr/>
                 {{ checkboxField(settings, 'multisite', tField) }}
-            {% endif %}
+            {% endif %} #}
         </div>
 		<hr>
 		<div>
-			<h3>{{ "Default Field Layout"|t }}</h3>
+			<h2>{{ "Default Field Layout"|t }}</h2>
 	        {% include "_includes/fieldlayoutdesigner" with {
 	            fieldLayout: settings.getFieldLayout()
 	        } only %}

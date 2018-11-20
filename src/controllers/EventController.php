@@ -550,8 +550,8 @@ class EventController extends BaseEventController
 		// $localeData = craft()->i18n->getLocaleData(craft()->language);
         // $dateFormatter = $localeData->getDateFormatter();
 		//$dateFormat = Craft::$app->formatter->dateTimeFormats['medium']['date'];
-		$dateFormat = Craft::$app->locale->getDateFormat('short',Locale::FORMAT_PHP);
-        $timeFormat = Craft::$app->locale->getTimeFormat('short',Locale::FORMAT_PHP);
+		$dateFormat = Craft::$app->locale->getDateFormat('short', Locale::FORMAT_PHP);
+        $timeFormat = Craft::$app->locale->getTimeFormat('short', Locale::FORMAT_PHP);
 
 		$variables['dateFormat'] = $dateFormat;
 		$variables['timeFormat'] = $timeFormat;
@@ -832,6 +832,8 @@ class EventController extends BaseEventController
 			$event->diff = $date2->getTimestamp() - $date1->getTimestamp();
 			$event->endRepeat = $lastDate->getEnd();
 		}
+
+		//\yii\helpers\VarDumper::dump($event->startDate, 5, true);exit;
 
 		$event->fieldLayoutId = $event->getGroup()->fieldLayoutId;
 		$fieldsLocation = Craft::$app->getRequest()->getParam('fieldsLocation', 'fields');

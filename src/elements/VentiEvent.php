@@ -269,9 +269,12 @@ class VentiEvent extends Element
 		$record->rRule = $this->rRule;
 		$record->summary = $this->summary;
 
+
+		//\yii\helpers\VarDumper::dump($record, 5, true);exit;
+
 		$record->save(false);
 
-		
+		//\yii\helpers\VarDumper::dump($record, 5, true);exit;
 
 		// Remove Excluded Dates & Included Dates regardless if is-recurring because event may have changed.
 		$excludedDates = (new Query())

@@ -82,7 +82,6 @@ class Calendar extends Component
                 "end"       => $param['endDate']->format('c'),
                 "allDay"    => $param['allDay'],
                 "summary"   => $param['summary'],
-                "locale"    => $param['locale'],
                 "recurring" => $param['recurring'],
                 "rRule"     => $param['rRule'],
                 "multiDay"  => $param['startDate']->format('Y-m-d') != $param['endDate']->format('Y-m-d') ? true : false,

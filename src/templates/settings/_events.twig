@@ -45,11 +45,11 @@
 {% endmacro %}
 
 {% from _self import  checkboxField, selectField %}
-
+{# 
 {% set tField = {
     "label":        "Multisite"|t,
     "instructions": "Venti inputs are multisite."|t,
-} %}
+} %} #}
 
 {% set durationField = {
     "label":        "Default Event Duration"|t,
@@ -75,10 +75,10 @@
 
 		{{ selectField(settings, 'timeInterval', timeIntField, settings.getTimeIntervals()) }}
 
-		{% if craft.app.isMultiSite() %}
+		{# {% if craft.app.isMultiSite() %}
 			<hr/>
 			{{ checkboxField(settings, 'multisite', tField) }}
-		{% endif %}
+		{% endif %} #}
 
 		<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
 	</form>
