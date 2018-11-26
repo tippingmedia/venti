@@ -49,26 +49,47 @@
 
 {% set groups = craft.venti.getCalendarSettingSources() %}
 
-{% set content %}
-    <div id='venti-calendar' data-date-format='{{ dateFormat }}' data-time-format='{{ timeFormat }}'></div>
-{% endset %}
-
 {# Retrieve list of all current locales used in Craft  #}
 {% set localesCollection = craft.app.i18n.siteLocales() %}
 {% set locales = [] %}
 {% for item in localesCollection %}
-	{% set lang = {"title":item.getDisplayName(),"handle":item.id} %}
-	{% set locales = locales|merge([lang]) %}
+    {% set lang = {
+        "title": item.getDisplayName(),
+        "handle": item.id
+    } %}
+    {% set locales = locales | merge([lang]) %}
 {% endfor %}
 
 {# Retrieve list of all current sites used in Craft  #}
 {% set sites = [] %}
 {% for item in craft.app.sites.getAllSites() %}
-	{% set site = {"title":item.name,"handle":item.id} %}
-	{% set sites = sites|merge([site]) %}
+    {% set site = {
+        "title": item.name,
+        "handle": item.id
+    } %}
+    {% set sites = sites | merge([site]) %}
 {% endfor %}
 
-{% js %}
+{% set content %}
+	<div id="venti-calendar-app">
+		<calendar-app 
+			v-bind:options='{
+				"dateFormat":"{{dateFormat}}",
+				"timeFormat":"{{timeFormat}}",
+				"eventSources":{{ groups | json_encode() | raw }},
+				"multisite":"{% if craft.app.isMultiSite() %}true{% else %}false{% endif %}",
+				"cpLanguage":"{{ craft.app.language | raw }}",
+				"timezone":"{{ timezone }}",
+				"locales":{{ locales | json_encode() | raw }},
+				"sites":{{ sites | json_encode() | raw }},
+				"editSites":{{ editSites | json_encode() | raw }}
+			}'></calendar-app>
+	</div>
+    {# <div id='venti-calendar' data-date-format='{{ dateFormat }}' data-time-format='{{ timeFormat }}'></div> #}
+{% endset %}
+
+
+{# {% js %}
     new VentiCalendar({
         id:"#venti-calendar",
         params: {
@@ -81,4 +102,4 @@
 			editSites: {{ editSites | json_encode() | raw }}
         }
     });
-{% endjs %}
+{% endjs %} #}

@@ -18,6 +18,9 @@ use tippingmedia\venti\bundles\CalendarBundle;
 use Craft;
 use craft\web\Controller;
 use craft\i18n\Locale;
+use craft\helpers\ArrayHelper;
+use yii\web\JsonResponseFormatter;
+use yii\web\Response;
 
 /**
  * Calendar Controller
@@ -68,8 +71,9 @@ class CalendarController extends Controller
         $start      = Craft::$app->getRequest()->getParam('start');
         $end        = Craft::$app->getRequest()->getParam('end');
         $groupId    = Craft::$app->getRequest()->getSegment(3);
-        $siteId   = Craft::$app->getRequest()->getSegment(4);
+        $siteId     = Craft::$app->getRequest()->getSegment(4);
 
+        // Getting data
         $output = Venti::getInstance()->calendar->getCalendarFeed($start, $end, $groupId, $siteId);
 
         $this->asJson($output);

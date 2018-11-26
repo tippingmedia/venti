@@ -13,24 +13,23 @@ class CalendarBundle extends AssetBundle
 
         // define the dependencies
         $this->depends = [
-            CpAsset::class,
+            //CpAsset::class
         ];
 
         // define the relative path to CSS/JS files that should be registered with the page
         // when this asset bundle is registered
         $this->js = [
-            'lib/fullcalendar/lib/moment.min.js',
-            'lib/fullcalendar/lib/moment-php-map.js',
-            'lib/fullcalendar/fullcalendar.min.js',
-            //'lib/qtip/jquery.qtip.min.js',
-            //'lib/fullcalendar/locale-all.js',
-            'js/venti.js'
+            'js/VentiCalendar.js'
+            // 'lib/fullcalendar/lib/moment.min.js',
+            // 'lib/fullcalendar/lib/moment-php-map.js',
+            // 'lib/fullcalendar/fullcalendar.min.js',
+            //'js/venti.js'
 
         ];
 
         $this->css = [
             'css/venti.css',
-            'lib/fullcalendar/fullcalendar.css',
+            'lib/fullcalendar/fullcalendar.css'
             //'lib/qtip/jquery.qtip.min.css',
         ];
 

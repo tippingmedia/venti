@@ -1,22 +1,25 @@
 {
-    "name": "venti",
-    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "watch": "NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "hot": "NODE_ENV=development webpack-dev-server --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "production": "NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "icons": "create-svg-sprite --input './assets/icons/' --output './public/img/' --name 'll-icons'"
+    },
     "devDependencies": {
-        "gulp": "^3.9.0",
-        "gulp-babel": "^7.0.1",
-        "babel-core": "^6.26.0",
-        "babel-preset-env": "^1.6.1",
-        "gulp-changed": "^3.2.0",
-        "gulp-clean-css": "^3.9.2",
-        "gulp-concat": "^2.6.1",
-        "gulp-jshint": "^2.1.0",
-        "gulp-jsmin": "^0.1.5",
-        "gulp-load-plugins": "^1.5.0",
-        "gulp-notify": "^3.2.0",
-        "gulp-rename": "^1.2.2",
-        "gulp-ruby-sass": "^3.0.0",
-        "gulp-uglify": "^3.0.0",
-        "jshint": "^2.9.5",
-        "jshint-stylish": "^2.2.1"
+        "ajv": "^6.5.5",
+        "cross-env": "^5.2.0",
+        "laravel-mix": "^2.1.14",
+        "postcss": "7.0.6",
+        "postcss-custom-properties": "8.0.9",
+        "svg-sprite": "1.5.0",
+        "svg-spritemap-webpack-plugin": "1.2.0",
+        "fullcalendar": "^4.0.0-alpha.2",
+        "vue": "^2.5.17",
+        "vuex": "^3.0.1",
+        "vuex-persistedstate": "^2.5.4",
+        "axios": "^0.18.0",
+        "garnishjs": "^0.1.29"
     }
 }

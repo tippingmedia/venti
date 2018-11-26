@@ -1466,9 +1466,8 @@ td.fc-head-container.fc-widget-header th {
     color: #3B3B3B;
 }
 
-.fc-day-top {
-    text-align: right;
-    padding: 2px;
+body.ltr td.fc-day-top {
+    text-align: right !important;
 }
 
 .fc-today>.fc-day-number {
@@ -1481,11 +1480,6 @@ td.fc-head-container.fc-widget-header th {
     text-align: center !important;
     line-height: 1.4rem;
     padding: 0px;
-}
-
-.fc-unthemed .fc-today {
-    background-color: #ffffff;
-    !important;
 }
 
 .fc-event {
@@ -1507,21 +1501,50 @@ body.ltr .fc-day-grid-event .fc-time {
 
 .fc-day-grid-event .fc-content {
     padding-right: 30px;
-    position: relative;
-    text-overflow: ellipsis;
 }
 
+.fc-unthemed .fc-today {
+    background-color: #ffffff;
+}
+
+.fc-other-month {
+    background-color: #fcfcfc;
+}
+
+/* Group color circle */
 .fc-event-singleday.fc-event .event_group_color,
 .venti-event-tip .event_group_color {
     display: inline-block;
-    margin-right: 7px;
-    height: 10px;
-    width: 10px;
+    margin-right: 0px;
+    height: 7px;
+    width: 7px;
     border-radius: 50%;
     background-position: 0 0;
 }
 
+/* event title */
+.fc-title {
+    display: inline-block;
+    width: 80%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+/* remove background & border color since we are using circle */
 .fc-event-singleday.fc-event {
     background-color: transparent !important;
     border-color: transparent !important;
+}
+
+/* Media queries */
+@media screen and (max-width: 895px) {
+    .fc-day-grid-event .fc-content {
+        /* clear padding for time */
+        padding-right: 0px;
+    }
+    .fc-content .fc-time {
+        display: none;
+    }
+    .fc-content .fc-title {
+        width: 100%;
+    }
 }

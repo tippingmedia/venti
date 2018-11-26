@@ -106,7 +106,7 @@ class Venti extends Plugin
 
 			// Calendar
 			$event->rules['venti/calendar'] = 'venti/calendar/calendar-index';
-			$event->rules['venti/feed/<groupId:\d+>/<siteId:\d+>'] = 'venti/calendar/calendar-feed';
+			$event->rules['venti/calendar/<groupId:\d+>/<siteId:\d+>'] = 'venti/calendar/calendar-feed';
 
 			// Settings
 			$event->rules['venti/settings'] = 'venti/settings/index';

@@ -74,19 +74,20 @@ class Calendar extends Component
                 $textColor = "#ffffff";
             }
 
+            // Needed to add intval to integer for full calendar to recognize event obj
             $feedData[] = array(
-                "id"        => $param['id'],
+                "id"        => intval($param['id']),
                 "siteId"    => $param['siteId'],
                 "title"     => $param['title'],
                 "start"     => $param['startDate']->format('c'),
                 "end"       => $param['endDate']->format('c'),
-                "allDay"    => $param['allDay'],
+                "allDay"    => intval($param['allDay']),
                 "summary"   => $param['summary'],
-                "recurring" => $param['recurring'],
+                "recurring" => intval($param['recurring']),
                 "rRule"     => $param['rRule'],
                 "multiDay"  => $param['startDate']->format('Y-m-d') != $param['endDate']->format('Y-m-d') ? true : false,
                 "group"     => $group->name,
-                "groupId"   => $group->id,
+                "groupId"   => intval($group->id),
                 "color"     => $group->color,
                 "textColor" => $textColor
             );
@@ -112,10 +113,11 @@ class Calendar extends Component
             }
             
             $sources[] = array(
-                'url'           => "/admin/venti/feed/" . $group['id'] . "/" . Craft::$app->sites->getPrimarySite()->id,
+                'url'           => "/admin/venti/calendar/" . $group['id'] . "/" . Craft::$app->sites->getPrimarySite()->id,
                 'id'            => $group['id'],
                 'label'         => $group['name'],
                 'color'         => $group['color'],
+                'className'     => $group['handle'] . '-event',
                 'overlap'       => true,
                 'canManageEvents'  => $currentUser->can('venti-manageEventsFor:'.$group['id'])
             );
