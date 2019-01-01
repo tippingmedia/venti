@@ -8,18 +8,26 @@
         "icons": "create-svg-sprite --input './assets/icons/' --output './public/img/' --name 'll-icons'"
     },
     "devDependencies": {
-        "ajv": "^6.5.5",
+        "ajv": "^6.6.2",
+        "axios": "^0.18.0",
         "cross-env": "^5.2.0",
-        "laravel-mix": "^2.1.14",
-        "postcss": "7.0.6",
+        "laravel-mix": "^4.0.12",
+        "fullcalendar": "^4.0.0-alpha.3",
+        "garnishjs": "^0.1.29",
+        "postcss": "7.0.7",
         "postcss-custom-properties": "8.0.9",
+        "resolve-url-loader": "^2.3.1",
+        "sass": "^1.15.2",
+        "sass-loader": "^7.1.0",
         "svg-sprite": "1.5.0",
-        "svg-spritemap-webpack-plugin": "1.2.0",
-        "fullcalendar": "^4.0.0-alpha.2",
-        "vue": "^2.5.17",
+        "svg-spritemap-webpack-plugin": "3.0.2",
+        "vue": "^2.5.21",
+        "vue-template-compiler": "^2.5.21",
         "vuex": "^3.0.1",
         "vuex-persistedstate": "^2.5.4",
-        "axios": "^0.18.0",
-        "garnishjs": "^0.1.29"
+        "webpack-cli": "^3.1.2"
+    },
+    "dependencies": {
+        "webpack": "^4.28.0"
     }
 }

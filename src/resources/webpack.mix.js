@@ -1,4 +1,4 @@
-let mix = require('laravel-mix');
+const mix = require('laravel-mix');
 let SVGSpritemapPlugin = require('svg-spritemap-webpack-plugin');
 
 /*
@@ -26,7 +26,7 @@ mix
 // }
 
 // https://laracasts.com/discuss/channels/laravel/help-needed-svg-sprites-with-laravelmix?page=1
-if (!mix.inProduction()) {
+if (mix.inProduction()) {
     mix.webpackConfig({
         plugins: [
             new SVGSpritemapPlugin({

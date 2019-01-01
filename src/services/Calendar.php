@@ -19,7 +19,9 @@ use Mexitek\PHPColors\Color;
 
 use Craft;
 use craft\base\Component;
+use craft\helpers\UrlHelper;
 use DateTime;
+
 
 
 /**
@@ -74,6 +76,7 @@ class Calendar extends Component
                 $textColor = "#ffffff";
             }
 
+
             // Needed to add intval to integer for full calendar to recognize event obj
             $feedData[] = array(
                 "id"        => intval($param['id']),
@@ -89,7 +92,8 @@ class Calendar extends Component
                 "group"     => $group->name,
                 "groupId"   => intval($group->id),
                 "color"     => $group->color,
-                "textColor" => $textColor
+                "textColor" => $textColor,
+                "url"       => "/" . Craft::$app->getConfig()->getGeneral()->cpTrigger . "/venti/" . strtolower($group->name) . "/" . intval($param['id']) ."-". $param['slug']
             );
         }
 
@@ -113,7 +117,7 @@ class Calendar extends Component
             }
             
             $sources[] = array(
-                'url'           => "/admin/venti/calendar/" . $group['id'] . "/" . Craft::$app->sites->getPrimarySite()->id,
+                'url'           => "/". Craft::$app->getConfig()->getGeneral()->cpTrigger . "/venti/calendar/" . $group['id'] . "/" . Craft::$app->sites->getPrimarySite()->id,
                 'id'            => $group['id'],
                 'label'         => $group['name'],
                 'color'         => $group['color'],

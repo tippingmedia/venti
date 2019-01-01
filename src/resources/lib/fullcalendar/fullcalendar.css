@@ -1511,9 +1511,12 @@ body.ltr .fc-day-grid-event .fc-time {
     background-color: #fcfcfc;
 }
 
+
 /* Group color circle */
 .fc-event-singleday.fc-event .event_group_color,
 .venti-event-tip .event_group_color {
+    position: relative;
+    top: -5px;
     display: inline-block;
     margin-right: 0px;
     height: 7px;
