@@ -17,6 +17,7 @@
         "homepage": "https://tippingmedia.com"
     }],
     "require": {
+        "craftcms/cms": "^3.1.2.2",
         "simshaun/recurr": "^2.2",
         "mexitek/phpcolors": "dev-master"
     },

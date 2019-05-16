@@ -16,6 +16,7 @@ let SVGSpritemapPlugin = require('svg-spritemap-webpack-plugin');
 mix
   //.js("lib/venti.js", "./js")
   .js("lib/VentiCalendar.js", "./js")
+  .js("lib/VentiInput.js", "./js")
   .sass("sass/venti.scss", "./css")
   .options({
     postCss: [require("postcss-custom-properties")]

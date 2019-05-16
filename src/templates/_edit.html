@@ -90,9 +90,19 @@
 	<div id="venti-fields" class="fields {% if event.allDay == 1 %}allDay{% endif %}" data-time-format="{{ timeFormat }}" data-date-format="{{ dateFormat }}" data-eod="{{ ed|date(timeFormat) }}" data-sod="{{ sd|date(timeFormat) }}" data-default-event-duration="{{ craft.venti.settings.eventDuration }}">
 		{# {% include 'venti/events/_tabs' with { group: eventGroup } only  %} #}
 
+{% set fieldData = {
+	'startDate' : event.startDate ? event.startDate : now,
+	'endDate' : event.endDate ? event.endDate : null,
+	'allDay'  : event.allDay ? event.allDay : "",
+	'rRule'   : event.rRule ? event.rRule : "",
+	'summary' : event.summary ? event.summary : "",
+	'siteId'  : event.siteId ? event.siteId : craft.siteId
+} %}
+
 		{% include 'venti/events/_fields' with {
 			event: event,
 			group: eventGroup,
+			data: fieldData,
 			dateFormat: dateFormat,
 			timeFormat: timeFormat } only %}
 
@@ -184,15 +194,7 @@
     {% endjs %}
 {% endif %}
 
-{% set fieldData = {
-	'startDate' : event.startDate ? event.startDate : now,
-	'endDate' : event.endDate ? event.endDate : null,
-	'allDay'  : event.allDay ? event.allDay : "",
-	'rRule'   : event.rRule ? event.rRule : "",
-	'summary' : event.summary ? event.summary : "",
-	'siteId'  : event.siteId ? event.siteId : craft.siteId
-} %}
-{% js %}
+{# {% js %}
     new VentiInput({
 		id: "venti-fields",
 		values: {{ fieldData|json_encode|raw }},
@@ -200,4 +202,4 @@
 		namespacedId: "",
 		siteId: "{{ craft.app.sites.currentSite.id }}"
 	});
-{% endjs %}
+{% endjs %} #}

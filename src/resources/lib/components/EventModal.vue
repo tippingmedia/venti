@@ -30,7 +30,7 @@
 </template>
 
 <script>
-    import { toDateTime } from 'fullcalendar/dist/plugins/luxon';
+    import { toDateTime } from '@fullcalendar/luxon';
     export default {
         data() {
             return {

@@ -6,7 +6,7 @@
     </div>
 </template>
 <script>
-    import { Calendar } from 'fullcalendar';
+    import { Calendar } from '@fullcalendar/core';
     import EventModal from './EventModal.vue';
     import DeleteDialog from './DeleteDialog.vue';
     window.Craft = window.Craft || {};
@@ -27,6 +27,8 @@
                         right: this.options.multisite == "true" ? "today prev,next" : "prev,next"
                     },
                     editable: true,
+                    eventStartEditable: false,
+                    eventDurationEditable: false,
                     eventLimit: 6
                 }
             }
@@ -70,6 +72,14 @@
 
                 Event.$emit('EventModalOpen', { event:info.event, jsEvent: info.jsEvent, el: info.el });
             },
+            dateClick(info) {
+                console.info("DATE CLICKED");
+                console.log(info);
+            },
+            eventDrop(info) {
+                console.info("EVENT DROPPED");
+                console.log(info);
+            },
             loading(info) {
                 //console.log(info);
             }
@@ -82,6 +92,8 @@
             //this.calendar.on('datesRender', this.datesRender);
             this.calendar.on('eventRender', this.eventRender);
             this.calendar.on('eventClick', _this.eventClick);
+            this.calendar.on('dateClick', this.dateClick);
+            this.calendar.on('eventDrop', this.eventDrop);
             //this.calendar.on('loading', this.loading);
             // Render Calendar
             this.calendar.render();
