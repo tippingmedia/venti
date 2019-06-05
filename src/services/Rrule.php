@@ -311,15 +311,17 @@ class Rrule extends Component
         $repeatEvery    = array_key_exists('every', $params) ? $params['every'] : null;
         $repeatOnDays   = array_key_exists('on', $params) ? $params['on'] : null;                // array
         $repeatBy       = array_key_exists('by', $params) ? $params['by'] : null;                // array
-        $starts         = array_key_exists('starts', $params) ? $params['starts'] : null;
-        $startsTime     = array_key_exists('startsTime',$params) ? $params['startsTime'] : null;
+        $starts         = array_key_exists('startsOn', $params) ? array_key_exists('date', $params['startsOn']) ? $params['startsOn']['date'] : null : null;
+        $startsTime     = array_key_exists('startsOn', $params) ? array_key_exists('time', $params['startsOn']) ? $params['startsOn']['time'] : null : null;
         $ends           = array_key_exists('ends', $params) ? $params['ends'] : null;
         $endsTime       = array_key_exists('endTime', $params) ? $params['endTime'] : null;
         $endsOn         = array_key_exists('endsOn', $params) ? $params['endsOn'] : null;        // array
-        $endDate        = array_key_exists('enddate', $params) ? array_key_exists('date',$params['enddate']) ? $params['enddate']['date'] : null : null;
+        $until        = array_key_exists('until', $params) ? $params['until'] : null;
         $occur          = array_key_exists('occur', $params) ? $params['occur'] : null;
         $exclude        = array_key_exists('exclude', $params) ? $params['exclude'] : null;      // array
         $include        = array_key_exists('include', $params) ? $params['include'] : null;      // array
+
+        //\yii\helpers\VarDumper::dump($params, 5, true); exit;
 
         $ruleString = [];
 
@@ -520,10 +522,12 @@ class Rrule extends Component
 
             }
 
+            
+
             #-- Ends (non-inclusive end)
             if ($ends != null)
             {
-                $edate = DateTime::createFromFormat($format, $ends, $timezone);
+                $edate = DateTime::createFromFormat($format, $ends.$endsTime, $timezone);
                 $edate->setTimezone(new DateTimeZone('UTC'));
                 //$edate = craft()->venti_recurr->formatToMysqlDate($edate);
                 $rrule['DTEND'] = $edate->format("Ymd\THis\Z");
@@ -533,17 +537,12 @@ class Rrule extends Component
             #-- Ends On by occurrence or date
             if ( $endsOn != null )
             {
+
                 if (intval($endsOn[0]) == 0 && $occur == null)
                 {
                     $rrule['COUNT'] = null;
                 }
-
-                if (intval($endsOn[0]) == 1 && $occur != null)
-                {
-                    $rrule['COUNT'] = $occur;
-                }
-
-                if (intval($endsOn[0]) == 2 && $endDate != null)
+                elseif (intval($endsOn[0]) == 1 && $until['date'] != null)
                 {
                     #-- Get offset in mintues of current timezone.
                     $time_in_tmz = new DateTime('now', $timezone);
@@ -551,10 +550,16 @@ class Rrule extends Component
                     #-- Add time so end date is included in recurrence schedule
                     /* $etime = strtotime("+23 hours",strtotime($endDate));
                     $rrule['UNTIL'] = str_replace($needles, $fill, gmdate('c',$etime)); */
-                    $endOfDayTime = date($timeFormat, strtotime('tomorrow -'.$offsetMinutes.' minutes'));
-                    $etime = DateTime::createFromFormat($format, $endDate .' '. $endOfDayTime, $timezone);
+                    //$endOfDayTime = date($timeFormat, strtotime('tomorrow -'.$offsetMinutes.' minutes'));
+                    //\yii\helpers\VarDumper::dump($endDate['date'] .' '. $endDate['time'], 5, true); exit;
+                    $etime = DateTime::createFromFormat($format, $until['date'] . ' ' . $until['time'], $timezone);
+                    
                     $etime->setTimezone(new DateTimeZone('UTC'));
                     $rrule['UNTIL'] = $etime->format("Ymd\THis\Z");
+                }
+                elseif (intval($endsOn[0]) == 2 && $occur != null)
+                {
+                    $rrule['COUNT'] = $occur;
                 }
             }
 
@@ -737,7 +742,7 @@ class Rrule extends Component
     *  Map Array for populating modal
     *  @return Array
     */
-    public function modalValuesArray($rule)
+    public function repeatObjectValues($rule)
     {
 
         // $localeData = craft()->i18n->getLocaleData(craft()->language);
@@ -760,7 +765,7 @@ class Rrule extends Component
         // If there is no count or until it never ends
         if (!array_key_exists('COUNT',$keyValueAry) && !array_key_exists('UNTIL',$keyValueAry))
         {
-            $outputAry['endsOn'] = ['0'];
+            $outputAry['endsOn'] = 0;
         }
 
         // Loop through assign values to output array
@@ -823,13 +828,13 @@ class Rrule extends Component
 
                 case 'COUNT':
                     $outputAry['occur'] = $value;
-                    $outputAry['endsOn'] = ['1'];
+                    $outputAry['endsOn'] = 2;
                     break;
 
                 case 'DTSTART':
                     $date = new DateTime($value, new DateTimeZone(Craft::$app->getTimeZone()));
-                    $outputAry['starts'] = $date->format($dateFormat);
-                    $outputAry['startsTime'] = $date->format($timeFormat);
+                    $outputAry['startsOn']['date'] = $date->format($dateFormat);
+                    $outputAry['startsOn']['time'] = $date->format($timeFormat);
                     break;
 
                 case 'DTEND':
@@ -845,8 +850,9 @@ class Rrule extends Component
                     #-- remove Z from date for date output to be correct.
                     //$dte = str_replace("Z", "", $value);
                     $date = DateTime::createFromFormat("Ymd\THis\Z", $value, new DateTimeZone(Craft::$app->getTimeZone()));
-                    $outputAry['enddate'] = $date;
-                    $outputAry['endsOn'] = ['2'];
+                    $outputAry['endDate']['date'] = $date->format($dateFormat);
+                    $outputAry['endDate']['time'] = $date->format($timeFormat);
+                    $outputAry['endsOn'] = 1;
                     break;
 
                 case 'EXDATE':

@@ -420,7 +420,7 @@ class EventController extends BaseEventController
 		$rules = new Rrule();
         if (Craft::$app->getRequest()->getAcceptsJson()) {
 			$post = Craft::$app->getRequest()->getBodyParams();
-			$repeat = reset($post)['repeat'];
+			$repeat = $post;
 			//$locale = array_key_exists('locale', $repeat) ? $repeat['locale'] : Craft::$app->getLocale();
 			$localeData = Craft::$app->locale;
 			$lang = $localeData->id;
@@ -488,7 +488,7 @@ class EventController extends BaseEventController
 	/*
      * Render repeat date modal from ajax call.
      */
-    public function actionModal(): Response
+    /*public function actionModal(): Response
 	{
 		//$this->requirePostRequest();
 		//$this->requireAcceptsJson();
@@ -517,10 +517,26 @@ class EventController extends BaseEventController
 		$headHtml = $view->getHeadHtml();
 
 		return $this->asJson(['html' => $html, 'headHtml' => $headHtml]);
-    }
+	}*/
+	
 
 
-/**
+	/**
+	 * Converts RRULE into key value array for venti input
+	 * @param String 'rrule'
+	 * @return Array
+	 */
+
+	public function actionRepeatObject () {
+		$this->requireAcceptsJson();
+		if (Craft::$app->getRequest()->getAcceptsJson()) {
+			$post = Craft::$app->getRequest()->getBodyParams();
+			return $this->asJson(Venti::getInstance()->rrule->repeatObjectValues($post['rrule']));
+		}
+	}
+
+
+	/**
 	 * Preps entry edit variables.
 	 *
 	 * @param array &$variables
@@ -805,7 +821,7 @@ class EventController extends BaseEventController
 		$event->startDate     = (($startDate = Craft::$app->getRequest()->getBodyParam('startDate')) ? DateTimeHelper::toDateTime($startDate) : null);
 		$event->endDate    	  = (($endDate   = Craft::$app->getRequest()->getBodyParam('endDate'))   ? DateTimeHelper::toDateTime($endDate) : null);
 		$event->rRule     	  = Craft::$app->getRequest()->getBodyParam('rRule', $event->rRule);
-		$event->recurring 	  = (bool) Craft::$app->getRequest()->getBodyParam('recurring', $event->recurring);
+		$event->recurring 	  = Craft::$app->getRequest()->getBodyParam('recurring', $event->recurring);
 		$event->summary 	  = Craft::$app->getRequest()->getBodyParam('summary', $event->summary);
 		$event->allDay 		  = (bool) Craft::$app->getRequest()->getBodyParam('allDay', $event->allDay);
 		$event->enabled 	  = (bool)Craft::$app->getRequest()->getBodyParam('enabled', $event->enabled);

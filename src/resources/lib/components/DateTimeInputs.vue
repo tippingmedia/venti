@@ -54,7 +54,7 @@
             </div>
         </div>
         
-        <!-- <input type="hidden" name="recurring" v-model="recurring" /> -->
+        <input type="hidden" name="recurring" v-model="recurring" />
         <input type="hidden" name="rRule" v-model="rrule" />
 
         <modal name="venti-repeat" transition="pop-out" :width="320" :height="400">
@@ -123,7 +123,7 @@
                                             name:'repeat[endDate]', 
                                             class:'text',
                                             autocomplete: 'off' }" 
-                                        v-model="repeat.endDate.date"
+                                        v-model="repeat.until.date"
                                     ></date-pick>
                                 </div>
                             </div>
@@ -143,8 +143,8 @@
                     </div>
                 </div>
                 <div class="box-actions">
-                    <button class="cancel" @click.prevent="this.$modal.hide('venti-repeat')">Cancel</button>
-                    <button class="submit" @click.prevent="getRule">Done</button>
+                    <button class="cancel" @click.prevent="cancelModal">Cancel</button>
+                    <button class="submit" @click.prevent="doneModal">Done</button>
                 </div>
             </div>
         </modal>
@@ -153,6 +153,7 @@
 
 <script>
 import Vue from 'vue';
+import { DateTime } from 'luxon';
 import RepeatModal from './RepeatModal.vue';
 import DatePick from 'vue-date-pick';
 import vSelect from 'vue-select';
@@ -215,24 +216,27 @@ export default {
             time: '',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         },
-        endTime: '',
         allDay: 0,
         recurring: 0,
         repeat: {
-            frequency: '',
-            startsOn: '',
-            every: 1,
-            on:[],
-            endsOn:0,
-            occur:1,
-            endDate: {
+            frequency: 7,
+            startsOn: {
                 date:'',
-                time: '23:59:59',
+                time: '12:59 PM',
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             },
-            by:0,
-            exclude:[],
-            include:[]
+            every: 1,
+            on: [],
+            endsOn: 0,
+            occur: 1,
+            until: {
+                date:'',
+                time: '12:59 PM',
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            },
+            by: 0,
+            exclude: [],
+            include: []
         },
         rrule: '',
         dateFormat: null,
@@ -244,7 +248,7 @@ export default {
         frequency: [
             {
                 label: Craft.t('venti', 'Does not repeat'),
-                value: '',
+                value: 7,
             },
             {
                 label: Craft.t('venti', 'Daily'),
@@ -284,7 +288,8 @@ export default {
                 label: Craft.t('venti', 'Day of the week'),
                 value: 1
             }
-        ]
+        ],
+        updatingRepeat: false
     }),
     computed : {
         isReccuring() {
@@ -327,27 +332,43 @@ export default {
     },
     watch: {
         'startDate.date': function(val) {
-            this.repeat.startsOn = val;
+            this.repeat.startsOn.date = val;
+        },
+        'startDate.time': function(val) {
+            this.repeat.startsOn.time = val;
         },
         'endDate.date': function(val) {
-            this.repeat.endDate.date = val;
+            if (this.repeat.endsOn === 1) {
+                this.repeat.until.date = val;
+            }
+        },
+        'endDate.time': function(val) {
+            if (this.repeat.endsOn === 1) {
+                this.repeat.until.time = val;
+            }
         },
         'repeat.frequency': function(val) {
-            //Show Modal
-            if(val !== '' & val >= 0) {
-                this.$modal.show('venti-repeat');
-            }
-            // Populate on data 
-            switch (val) {
-                case 1:
-                    this.repeat.on = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-                    break;
-                case 2:
-                    this.repeat.on = ['monday','wednesday','friday'];
-                    break;
-                case 3:
-                    this.repeat.on = ['tuesday','thursday'];
-                    break;
+            
+            // prevent showing modal if updating repeat on inital load
+            if(!this.updatingRepeat) {
+
+                if(val <= 6 & val >= 0) {
+                    //Show Modal
+                    this.$modal.show('venti-repeat');
+                }
+                // Populate on data 
+                switch (val) {
+                    case 1:
+                        this.repeat.on = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        break;
+                    case 2:
+                        this.repeat.on = ['monday','wednesday','friday'];
+                        break;
+                    case 3:
+                        this.repeat.on = ['tuesday','thursday'];
+                        break;
+                }
+
             }
         }
     },
@@ -359,7 +380,42 @@ export default {
             return formatter(date);
         },
         getRule() {
-
+            const _this = this;
+            let params = this.repeat;
+                params.ends = this.endDate.date;
+                params.endTime = this.endDate.time;
+            return new Promise((resolve, reject) => {
+                Craft.postActionRequest('venti/event/get-rule-string', params, function(response, textStatus) {
+                    //console.log(response);
+                    if (textStatus == 'success') {
+                        _this.recurring = 1;
+                        _this.rrule = response.rrule;
+                        resolve(textStatus);
+                    }
+                });
+            });
+        },
+        getMappedRules() {
+            let _this = this;
+            this.updatingRepeat = true;
+            let params = { rrule: this.rrule };
+            return new Promise((resolve, reject) => {
+                Craft.postActionRequest('venti/event/repeat-object', params, function(response, textStatus) {
+                    console.log(response);
+                    if (textStatus == 'success') {
+                        Object.assign(_this.repeat, response);
+                        resolve(textStatus);
+                    }
+                });
+            });
+        },
+        cancelModal(evt) {
+            this.$modal.hide('venti-repeat');
+        },
+        doneModal(evt) {
+            this.getRule().then((status) => { 
+                this.$modal.hide('venti-repeat');
+            });
         }
     },
     created() {
@@ -370,6 +426,11 @@ export default {
         this.allDay = this.inputAllDay;
         this.recurring = this.inputRecurring;
         this.rrule = this.inputRrule;
+        if(this.rrule !== '') {
+            this.getMappedRules().then((response) => {
+                this.updatingRepeat = false;
+            });
+        }
     },
     components: {
         RepeatModal,
@@ -513,6 +574,10 @@ export default {
 
     .v--modal-overlay .v--modal-box {
         overflow: visible;
+    }
+    .v--modal {
+        background: transparent;
+        box-shadow: none;
     }
 
     .box {
