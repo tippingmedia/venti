@@ -11,7 +11,6 @@ let SVGSpritemapPlugin = require('svg-spritemap-webpack-plugin');
  | file for the application as well as bundling up all the JS files.
  |
  */
-
 // use .extract(['vue'])  if using Vuejs
 mix
   //.js("lib/venti.js", "./js")
