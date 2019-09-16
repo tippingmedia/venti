@@ -15,7 +15,7 @@
                 ></date-pick>
             </div>
             <div class="field"  v-if="!allDay">
-                <v-select :options="times" v-model="startDate.time" class="venti-time" :clearable="false"></v-select>
+                <v-select :options="times" v-model="startDate.time" class="venti-time" :clearable="false" selectOnTab push-tags taggable :create-option="time => ({label: time, value: time})"></v-select>
             </div>
             <input type="hidden" name="startDate[time]" v-model="startDate.time">
             <input type="hidden" name="startDate[timezone]" v-model="timezone" />
@@ -36,7 +36,7 @@
                 ></date-pick>
             </div>
             <div class="field" v-if="!allDay">
-                <v-select :options="times" v-model="endDate.time" class="venti-time" :clearable="false"></v-select>
+                <v-select :options="times" v-model="endDate.time" class="venti-time" :clearable="false" selectOnTab push-tags taggable :create-option="time => ({label: time, value: time})"></v-select>
             </div>
             <input type="hidden" name="endDate[time]" v-model="endDate.time">
             <input type="hidden" name="endDate[timezone]" v-model="timezone" />
@@ -189,6 +189,10 @@ export default {
             type: String,
             default: '10:30 AM'
         },
+        inputTimeZone: {
+            type: String,
+            default:Intl.DateTimeFormat().resolvedOptions().timeZone
+        },
         inputAllDay: {
             type: Number
         },
@@ -310,7 +314,7 @@ export default {
                         m = '0' + m;
                     }
                     let label = 'AM';
-                    if (h > 12) {
+                    if (h >= 12) {
                         label = 'PM';
                         h -= 12;
                     }
@@ -421,8 +425,13 @@ export default {
     created() {
         this.startDate.date = this.inputStartDate;
         this.startDate.time = this.inputStartTime;
+        this.startDate.timezone = this.inputTimeZone;
         this.endDate.date = this.inputEndDate;
         this.endDate.time = this.inputEndTime;
+        this.endDate.timezone = this.inputTimeZone;
+        this.repeat.startsOn.timezone = this.inputTimeZone;
+        this.repeat.until.timezone = this.inputTimeZone;
+        this.timezone = this.inputTimeZone;
         this.allDay = this.inputAllDay;
         this.recurring = this.inputRecurring;
         this.rrule = this.inputRrule;
@@ -431,6 +440,8 @@ export default {
                 this.updatingRepeat = false;
             });
         }
+
+        console.log(this.startDate);
     },
     components: {
         RepeatModal,

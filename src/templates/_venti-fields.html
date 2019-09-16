@@ -1,11 +1,14 @@
 {# {% include "_venti-fields-holder" %} #}
-
+<pre>
+	{{ dump(data.startDate.timezone) }}
+</pre>
 <div id="venti-input">
 	<date-time-inputs 
 		:input-start-date="'{{ data.startDate|date(dateFormat) }}'"
 		:input-start-time="'{{ data.startDate|date(timeFormat) }}'"
 		:input-end-date="'{{ data.endDate|date(dateFormat) }}'"
 		:input-end-time="'{{ data.endDate|date(timeFormat) }}'"
+		:input-time-zone="'{{ data.startDate.timezone }}'"
 		:input-recurring="{{ data.rRule is not empty ? '1' : '0' }}"
 		:input-rrule="'{{ data.rRule|default('') }}'"
 		:input-all-day="{{ data.allDay|default('0') }}"

@@ -302,7 +302,7 @@ class EventController extends BaseEventController
 			}
 
 			$return['startDate'] = $event->startDate;
-			$return['endDate'] = $event->startDate;
+			$return['endDate'] = $event->endDate;
 			$return['endRepeat'] = $event->endRepeat;
 			$return['rRule'] = $event->rRule;
 			$return['summary'] = $event->summary;
