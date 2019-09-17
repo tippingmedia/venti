@@ -14,7 +14,7 @@ use tippingmedia\venti\models\Event;
 use tippingmedia\venti\models\Group;
 use tippingmedia\venti\records\Event as EventRecord;
 use tippingmedia\venti\services\Rrule;
-use tippingmedia\venti\events\EvtEvent;
+use tippingmedia\venti\events\EventEvent;
 use tippingmedia\venti\elements\VentiEvent;
 
 
@@ -113,7 +113,7 @@ class Events extends Component
 		$settings = Craft::$app->getPlugins()->getPlugin('venti')->getSettings();
 
 		// if ($this->hasEventHandlers(self::EVENT_BEFORE_SAVE_EVENT)) {
-		// 	$this->trigger(self::EVENT_BEFORE_SAVE_EVENT, new EvtEvent([
+		// 	$this->trigger(self::EVENT_BEFORE_SAVE_EVENT, new EventEvent([
 		// 		'event' => $event,
 		// 		'isNew' => $isNewEvent
 		// 	]));
@@ -148,7 +148,7 @@ class Events extends Component
 
 		// Fire an 'afterSaveEvent' event
 		// if ($this->hasEventHandlers(self::EVENT_AFTER_SAVE_EVENT)) {
-		// 	$this->trigger(self::EVENT_AFTER_SAVE_EVENT, new EvtEvent([
+		// 	$this->trigger(self::EVENT_AFTER_SAVE_EVENT, new EventEvent([
 		// 		'event' => $event,
 		// 		'isNew' => $isNewEvent
 		// 	]));

@@ -42,7 +42,7 @@
             <input type="hidden" name="endDate[timezone]" v-model="timezone" />
         </div>
 
-        <div class="venti-input-group input">
+        <div class="venti-input-group input">   
             <div class="field-onedge field-flex">
                 <checkbox id="venti-all-day" v-model="allDay" name="allDay"></checkbox>
                 <span class="heading">
@@ -50,8 +50,74 @@
                 </span>
             </div>
             <div class="field field-onedge">
-                <v-select :options="frequency"  :searchable="false" :clearable="false" :selectOnTab="true" v-model="repeat.frequency" :reduce="option => option.value" placeholder="Does not repeat" class="venti-reccuring-select"></v-select>
+                <v-select 
+                    v-model="repeat.frequency" 
+                    :options="frequency"  
+                    :searchable="false" 
+                    :clearable="false" 
+                    :selectOnTab="true" 
+                    :reduce="option => option.value" 
+                    placeholder="Does not repeat" 
+                    class="venti-reccuring-select"></v-select>
             </div>
+        </div>
+        <div class="venti-input-sep" style='margin:24px 0px;'></div>
+
+        <div class="input" v-if='recurring == 1'>
+            <div class="field">
+                <div class="heading">
+                    <label v-text="'Excluded Dates'" for="venti-excluded-dates"></label>
+                </div>
+                <div>
+                    <date-pick 
+                        :format="datePickerFormat"
+                        :inputAttributes="{ 
+                            class:'text',
+                            placeholder: 'Select Date',
+                            autocomplete: 'off' }" 
+                        v-model="excludedDate"
+                    ></date-pick>
+                </div>
+            </div>
+            <div class="field">
+                <vue-tags-input
+                    v-model="excludedTag"
+                    :tags="excludedDates"
+                    :placeholder="''"
+                    @tags-changed="excludedTagsChanged"
+                />
+            </div>
+            
+            <input v-for="(item, index) in repeat.exclude" type='hidden' name="repeat[exclude][]" :value="item.text" :key="'exdate'+index">
+            
+        </div>
+
+        <div class="input" v-if='recurring == 1'>
+            <div class="field">
+                <div class="heading">
+                    <label v-text="'Included Dates'" for="venti-included-dates"></label>
+                </div>
+                <div>
+                    <date-pick 
+                        :format="datePickerFormat"
+                        :inputAttributes="{ 
+                            class:'text',
+                            placeholder: 'Select Date',
+                            autocomplete: 'off' }" 
+                        v-model="includedDate"
+                    ></date-pick>
+                </div>
+            </div>
+            <div class="field">
+                <vue-tags-input
+                    v-model="includedTag"
+                    :tags="includedDates"
+                    :placeholder="''"
+                    @tags-changed="includedTagsChanged"
+                />
+            </div>
+            
+            <input v-for="(item, index) in repeat.include" type='hidden' name="repeat[include][]" :value="item.text" :key="'rdate'+index">
         </div>
         
         <input type="hidden" name="recurring" v-model="recurring" />
@@ -159,6 +225,7 @@ import DatePick from 'vue-date-pick';
 import vSelect from 'vue-select';
 import Checkbox from './Checkbox';
 import Radio    from './Radio';
+import VueTagsInput from '@johmun/vue-tags-input';
 import 'vue-date-pick/dist/vueDatePick.css';
 window.Craft = window.Craft || {};
 d3 = d3 || {};
@@ -293,11 +360,17 @@ export default {
                 value: 1
             }
         ],
+        excludedDate:'',
+        excludedDates:[],
+        excludedTag:'',
+        includedDate:'',
+        includedDates:[],
+        includedTag:'',
         updatingRepeat: false
     }),
     computed : {
         isReccuring() {
-            return this.repeat.frequency !== null && this.repeat.frequency > 0;
+            return this.repeat.frequency !== null && this.repeat.frequency > 0 && this.repeat.frequency < 7;
         },
         datePickerFormat() {
             return this.dateFormat !== null ? this.dateFormat.toUpperCase() : 'MM/DD/YYYY';
@@ -352,14 +425,21 @@ export default {
             }
         },
         'repeat.frequency': function(val) {
-            
             // prevent showing modal if updating repeat on inital load
             if(!this.updatingRepeat) {
+                
+                // reset reccuring, repeat, & rrule values
+                if (val === 7) {
+                    this.recurring = 0;
+                    this.rrule = "";
+                    this.repeat = this.repeatModel;
+                }
 
                 if(val <= 6 & val >= 0) {
                     //Show Modal
                     this.$modal.show('venti-repeat');
                 }
+                
                 // Populate on data 
                 switch (val) {
                     case 1:
@@ -372,15 +452,30 @@ export default {
                         this.repeat.on = ['tuesday','thursday'];
                         break;
                 }
-
+            }
+        },
+        'excludedDate': function(val) {
+            if (val !== '' && !this.repeat.exclude.includes(val)) {
+                this.repeat.exclude.push(val);
+                this.excludedDates.push({text:val});
+                this.excludedDate = '';
+                this.getRule();
+            }
+        },
+        'includedDate': function(val) {
+            if (val !== '' && !this.repeat.include.includes(val)) {
+                this.repeat.include.push(val);
+                this.includedDates.push({text:val});
+                this.includedDate = '';
+                this.getRule();
             }
         }
     },
     methods: {
         formatDate(date) {
             let formatter = d3.timeFormat( window.d3TimeFormatLocaleDefinition.date );
-            console.log(date);
-            console.log(formatter(date));
+            //console.log(date);
+            //console.log(formatter(date));
             return formatter(date);
         },
         getRule() {
@@ -388,6 +483,7 @@ export default {
             let params = this.repeat;
                 params.ends = this.endDate.date;
                 params.endTime = this.endDate.time;
+
             return new Promise((resolve, reject) => {
                 Craft.postActionRequest('venti/event/get-rule-string', params, function(response, textStatus) {
                     //console.log(response);
@@ -408,6 +504,13 @@ export default {
                     console.log(response);
                     if (textStatus == 'success') {
                         Object.assign(_this.repeat, response);
+                        // Populate Tag inputs with excluded & included dates
+                        _this.excludedDates = response.exclude !== undefined ? response.exclude.map(function(val){
+                            return { text: val };
+                        }) : [] ;
+                        _this.includedDates = response.include !== undefined ? response.include.map(function(val){
+                            return { text: val };
+                        }) : [] ;
                         resolve(textStatus);
                     }
                 });
@@ -420,9 +523,22 @@ export default {
             this.getRule().then((status) => { 
                 this.$modal.hide('venti-repeat');
             });
+        },
+        excludedTagsChanged(tags) {
+            this.repeat.exclude = tags.map(t => t.text);
+            this.excludedDates = tags;
+            this.getRule();
+        },
+        includedTagsChanged(tags) {
+            this.repeat.include = tags.map(t => t.text);
+            this.includedDates = tags;
+            this.getRule();
         }
     },
     created() {
+        // save a copy of the repeat model 
+        this.repeatModel = JSON.parse(JSON.stringify(this.repeat));
+        // populate data model from saved values
         this.startDate.date = this.inputStartDate;
         this.startDate.time = this.inputStartTime;
         this.startDate.timezone = this.inputTimeZone;
@@ -440,15 +556,14 @@ export default {
                 this.updatingRepeat = false;
             });
         }
-
-        console.log(this.startDate);
     },
     components: {
         RepeatModal,
         DatePick,
         vSelect,
         Checkbox,
-        Radio
+        Radio,
+        VueTagsInput
     }
 }
 </script>
@@ -703,4 +818,110 @@ export default {
         opacity: 0;
         transform: translateY(24px);
     }
+    // Tags
+    /* style the background and the text color of the input ... */
+  .vue-tags-input {
+    max-width: 100% !important;
+    background: #324652;
+  }
+
+  .vue-tags-input .ti-new-tag-input {
+    background: transparent;
+    color: #b7c4c9;
+  }
+
+  .vue-tags-input .ti-input {
+    padding: 4px 10px;
+    border: 1px solid rgba(0, 0, 20, 0.1);
+    transition: border-bottom 200ms ease;
+  }
+
+  .ti-new-tag-input-wrapper {
+      display: none;
+  }
+
+  /* we cange the border color if the user focuses the input */
+  .vue-tags-input.ti-focus .ti-input {
+    border: 1px solid #0a99f2;
+  }
+
+  /* some stylings for the autocomplete layer */
+  .vue-tags-input .ti-autocomplete {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 20, 0.1);
+    border-top: none;
+  }
+
+  /* the selected item in the autocomplete layer, should be highlighted */
+  .vue-tags-input .ti-item.ti-selected-item {
+    background: #0a99f2;
+    color: #333;
+  }
+
+  /* style the placeholders color across all browser */
+  .vue-tags-input ::-webkit-input-placeholder {
+    color: #a4b1b6;
+  }
+
+  .vue-tags-input ::-moz-placeholder {
+    color: #a4b1b6;
+  }
+
+  .vue-tags-input :-ms-input-placeholder {
+    color: #a4b1b6;
+  }
+
+  .vue-tags-input :-moz-placeholder {
+    color: #a4b1b6;
+  }
+
+  /* default styles for all the tags */
+  .vue-tags-input .ti-tag {
+    position: relative;
+    background: #0a99f2;
+    color: #ffffff;
+  }
+
+  /* we defined a custom css class in the data model, now we are using it to style the tag */
+  .vue-tags-input .ti-tag.custom-class {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 20, 0.1);
+    color: #333333;
+    margin-right: 4px;
+    border-radius: 0px;
+    font-size: 13px;
+  }
+
+  /* the styles if a tag is invalid */
+  .vue-tags-input .ti-tag.ti-invalid {
+    background-color: #e88a74;
+  }
+
+  /* if the user input is invalid, the input color should be red */
+  .vue-tags-input .ti-new-tag-input.ti-invalid {
+    color: #e88a74;
+  }
+
+  /* if a tag or the user input is a duplicate, it should be crossed out */
+  .vue-tags-input .ti-duplicate span,
+  .vue-tags-input .ti-new-tag-input.ti-duplicate {
+    text-decoration: line-through;
+  }
+
+  /* if the user presses backspace, the complete tag should be crossed out, to mark it for deletion */
+  .vue-tags-input .ti-tag:after {
+    transition: transform .2s;
+    position: absolute;
+    content: '';
+    height: 2px;
+    width: 108%;
+    left: -4%;
+    top: calc(50% - 1px);
+    background-color: #000;
+    transform: scaleX(0);
+  }
+
+  .vue-tags-input .ti-deletion-mark:after {
+    transform: scaleX(1);
+  }
 </style>

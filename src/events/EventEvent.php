@@ -15,7 +15,7 @@ use yii\base\Event;
  * @author Tippingmedia LLC. <support@tippingmedia.com>
  * @since  2.0
  */
-class EvtEvent extends Event
+class EventEvent extends Event
 {
     // Properties
     // =========================================================================
