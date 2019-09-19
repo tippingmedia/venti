@@ -7,6 +7,8 @@
 </template>
 <script>
     import { Calendar } from '@fullcalendar/core';
+    import dayGridPlugin from '@fullcalendar/daygrid';
+    import interactionPlugin from '@fullcalendar/interaction';
     import EventModal from './EventModal.vue';
     import DeleteDialog from './DeleteDialog.vue';
     window.Craft = window.Craft || {};
@@ -21,6 +23,7 @@
                 calendar: {},
                 selectedEvent: {},
                 defaults : {
+                    plugins:[ dayGridPlugin, interactionPlugin ],
                     header : {
                         left: 'title',
                         center: '',

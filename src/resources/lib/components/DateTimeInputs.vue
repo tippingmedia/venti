@@ -15,7 +15,7 @@
                 ></date-pick>
             </div>
             <div class="field"  v-if="!allDay">
-                <v-select :options="times" v-model="startDate.time" class="venti-time" :clearable="false" selectOnTab push-tags taggable :create-option="time => ({label: time, value: time})"></v-select>
+                <v-select :from="times" v-model="startDate.time" placeholer="Select Time" class="venti-time"></v-select>
             </div>
             <input type="hidden" name="startDate[time]" v-model="startDate.time">
             <input type="hidden" name="startDate[timezone]" v-model="timezone" />
@@ -36,7 +36,7 @@
                 ></date-pick>
             </div>
             <div class="field" v-if="!allDay">
-                <v-select :options="times" v-model="endDate.time" class="venti-time" :clearable="false" selectOnTab push-tags taggable :create-option="time => ({label: time, value: time})"></v-select>
+                <v-select :from="times" v-model="endDate.time" placeholer="Select Time" class="venti-time"></v-select>
             </div>
             <input type="hidden" name="endDate[time]" v-model="endDate.time">
             <input type="hidden" name="endDate[timezone]" v-model="timezone" />
@@ -52,12 +52,10 @@
             <div class="field field-onedge">
                 <v-select 
                     v-model="repeat.frequency" 
-                    :options="frequency"  
-                    :searchable="false" 
-                    :clearable="false" 
-                    :selectOnTab="true" 
-                    :reduce="option => option.value" 
-                    placeholder="Does not repeat" 
+                    :from="frequency"  
+                    :as="'label:value'"
+                    placeholder="Does not repeat"
+                    @select="selectFrequency"
                     class="venti-reccuring-select"></v-select>
             </div>
         </div>
@@ -222,22 +220,24 @@ import Vue from 'vue';
 import { DateTime } from 'luxon';
 import RepeatModal from './RepeatModal.vue';
 import DatePick from 'vue-date-pick';
-import vSelect from 'vue-select';
+import VueSelect from '@desislavsd/vue-select';
 import Checkbox from './Checkbox';
 import Radio    from './Radio';
 import VueTagsInput from '@johmun/vue-tags-input';
 import 'vue-date-pick/dist/vueDatePick.css';
+import '../../sass/vue-select.scss';
+//import '@desislavsd/vue-select/dist/vue-select.css'
 window.Craft = window.Craft || {};
 d3 = d3 || {};
 
-vSelect.props.components.default = () => ({
-    Deselect: {
-        render: createElement => createElement('span', {class: 'vdpClearInput' }),
-    },
-    OpenIndicator: {
-        render: createElement => createElement('span', ''),
-    },
-});
+// vSelect.props.components.default = () => ({
+//     Deselect: {
+//         render: createElement => createElement('span', {class: 'vdpClearInput' }),
+//     },
+//     OpenIndicator: {
+//         render: createElement => createElement('span', ''),
+//     },
+// });
 
 export default {
     props: {
@@ -366,7 +366,8 @@ export default {
         includedDate:'',
         includedDates:[],
         includedTag:'',
-        updatingRepeat: false
+        updatingRepeat: false,
+        frequencyCache: null
     }),
     computed : {
         isReccuring() {
@@ -425,34 +426,34 @@ export default {
             }
         },
         'repeat.frequency': function(val) {
-            // prevent showing modal if updating repeat on inital load
-            if(!this.updatingRepeat) {
+            // // prevent showing modal if updating repeat on inital load
+            // if(!this.updatingRepeat) {
                 
-                // reset reccuring, repeat, & rrule values
-                if (val === 7) {
-                    this.recurring = 0;
-                    this.rrule = "";
-                    this.repeat = this.repeatModel;
-                }
+            //     // reset reccuring, repeat, & rrule values
+            //     if (val === 7) {
+            //         this.recurring = 0;
+            //         this.rrule = "";
+            //         this.repeat = this.repeatModel;
+            //     }
 
-                if(val <= 6 & val >= 0) {
-                    //Show Modal
-                    this.$modal.show('venti-repeat');
-                }
+            //     if(val <= 6 & val >= 0) {
+            //         //Show Modal
+            //         this.$modal.show('venti-repeat');
+            //     }
                 
-                // Populate on data 
-                switch (val) {
-                    case 1:
-                        this.repeat.on = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-                        break;
-                    case 2:
-                        this.repeat.on = ['monday','wednesday','friday'];
-                        break;
-                    case 3:
-                        this.repeat.on = ['tuesday','thursday'];
-                        break;
-                }
-            }
+            //     // Populate on data 
+            //     switch (val) {
+            //         case 1:
+            //             this.repeat.on = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+            //             break;
+            //         case 2:
+            //             this.repeat.on = ['monday','wednesday','friday'];
+            //             break;
+            //         case 3:
+            //             this.repeat.on = ['tuesday','thursday'];
+            //             break;
+            //     }
+            // }
         },
         'excludedDate': function(val) {
             if (val !== '' && !this.repeat.exclude.includes(val)) {
@@ -517,10 +518,12 @@ export default {
             });
         },
         cancelModal(evt) {
+            this.repeat.frequency = this.frequencyCache !== null ? this.frequencyCache : this.repeat.frequency;
             this.$modal.hide('venti-repeat');
         },
         doneModal(evt) {
             this.getRule().then((status) => { 
+                this.frequencyCache = this.repeat.frequency;
                 this.$modal.hide('venti-repeat');
             });
         },
@@ -533,6 +536,40 @@ export default {
             this.repeat.include = tags.map(t => t.text);
             this.includedDates = tags;
             this.getRule();
+        },
+        selectFrequency(val) {
+            // prevent showing modal if updating repeat on inital load
+            if(!this.updatingRepeat) {
+                
+                // reset reccuring, repeat, & rrule values
+                if (val.value === 7) {
+                    this.recurring = 0;
+                    this.rrule = "";
+                    this.repeat = this.repeatModel;
+                }
+
+                if(val.value <= 6 & val.value >= 0) {
+                    //Show Modal
+                    this.$modal.show('venti-repeat');
+                }
+
+                if(val.value === 7) {
+                    this.frequencyCache = 7;
+                }
+                
+                // Populate on data 
+                switch (val.value) {
+                    case 1:
+                        this.repeat.on = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        break;
+                    case 2:
+                        this.repeat.on = ['monday','wednesday','friday'];
+                        break;
+                    case 3:
+                        this.repeat.on = ['tuesday','thursday'];
+                        break;
+                }
+            }
         }
     },
     created() {
@@ -554,13 +591,14 @@ export default {
         if(this.rrule !== '') {
             this.getMappedRules().then((response) => {
                 this.updatingRepeat = false;
+                this.frequencyCache = this.repeat.frequency;
             });
         }
     },
     components: {
         RepeatModal,
         DatePick,
-        vSelect,
+        vSelect: VueSelect.vSelect,
         Checkbox,
         Radio,
         VueTagsInput
@@ -578,61 +616,8 @@ export default {
         margin-left: 20px !important;
     }
 
-    .venti-input-group .v-select,
-    .venti-repeat-by .v-select {
-        padding: 5px 7px;
-        border: 1px solid rgba(0, 0, 20, 0.1);
-        border-radius: 2px;
-        -webkit-transition: border linear 50ms;
-        transition: border linear 50ms;
-    }
-
-    .venti-input-group .v-select.venti-time {
-        width: 120px;
-    }
-
-    .venti-input-group .vs__dropdown-toggle,
-    .venti-repeat-by .vs__dropdown-toggle {
-        padding: 0px;
-        border: none;
-    }
-    .venti-input-group .vs__actions,
-    .venti-repeat-by .vs__actions {
-        padding: 0px;
-    }
-    .venti-input-group .vs__search, 
-    .venti-input-gropu.vs__search:focus,
-    .venti-repeat-by .vs__search,
-    .venti-repeat-by .vs__search:focus {
-        margin: 0px;
-    }
-
-    .venti-input-group .vs__selected,
-    .venti-repeat-by .vs__selected {
-        padding: 0px;
-        margin: 0px;
-        border: none;
-    }
-
-    .venti-input-group .vs__dropdown-menu,
-    .venti-repeat-by .vs__dropdown-menu {
-        border-radius: 2px;
-        padding: 0 0px;
-        overflow: auto;
-        background: #fff;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        -webkit-box-shadow: 0 0 0 1px rgba(0, 0, 20, 0.1), 0 5px 20px rgba(0, 0, 0, 0.25);
-        box-shadow: 0 0 0 1px rgba(0, 0, 20, 0.1), 0 5px 20px rgba(0, 0, 0, 0.25);
-    }
-
-    .venti-input-group .v-select.venti-time .vs__dropdown-menu {
-        min-width: 120px;
-    }
-    .venti-input-group .v-select.venti-reccuring-select {
-        min-width: 300px;
+    .venti-reccuring-select {
+        width: 325px;
     }
 
     .venti-repeat-on {

@@ -8,8 +8,12 @@
         "icons": "create-svg-sprite --input './assets/icons/' --output './public/img/' --name 'll-icons'"
     },
     "devDependencies": {
+        "@desislavsd/vue-select": "^0.3.4",
         "@fullcalendar/core": "^4.3.1",
+        "@fullcalendar/daygrid": "4.3.0",
+        "@fullcalendar/interaction": "4.3.0",
         "@fullcalendar/luxon": "^4.3.0",
+        "@johmun/vue-tags-input": "^2.1.0",
         "ajv": "^6.10.2",
         "axios": "^0.19.0",
         "cross-env": "^5.2.1",
