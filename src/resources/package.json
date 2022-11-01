@@ -2,7 +2,7 @@
     "name": "venti",
     "version": "1.0.0",
     "devDependencies": {
-        "gulp": "^3.9.0",
+        "gulp": "^4.0.2",
         "gulp-babel": "^7.0.1",
         "babel-core": "^6.26.0",
         "babel-preset-env": "^1.6.1",
