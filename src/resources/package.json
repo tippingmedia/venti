@@ -2,7 +2,7 @@
     "name": "venti",
     "version": "1.0.0",
     "devDependencies": {
-        "gulp": "^3.9.0",
+        "gulp": "^4.0.2",
         "gulp-babel": "^7.0.1",
         "babel-core": "^6.26.0",
         "babel-preset-env": "^1.6.1",
@@ -16,7 +16,7 @@
         "gulp-rename": "^1.2.2",
         "gulp-ruby-sass": "^3.0.0",
         "gulp-uglify": "^3.0.0",
-        "jshint": "^2.9.5",
+        "jshint": "^2.13.6",
         "jshint-stylish": "^2.2.1"
     }
 }
