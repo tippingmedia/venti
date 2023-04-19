@@ -11,7 +11,7 @@
         "gulp-concat": "^2.6.1",
         "gulp-jshint": "^2.1.0",
         "gulp-jsmin": "^0.1.5",
-        "gulp-load-plugins": "^1.5.0",
+        "gulp-load-plugins": "^1.6.0",
         "gulp-notify": "^3.2.0",
         "gulp-rename": "^1.2.2",
         "gulp-ruby-sass": "^3.0.0",
